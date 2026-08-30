@@ -1,17 +1,16 @@
 module.exports = async (req, res) => {
   try {
     const MAP_URL = "https://ts11.x1.europe.travian.com/map.sql";
-    const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita";
+    // on_conflict=id ile Supabase'in köyleri eksiksiz içeri alması sağlandı
+    const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita?on_conflict=id";
     const SUPABASE_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
 
-    // 1. Travian sunucusundan doğrudan map.sql dosyasını indir
     const response = await fetch(MAP_URL);
     if (!response.ok) {
-      return res.status(500).json({ error: "Travian sunucusuna ulaşılamadı: " + response.statusText });
+      return res.status(500).json({ error: "Travian map.sql indirilemedi: " + response.statusText });
     }
     const sqlText = await response.text();
 
-    // 2. Irk kodlarını ve verileri ayıkla
     const IRK_KODLARI = { 1: "Roma", 2: "Cermen", 3: "Galya", 4: "Doğa", 5: "Natar", 6: "Hun", 7: "Mısır" };
     const regex = /\((\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+)/g;
 
@@ -35,14 +34,17 @@ module.exports = async (req, res) => {
     }
 
     if (kayitlar.length === 0) {
-      return res.status(400).json({ error: "Harita verisi ayrıştırılamadı." });
+      return res.status(400).json({ error: "Kayıt ayrıştırılamadı." });
     }
 
-    // 3. Veritabanına (Supabase) 1000'erli paketlerle yükle
+    // 1000'erli paketlerle veritabanına aktar
     const batchSize = 1000;
+    let basarili = 0;
+    let hataDetay = null;
+
     for (let i = 0; i < kayitlar.length; i += batchSize) {
       const batch = kayitlar.slice(i, i + batchSize);
-      await fetch(SUPABASE_URL, {
+      const postRes = await fetch(SUPABASE_URL, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -52,12 +54,22 @@ module.exports = async (req, res) => {
         },
         body: JSON.stringify(batch)
       });
+
+      if (!postRes.ok) {
+        hataDetay = await postRes.text();
+      } else {
+        basarili += batch.length;
+      }
+    }
+
+    if (hataDetay && basarili === 0) {
+      return res.status(500).json({ error: "Veritabanı hatası: " + hataDetay });
     }
 
     return res.status(200).json({
       success: true,
-      message: `${kayitlar.length} adet köy başarıyla güncellendi.`,
-      toplam_koy: kayitlar.length,
+      message: `${basarili} adet köy Supabase veritabanına başarıyla işlendi.`,
+      toplam: kayitlar.length,
       guncelleme: new Date().toISOString()
     });
   } catch (error) {
