@@ -32,11 +32,11 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
 
-    <!-- Supabase Bağlantısı -->
+    <!-- Supabase Veritabanı İstemcisi -->
     <script>
         const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
 
     <!-- 1. GİRİŞ EKRANI -->
@@ -78,8 +78,8 @@
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
                     
-                    <!-- Canlı Harita Senkronizasyon Butonu -->
-                    <button onclick="manuelSenkronizeEt()" id="btn-sync-status" title="Harita verisini güncellemek için tıklayın" class="hidden sm:flex items-center gap-2 bg-slate-950 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] transition">
+                    <!-- Canlı Harita Durum Butonu -->
+                    <button onclick="manuelSenkronizeEt()" id="btn-sync-status" title="Haritayı güncellemek için tıklayın" class="hidden sm:flex items-center gap-2 bg-slate-950 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] transition">
                         <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         <span id="harita-canli-durum" class="text-slate-300 font-mono">Harita Kontrol Ediliyor...</span>
                     </button>
@@ -336,7 +336,7 @@
         </main>
     </div>
 
-    <!-- MODAL 1: TEKİL ORDU EKLE -->
+    <!-- MODAL 1: TEKİL ORDU EKLE (KOORDİNATLA OTO-DOLAR) -->
     <div id="modal-ordu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -374,14 +374,15 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
-                    <input type="text" id="m-ordu-koy" required placeholder="Koordinatla otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                    <input type="text" id="m-ordu-koy" required placeholder="Koordinat girince otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Oyuncu Adı</label>
-                    <input type="text" id="m-ordu-nick" required placeholder="Koordinatla otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                    <input type="text" id="m-ordu-nick" required placeholder="Koordinat girince otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
                 </div>
             </div>
 
+            <!-- Dinamik Asker Giriş Alanları -->
             <div class="border-t border-slate-800 pt-3">
                 <span id="asker-baslik-etiket" class="block text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">Asker Kadrosu</span>
                 <div id="asker-input-alani" class="grid grid-cols-3 gap-2.5"></div>
@@ -421,7 +422,7 @@
                 </span>
                 <div class="max-h-48 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
                     <table class="w-full text-left text-[11px] text-slate-300">
-                        <thead class="bg-slate-900 sticky top-0 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px]">
+                        <thead class="bg-slate-950 sticky top-0 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px]">
                             <tr>
                                 <th class="p-2">Oyuncu</th>
                                 <th class="p-2">Köy (Koord)</th>
@@ -441,7 +442,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: YENİ RAKİP EKLE -->
+    <!-- MODAL 3: YENİ RAKİP EKLE (KOORDİNATLA OTO-DOLAR) -->
     <div id="modal-rakip" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -516,6 +517,7 @@
     <script>
         lucide.createIcons();
 
+        // 1. GİRİŞ
         const OZEL_HESAPLAR = { "mahir": "ahirbenem" };
 
         function ozelGirisYap(e) {
@@ -551,17 +553,17 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // Harita Durumu ve Otomatik / Manuel Senkronizasyon
+        // 2. HARİTA DURUMU & TEK TIKLA SENKRONİZE ET
         async function haritaDurumKontrolEt() {
             const durumEl = document.getElementById('harita-canli-durum');
             const dotEl = document.getElementById('sync-dot');
             try {
-                const { count, error } = await supabase.from('harita').select('*', { count: 'exact', head: true });
+                const { count, error } = await db.from('harita').select('*', { count: 'exact', head: true });
                 if (!error && count && count > 0) {
                     durumEl.innerText = `Harita: ${count.toLocaleString('tr-TR')} Köy Güncel`;
                     dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
                 } else {
-                    durumEl.innerText = "Harita Boş (Güncellemek İçin Tıkla)";
+                    durumEl.innerText = "Harita Boş (Yüklemek İçin Tıkla)";
                     dotEl.className = "w-2 h-2 rounded-full bg-rose-500 animate-pulse";
                 }
             } catch (e) {
@@ -572,7 +574,7 @@
         async function manuelSenkronizeEt() {
             const durumEl = document.getElementById('harita-canli-durum');
             const dotEl = document.getElementById('sync-dot');
-            durumEl.innerText = "Veriler İndiriliyor...";
+            durumEl.innerText = "Travian'dan İndiriliyor...";
             dotEl.className = "w-2 h-2 rounded-full bg-amber-400 animate-spin";
 
             try {
@@ -591,6 +593,7 @@
             }
         }
 
+        // 3. MODAL & SEKME
         function modalAc(id) { document.getElementById(id).classList.remove('hidden'); }
         function modalKapat(id) { document.getElementById(id).classList.add('hidden'); }
         function modalOrduAc() { askerAlanlariniGuncelle(); modalAc('modal-ordu'); }
@@ -611,6 +614,7 @@
             lucide.createIcons();
         }
 
+        // 4. IRKA GÖRE ASKER LİSTESİ
         const IRK_ASKERLERI = {
             "Cermen": [
                 { id: "piyade_saldiri", ad: "Tokmak Sallayan", carpan: 40 },
@@ -675,21 +679,24 @@
             `).join('');
         }
 
-        // Koordinat Sorgusu
+        // 5. KOORDİNAT OTO-DOLDURMA FONKSİYONU
         async function koordSorgula(tur) {
-            const xGirdi = document.getElementById(`m-${tur}-x`).value.trim();
-            const yGirdi = document.getElementById(`m-${tur}-y`).value.trim();
+            const xInput = document.getElementById(`m-${tur}-x`);
+            const yInput = document.getElementById(`m-${tur}-y`);
+            if (!xInput || !yInput) return;
 
-            if (xGirdi === "" || yGirdi === "") return;
+            const xVal = xInput.value.trim();
+            const yVal = yInput.value.trim();
+            if (xVal === "" || yVal === "") return;
 
-            const x = parseInt(xGirdi);
-            const y = parseInt(yGirdi);
+            const x = parseInt(xVal, 10);
+            const y = parseInt(yVal, 10);
             if (isNaN(x) || isNaN(y)) return;
 
-            const { data, error } = await supabase.from('harita').select('*').eq('x', x).eq('y', y).limit(1);
+            const { data, error } = await db.from('harita').select('*').eq('x', x).eq('y', y).limit(1);
 
             if (error) {
-                console.error("Harita sorgusu hatası:", error);
+                console.error("Harita sorgu hatası:", error);
                 return;
             }
 
@@ -713,13 +720,14 @@
             }
         }
 
+        // 6. TEKİL ORDU KAYDET
         async function orduKaydet() {
-            const x = parseInt(document.getElementById('m-ordu-x').value);
-            const y = parseInt(document.getElementById('m-ordu-y').value);
+            const x = parseInt(document.getElementById('m-ordu-x').value, 10);
+            const y = parseInt(document.getElementById('m-ordu-y').value, 10);
             const koy = document.getElementById('m-ordu-koy').value;
             const nick = document.getElementById('m-ordu-nick').value;
             const irk = document.getElementById('m-ordu-irk').value;
-            const ty = parseInt(document.getElementById('m-ordu-ty').value) || 0;
+            const ty = parseInt(document.getElementById('m-ordu-ty').value, 10) || 0;
 
             if (isNaN(x) || isNaN(y) || !koy || !nick) {
                 alert("Lütfen koordinat, köy adı ve oyuncu adını eksiksiz girin!");
@@ -731,12 +739,12 @@
             let askerDökümü = {};
 
             liste.forEach(a => {
-                const adet = parseInt(document.getElementById(`asker-${a.id}`)?.value) || 0;
+                const adet = parseInt(document.getElementById(`asker-${a.id}`)?.value, 10) || 0;
                 askerDökümü[a.ad] = adet;
                 toplamGuc += (adet * a.carpan);
             });
 
-            const { error } = await supabase.from('ordular').insert([{
+            const { error } = await db.from('ordular').insert([{
                 kullanici_adi: nick,
                 koy_adi: koy,
                 x_koordinat: x,
@@ -752,10 +760,11 @@
             } else {
                 modalKapat('modal-ordu');
                 verileriYukle();
-                alert("Ordu ve Köy başarıyla kaydedildi!");
+                alert("Ordu başarıyla kaydedildi!");
             }
         }
 
+        // 7. TOPLU ORDU EXCEL AYRIŞTIRICI
         let topluOrdularListesi = [];
 
         function topluOrduOnizle() {
@@ -778,17 +787,17 @@
                 if (sutunlar.length >= 4) {
                     const nick = sutunlar[0] || 'Oyuncu';
                     const koy = sutunlar[1] || 'Köy';
-                    const x = parseInt(sutunlar[2]) || 0;
-                    const y = parseInt(sutunlar[3]) || 0;
+                    const x = parseInt(sutunlar[2], 10) || 0;
+                    const y = parseInt(sutunlar[3], 10) || 0;
                     const irk = sutunlar[4] || 'Cermen';
-                    const ty = parseInt(sutunlar[5]) || 0;
+                    const ty = parseInt(sutunlar[5], 10) || 0;
 
-                    const piyade = parseInt(sutunlar[6]) || 0;
-                    const suvari = parseInt(sutunlar[7]) || 0;
-                    const koc = parseInt(sutunlar[8]) || 0;
-                    const mancinik = parseInt(sutunlar[9]) || 0;
-                    const reis = parseInt(sutunlar[10]) || 0;
-                    const savunma = parseInt(sutunlar[11]) || 0;
+                    const piyade = parseInt(sutunlar[6], 10) || 0;
+                    const suvari = parseInt(sutunlar[7], 10) || 0;
+                    const koc = parseInt(sutunlar[8], 10) || 0;
+                    const mancinik = parseInt(sutunlar[9], 10) || 0;
+                    const reis = parseInt(sutunlar[10], 10) || 0;
+                    const savunma = parseInt(sutunlar[11], 10) || 0;
 
                     const guc = (piyade * 50) + (suvari * 130) + (koc * 60) + (mancinik * 70) + (reis * 500) + (savunma * 40);
 
@@ -832,7 +841,7 @@
             const btn = document.getElementById('btn-toplu-kaydet');
             btn.innerText = "Kayıtlar Aktarılıyor...";
 
-            const { error } = await supabase.from('ordular').insert(topluOrdularListesi);
+            const { error } = await db.from('ordular').insert(topluOrdularListesi);
 
             if (error) {
                 alert("Toplu Kayıt Hatası: " + error.message);
@@ -848,10 +857,11 @@
             lucide.createIcons();
         }
 
+        // 8. RAKİP HEDEF KAYDET
         async function rakipKaydet(e) {
             e.preventDefault();
-            const x = parseInt(document.getElementById('m-rakip-x').value);
-            const y = parseInt(document.getElementById('m-rakip-y').value);
+            const x = parseInt(document.getElementById('m-rakip-x').value, 10);
+            const y = parseInt(document.getElementById('m-rakip-y').value, 10);
             const nick = document.getElementById('m-rakip-nick').value;
             const koy = document.getElementById('m-rakip-koy').value;
             const birlik = document.getElementById('m-rakip-birlik').value;
@@ -859,7 +869,7 @@
             const tur = document.getElementById('m-rakip-tur').value;
             const not = document.getElementById('m-rakip-not').value;
 
-            const { error } = await supabase.from('rakipler').insert([{
+            const { error } = await db.from('rakipler').insert([{
                 oyuncu_adi: nick,
                 koy_adi: koy,
                 x_koordinat: x,
@@ -879,8 +889,9 @@
             }
         }
 
+        // 9. TABLOLARI YÜKLE
         async function verileriYukle() {
-            const { data: ordular } = await supabase.from('ordular').select('*').order('id', { ascending: false });
+            const { data: ordular } = await db.from('ordular').select('*').order('id', { ascending: false });
             const orduGovde = document.getElementById('ordu-tablo-govde');
             const arsivGovde = document.getElementById('arsiv-tablo-govde');
             const kurguSaldiran = document.getElementById('kurgu-saldiran');
@@ -923,7 +934,7 @@
                 arsivGovde.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Arşivde henüz ordu kaydı yok.</td></tr>`;
             }
 
-            const { data: rakipler } = await supabase.from('rakipler').select('*').order('id', { ascending: false });
+            const { data: rakipler } = await db.from('rakipler').select('*').order('id', { ascending: false });
             const rakipGovde = document.getElementById('rakip-tablo-govde');
             const kurguHedef = document.getElementById('kurgu-hedef');
 
@@ -975,7 +986,7 @@
                 return;
             }
 
-            const sX = parseFloat(saldiran[0]), sY = parseFloat(saldiran[1]), ty = parseInt(saldiran[2]), oyuncuAdi = saldiran[3];
+            const sX = parseFloat(saldiran[0]), sY = parseFloat(saldiran[1]), ty = parseInt(saldiran[2], 10), oyuncuAdi = saldiran[3];
             const hX = parseFloat(hedef[0]), hY = parseFloat(hedef[1]), hedefOyuncu = hedef[2], hedefKoy = hedef[3];
 
             const mesafe = Math.sqrt(Math.pow(hX - sX, 2) + Math.pow(hY - sY, 2));
@@ -1000,7 +1011,7 @@
             const varisDate = new Date(varisZamaniStr);
             const cikisDate = new Date(varisDate.getTime() - (toplamSaniye * 1000));
 
-            const { error } = await supabase.from('operasyonlar').insert([{
+            const { error } = await db.from('operasyonlar').insert([{
                 saldiran_oyuncu: oyuncuAdi,
                 saldiran_koordinat: `(${sX}|${sY})`,
                 hedef_oyuncu: `${hedefOyuncu} - ${hedefKoy}`,
@@ -1021,7 +1032,7 @@
         }
 
         async function operasyonlariListele() {
-            const { data: operasyonlar } = await supabase.from('operasyonlar').select('*').order('cikis_saati', { ascending: true });
+            const { data: operasyonlar } = await db.from('operasyonlar').select('*').order('cikis_saati', { ascending: true });
             const opGovde = document.getElementById('operasyon-tablo-govde');
             const opSayisi = document.getElementById('kurgu-sayisi');
 
