@@ -1,10 +1,10 @@
 module.exports = async (req, res) => {
   try {
     const MAP_URL = "https://ts11.x1.europe.travian.com/map.sql";
-    // on_conflict=id ile Supabase'in köyleri eksiksiz içeri alması sağlandı
     const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita?on_conflict=id";
     const SUPABASE_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
 
+    // 1. map.sql dosyasını indir
     const response = await fetch(MAP_URL);
     if (!response.ok) {
       return res.status(500).json({ error: "Travian map.sql indirilemedi: " + response.statusText });
@@ -34,13 +34,13 @@ module.exports = async (req, res) => {
     }
 
     if (kayitlar.length === 0) {
-      return res.status(400).json({ error: "Kayıt ayrıştırılamadı." });
+      return res.status(400).json({ error: "Harita verisi ayrıştırılamadı." });
     }
 
-    // 1000'erli paketlerle veritabanına aktar
-    const batchSize = 1000;
+    // 2. 500'erli paketlerle veritabanına doğrudan yaz
+    const batchSize = 500;
     let basarili = 0;
-    let hataDetay = null;
+    let sonHata = null;
 
     for (let i = 0; i < kayitlar.length; i += batchSize) {
       const batch = kayitlar.slice(i, i + batchSize);
@@ -55,22 +55,22 @@ module.exports = async (req, res) => {
         body: JSON.stringify(batch)
       });
 
-      if (!postRes.ok) {
-        hataDetay = await postRes.text();
-      } else {
+      if (postRes.ok) {
         basarili += batch.length;
+      } else {
+        sonHata = await postRes.text();
       }
     }
 
-    if (hataDetay && basarili === 0) {
-      return res.status(500).json({ error: "Veritabanı hatası: " + hataDetay });
+    if (basarili === 0 && sonHata) {
+      return res.status(500).json({ error: "Veritabanı kayıt hatası: " + sonHata });
     }
 
     return res.status(200).json({
       success: true,
-      message: `${basarili} adet köy Supabase veritabanına başarıyla işlendi.`,
+      message: `${basarili} adet köy veritabanına başarıyla yazıldı.`,
       toplam: kayitlar.length,
-      guncelleme: new Date().toISOString()
+      tarih: new Date().toISOString()
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
