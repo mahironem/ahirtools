@@ -1,7 +1,7 @@
 module.exports = async (req, res) => {
   try {
     const MAP_URL = "https://ts11.x1.europe.travian.com/map.sql";
-    const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita";
+    const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita?on_conflict=id";
     const SUPABASE_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
 
     // 1. Travian sunucusundan map.sql dosyasını indir
@@ -37,38 +37,38 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "Harita verisi ayrıştırılamadı." });
     }
 
-    // 2. 500'erli paketlerle doğrudan Supabase'e yaz
-    const batchSize = 500;
-    let basarili = 0;
-    let sonHata = null;
+    // 2. 1000'erli paketler halinde paralel aktarım
+    const batchSize = 1000;
+    const yuklemeGorevleri = [];
 
     for (let i = 0; i < kayitlar.length; i += batchSize) {
       const batch = kayitlar.slice(i, i + batchSize);
-      const postRes = await fetch(SUPABASE_URL, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates'
-        },
-        body: JSON.stringify(batch)
-      });
-
-      if (postRes.ok) {
-        basarili += batch.length;
-      } else {
-        sonHata = await postRes.text();
-      }
+      yuklemeGorevleri.push(
+        fetch(SUPABASE_URL, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify(batch)
+        }).then(async (r) => {
+          if (!r.ok) {
+            const errText = await r.text();
+            throw new Error(`Supabase Hatası (${r.status}): ${errText}`);
+          }
+          return batch.length;
+        })
+      );
     }
 
-    if (basarili === 0 && sonHata) {
-      return res.status(500).json({ error: "Supabase kayıt hatası: " + sonHata });
-    }
+    const sonuclar = await Promise.all(yuklemeGorevleri);
+    const toplamAktarilan = sonuclar.reduce((a, b) => a + b, 0);
 
     return res.status(200).json({
       success: true,
-      message: `${basarili} adet köy veritabanına başarıyla aktarıldı.`,
+      message: `${toplamAktarilan} adet köy Supabase veritabanına başarıyla yazıldı.`,
       toplam_koy: kayitlar.length,
       guncelleme: new Date().toISOString()
     });
