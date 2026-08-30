@@ -1,10 +1,17 @@
 module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     const MAP_URL = "https://ts11.x1.europe.travian.com/map.sql";
     const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita?on_conflict=id";
     const SUPABASE_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
 
-    // 1. Travian sunucusundan map.sql dosyasını indir
+    // 1. Travian map.sql dosyasını indir
     const response = await fetch(MAP_URL);
     if (!response.ok) {
       return res.status(500).json({ error: "Travian map.sql indirilemedi: " + response.statusText });
@@ -17,19 +24,19 @@ module.exports = async (req, res) => {
     const kayitlar = [];
     let match;
     while ((match = regex.exec(sqlText)) !== null) {
-      const tid = parseInt(match[4]);
+      const tid = parseInt(match[4], 10);
       kayitlar.push({
-        id: parseInt(match[1]),
-        x: parseInt(match[2]),
-        y: parseInt(match[3]),
+        id: parseInt(match[1], 10),
+        x: parseInt(match[2], 10),
+        y: parseInt(match[3], 10),
         irk_id: tid,
         irk: IRK_KODLARI[tid] || "Bilinmiyor",
         koy_adi: match[6].replace(/\\'/g, "'"),
-        oyuncu_id: parseInt(match[7]),
+        oyuncu_id: parseInt(match[7], 10),
         oyuncu_adi: match[8].replace(/\\'/g, "'"),
-        birlik_id: parseInt(match[9]),
+        birlik_id: parseInt(match[9], 10),
         birlik_adi: match[10].replace(/\\'/g, "'"),
-        nufus: parseInt(match[11])
+        nufus: parseInt(match[11], 10)
       });
     }
 
@@ -37,40 +44,35 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "Harita verisi ayrıştırılamadı." });
     }
 
-    // 2. 1000'erli paketler halinde paralel aktarım
-    const batchSize = 1000;
-    const yuklemeGorevleri = [];
+    // 2. 500'erli paketler halinde Supabase'e garantili yaz
+    const batchSize = 500;
+    let aktarilan = 0;
 
     for (let i = 0; i < kayitlar.length; i += batchSize) {
       const batch = kayitlar.slice(i, i + batchSize);
-      yuklemeGorevleri.push(
-        fetch(SUPABASE_URL, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates'
-          },
-          body: JSON.stringify(batch)
-        }).then(async (r) => {
-          if (!r.ok) {
-            const errText = await r.text();
-            throw new Error(`Supabase Hatası (${r.status}): ${errText}`);
-          }
-          return batch.length;
-        })
-      );
-    }
+      const postRes = await fetch(SUPABASE_URL, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify(batch)
+      });
 
-    const sonuclar = await Promise.all(yuklemeGorevleri);
-    const toplamAktarilan = sonuclar.reduce((a, b) => a + b, 0);
+      if (!postRes.ok) {
+        const errDetail = await postRes.text();
+        return res.status(500).json({ error: "Supabase kayıt hatası: " + errDetail });
+      }
+      aktarilan += batch.length;
+    }
 
     return res.status(200).json({
       success: true,
-      message: `${toplamAktarilan} adet köy Supabase veritabanına başarıyla yazıldı.`,
+      message: `${aktarilan} adet köy harita tablosuna başarıyla kaydedildi.`,
       toplam_koy: kayitlar.length,
-      guncelleme: new Date().toISOString()
+      tarih: new Date().toISOString()
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
