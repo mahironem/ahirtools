@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AhirTools - Travian Operasyon Portalı</title>
+    <title>AhirTools - Travian Operasyon & Veri Portalı</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
@@ -47,13 +47,13 @@
                     <i data-lucide="shield" class="w-8 h-8"></i>
                 </div>
                 <h1 class="text-2xl font-black tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></h1>
-                <p class="text-xs text-slate-400">Birlik İçi Özel Giriş</p>
+                <p class="text-xs text-slate-400">Birlik Özel Giriş Paneli</p>
             </div>
 
             <form onsubmit="ozelGirisYap(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Kullanıcı Adı</label>
-                    <input type="text" id="giris-nick" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 outline-none text-white" placeholder="Kullanıcı adınızı girin">
+                    <input type="text" id="giris-nick" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 outline-none text-white" placeholder="Kullanıcı adı">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Şifre</label>
@@ -77,6 +77,7 @@
                         <i data-lucide="swords" class="w-5 h-5"></i>
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
+                    <span class="hidden sm:inline-block text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">ts11.x1 Server</span>
                 </div>
 
                 <!-- Masaüstü Navigasyon -->
@@ -93,6 +94,9 @@
                     <button onclick="tabDegistir('operasyon')" id="tab-btn-operasyon" class="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-2">
                         <i data-lucide="flame" class="w-4 h-4"></i> Operasyon Kurgu
                     </button>
+                    <button onclick="tabDegistir('veriyonetimi')" id="tab-btn-veriyonetimi" class="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-2">
+                        <i data-lucide="database" class="w-4 h-4"></i> map.sql Veri
+                    </button>
                 </nav>
 
                 <!-- Kullanıcı & Çıkış -->
@@ -105,23 +109,26 @@
             </div>
         </header>
 
-        <!-- Mobil Navigasyon Barı -->
+        <!-- Mobil Alt Menü Barı -->
         <div class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 z-40 flex justify-around p-2">
-            <button onclick="tabDegistir('ordular')" id="mob-btn-ordular" class="flex flex-col items-center py-1 text-emerald-400 text-xs">
+            <button onclick="tabDegistir('ordular')" id="mob-btn-ordular" class="flex flex-col items-center py-1 text-emerald-400 text-xs font-medium">
                 <i data-lucide="shield" class="w-5 h-5 mb-1"></i> Ordular
             </button>
-            <button onclick="tabDegistir('arsiv')" id="mob-btn-arsiv" class="flex flex-col items-center py-1 text-slate-400 text-xs">
+            <button onclick="tabDegistir('arsiv')" id="mob-btn-arsiv" class="flex flex-col items-center py-1 text-slate-400 text-xs font-medium">
                 <i data-lucide="archive" class="w-5 h-5 mb-1"></i> Arşiv
             </button>
-            <button onclick="tabDegistir('rakipler')" id="mob-btn-rakipler" class="flex flex-col items-center py-1 text-slate-400 text-xs">
+            <button onclick="tabDegistir('rakipler')" id="mob-btn-rakipler" class="flex flex-col items-center py-1 text-slate-400 text-xs font-medium">
                 <i data-lucide="crosshair" class="w-5 h-5 mb-1"></i> Rakipler
             </button>
-            <button onclick="tabDegistir('operasyon')" id="mob-btn-operasyon" class="flex flex-col items-center py-1 text-slate-400 text-xs">
+            <button onclick="tabDegistir('operasyon')" id="mob-btn-operasyon" class="flex flex-col items-center py-1 text-slate-400 text-xs font-medium">
                 <i data-lucide="flame" class="w-5 h-5 mb-1"></i> Kurgu
+            </button>
+            <button onclick="tabDegistir('veriyonetimi')" id="mob-btn-veriyonetimi" class="flex flex-col items-center py-1 text-slate-400 text-xs font-medium">
+                <i data-lucide="database" class="w-5 h-5 mb-1"></i> Veri
             </button>
         </div>
 
-        <!-- Ana İçerik -->
+        <!-- Ana Gövde -->
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
             
             <!-- 1. ORDULAR SEKMESİ -->
@@ -129,9 +136,9 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h1 class="text-xl sm:text-2xl font-bold text-white">Birlik Ordu Yönetimi</h1>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Kayıtlı aktif köy ve ordular.</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Kayıtlı ordu ve köylerin güncel listesi.</p>
                     </div>
-                    <button onclick="modalAc('modal-ordu')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+                    <button onclick="modalOrduAc()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
                         <i data-lucide="plus-circle" class="w-5 h-5"></i> Yeni Ordu Ekle
                     </button>
                 </div>
@@ -143,14 +150,14 @@
                                 <tr>
                                     <th class="p-3 sm:p-4">Koordinat</th>
                                     <th class="p-3 sm:p-4">Oyuncu</th>
-                                    <th class="p-3 sm:p-4">Köy</th>
+                                    <th class="p-3 sm:p-4">Köy Adı</th>
                                     <th class="p-3 sm:p-4">Irk</th>
-                                    <th class="p-3 sm:p-4">TY</th>
+                                    <th class="p-3 sm:p-4">Turnuva Yeri</th>
                                     <th class="p-3 sm:p-4">Güç Puanı</th>
                                     <th class="p-3 sm:p-4 text-center">Durum</th>
                                 </tr>
                             </thead>
-                            <tbody id="ordu-tablo-govde" class="divide-y divide-slate-800/60">
+                            <tbody id="ordu-tablo-govde" class="divide-y divide-slate-800/60 font-medium">
                                 <tr><td colspan="7" class="p-8 text-center text-slate-500">Ordular yükleniyor...</td></tr>
                             </tbody>
                         </table>
@@ -162,7 +169,7 @@
             <section id="tab-arsiv" class="hidden space-y-6">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-white">Ordu Arşivi & Gelişim Takibi</h1>
-                    <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Orduların güncellenme ve gelişim geçmişi.</p>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Asker basım ve köy gelişim geçmişi.</p>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="overflow-x-auto">
@@ -171,9 +178,9 @@
                                 <tr>
                                     <th class="p-3 sm:p-4">Kayıt Tarihi</th>
                                     <th class="p-3 sm:p-4">Oyuncu</th>
-                                    <th class="p-3 sm:p-4">Köy (Koord)</th>
+                                    <th class="p-3 sm:p-4">Köy (Koordinat)</th>
                                     <th class="p-3 sm:p-4">Güç Puanı</th>
-                                    <th class="p-3 sm:p-4">Asker Dökümü (P/S/K/M/R/Sav)</th>
+                                    <th class="p-3 sm:p-4">Detaylı Asker Dökümü</th>
                                 </tr>
                             </thead>
                             <tbody id="arsiv-tablo-govde" class="divide-y divide-slate-800/60 font-mono text-xs">
@@ -189,9 +196,9 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h1 class="text-xl sm:text-2xl font-bold text-white">Hedef & İstihbarat</h1>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Operasyon hedefleri.</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Operasyon hedefleri ve köy tipleri.</p>
                     </div>
-                    <button onclick="modalAc('modal-rakip')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                    <button onclick="modalRakipAc()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
                         <i data-lucide="crosshair" class="w-5 h-5"></i> Yeni Hedef Ekle
                     </button>
                 </div>
@@ -253,13 +260,13 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-1">En Yavaş Asker</label>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">En Yavaş Asker Hızı</label>
                                 <select id="kurgu-hiz" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-white">
                                     <option value="3">3 (Mancınık)</option>
-                                    <option value="4">4 (Koçbaşı/Reis)</option>
+                                    <option value="4">4 (Koçbaşı / Reis)</option>
                                     <option value="5">5 (Pretoryan)</option>
-                                    <option value="6">6 (Lejyoner/Balta/Kılıç)</option>
-                                    <option value="7">7 (Emperyan/Tokmak)</option>
+                                    <option value="6">6 (Lejyoner / Balta / Kılıç)</option>
+                                    <option value="7">7 (Emperyan / Tokmak)</option>
                                     <option value="9">9 (Toyton)</option>
                                     <option value="19">19 (Toytat Şimşeği)</option>
                                 </select>
@@ -322,10 +329,75 @@
                     </div>
                 </div>
             </section>
+
+            <!-- 5. VERİ YÖNETİMİ (map.sql) SEKMESİ -->
+            <section id="tab-veriyonetimi" class="hidden space-y-6">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-white">Travian Harita Verisi (map.sql)</h1>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Server harita verisini güncelleyin, koordinat sorgularını otomatikleştirin.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Otomatik Çekme -->
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl">
+                                <i data-lucide="cloud-download" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-base font-bold text-white">Sunucudan Otomatik Çek</h2>
+                                <p class="text-xs text-slate-400">ts11.x1.europe.travian.com/map.sql</p>
+                            </div>
+                        </div>
+
+                        <input type="text" id="map-url" value="https://ts11.x1.europe.travian.com/map.sql" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-white font-mono outline-none">
+
+                        <button onclick="haritaVerisiniInternettenCek()" id="btn-fetch-map" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Haritayı Şimdi Güncelle
+                        </button>
+                    </div>
+
+                    <!-- Dosyadan Manuel Yükleme -->
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                                <i data-lucide="file-up" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-base font-bold text-white">Dosyadan Yükle (Alternatif)</h2>
+                                <p class="text-xs text-slate-400">İndirdiğiniz map.sql dosyasını seçin</p>
+                            </div>
+                        </div>
+
+                        <input type="file" id="map-file" accept=".sql,.txt" class="w-full text-xs text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-emerald-400 hover:file:bg-slate-700">
+
+                        <button onclick="haritaVerisiniDosyadanYukle()" id="btn-upload-map" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Dosyayı İçe Aktar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Durum / İlerleme Çubuğu -->
+                <div id="map-progress-container" class="hidden bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span id="map-progress-status" class="text-emerald-400">Veriler işleniyor...</span>
+                        <span id="map-progress-percent" class="text-slate-300">%0</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden">
+                        <div id="map-progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Harita Özeti -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between text-xs">
+                    <span class="text-slate-400">Sistemde Kayıtlı Toplam Köy Sayısı:</span>
+                    <span id="toplam-koy-sayisi" class="font-mono font-bold text-emerald-400 text-sm">0</span>
+                </div>
+            </section>
         </main>
     </div>
 
-    <!-- MODAL: YENİ ORDU EKLE -->
+    <!-- MODAL 1: YENİ ORDU EKLE (DİNAMİK ASKER VE KOORDİNAT OTO-DOLDURMA) -->
     <div id="modal-ordu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -335,78 +407,70 @@
                 <button onclick="modalKapat('modal-ordu')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <form onsubmit="orduKaydet(event)" class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
-                        <input type="text" id="m-ordu-koy" required placeholder="01 Merkez" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Irk</label>
-                        <select id="m-ordu-irk" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white">
-                            <option value="Roma">Roma</option>
-                            <option value="Cermen">Cermen</option>
-                            <option value="Galya">Galya</option>
-                            <option value="Hun">Hun</option>
-                            <option value="Mısır">Mısır</option>
-                        </select>
-                    </div>
+            <!-- Koordinat ve Otomatik Bilgi -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
+                <div>
+                    <label class="block text-[11px] font-semibold text-emerald-400 mb-1">X Koordinatı</label>
+                    <input type="number" id="m-ordu-x" oninput="koordSorgula('ordu')" required placeholder="50" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
                 </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">X Koordinat</label>
-                        <input type="number" id="m-ordu-x" required placeholder="50" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Y Koordinat</label>
-                        <input type="number" id="m-ordu-y" required placeholder="-20" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Turnuva Yeri (TY)</label>
-                        <input type="number" id="m-ordu-ty" min="0" max="20" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-amber-400 font-bold outline-none">
-                    </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-emerald-400 mb-1">Y Koordinatı</label>
+                    <input type="number" id="m-ordu-y" oninput="koordSorgula('ordu')" required placeholder="-20" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
                 </div>
-
-                <!-- Asker Sayıları -->
-                <div class="border-t border-slate-800 pt-3">
-                    <span class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Mevcut Asker Sayıları</span>
-                    <div class="grid grid-cols-3 gap-2.5">
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Piyade (Saldırı)</label>
-                            <input type="number" id="m-asker-piyade" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Süvari (Saldırı)</label>
-                            <input type="number" id="m-asker-suvari" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Koçbaşı</label>
-                            <input type="number" id="m-asker-kocbasi" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Mancınık</label>
-                            <input type="number" id="m-asker-mancinik" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Reis / Senatör</label>
-                            <input type="number" id="m-asker-reis" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Savunma Askeri</label>
-                            <input type="number" id="m-asker-savunma" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white">
-                        </div>
-                    </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-amber-400 mb-1">Turnuva Yeri (TY)</label>
+                    <input type="number" id="m-ordu-ty" min="0" max="20" value="0" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-amber-400 font-bold outline-none">
                 </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Irk</label>
+                    <select id="m-ordu-irk" onchange="askerAlanlariniGuncelle()" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-xs text-white">
+                        <option value="Roma">Roma</option>
+                        <option value="Cermen">Cermen</option>
+                        <option value="Galya">Galya</option>
+                        <option value="Hun">Hun</option>
+                        <option value="Mısır">Mısır</option>
+                    </select>
+                </div>
+            </div>
 
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3.5 rounded-xl transition shadow-lg shadow-emerald-500/20">
-                    Orduyu Veritabanına Kaydet
-                </button>
-            </form>
+            <!-- Otomatik Doldurulan Köy & Oyuncu -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
+                    <input type="text" id="m-ordu-koy" required placeholder="01 Merkez" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Oyuncu Adı</label>
+                    <input type="text" id="m-ordu-nick" required placeholder="Oyuncu Adı" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                </div>
+            </div>
+
+            <!-- Toplu Asker Yapıştır Kutusu -->
+            <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <i data-lucide="clipboard-paste" class="w-3.5 h-3.5 text-emerald-400"></i> Toplu Asker Yapıştır (İsteğe Bağlı)
+                    </span>
+                    <button type="button" onclick="topluAskerAyristir()" class="text-[11px] text-emerald-400 hover:underline font-semibold">Ayrıştır & Doldur</button>
+                </div>
+                <input type="text" id="m-ordu-raw" placeholder="Örn: 15000 4500 600 300 3 veya kopyalanan asker metni" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none">
+            </div>
+
+            <!-- Dinamik Asker Giriş Alanları (Irka Göre Değişir) -->
+            <div class="border-t border-slate-800 pt-3">
+                <span id="asker-baslik-etiket" class="block text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">Cermen Asker Kadrosu</span>
+                <div id="asker-input-alani" class="grid grid-cols-3 gap-2.5">
+                    <!-- JS Tarafından Dinamik Üretilir -->
+                </div>
+            </div>
+
+            <button type="button" onclick="orduKaydet()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3.5 rounded-xl transition shadow-lg shadow-emerald-500/20">
+                Orduyu Veritabanına Kaydet
+            </button>
         </div>
     </div>
 
-    <!-- MODAL: YENİ RAKİP EKLE -->
+    <!-- MODAL 2: YENİ RAKİP EKLE (KOORDİNAT OTO-DOLDURMA) -->
     <div id="modal-rakip" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -417,25 +481,26 @@
             </div>
 
             <form onsubmit="rakipKaydet(event)" class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
+                <!-- Koordinat Girişi -->
+                <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Rakip Oyuncu Adı</label>
-                        <input type="text" id="m-rakip-nick" required placeholder="Düşman Nick" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500">
+                        <label class="block text-[11px] font-semibold text-blue-400 mb-1">X Koordinatı</label>
+                        <input type="number" id="m-rakip-x" oninput="koordSorgula('rakip')" required placeholder="10" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
-                        <input type="text" id="m-rakip-koy" required placeholder="01 Merkez" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        <label class="block text-[11px] font-semibold text-blue-400 mb-1">Y Koordinatı</label>
+                        <input type="number" id="m-rakip-y" oninput="koordSorgula('rakip')" required placeholder="-45" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">X Koordinat</label>
-                        <input type="number" id="m-rakip-x" required placeholder="10" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Rakip Oyuncu</label>
+                        <input type="text" id="m-rakip-nick" required placeholder="Düşman Nick" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Y Koordinat</label>
-                        <input type="number" id="m-rakip-y" required placeholder="-45" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
+                        <input type="text" id="m-rakip-koy" required placeholder="01 Merkez" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
                     </div>
                 </div>
 
@@ -481,10 +546,8 @@
     <script>
         lucide.createIcons();
 
-        // 1. ÖZEL GİRİŞ SİSTEMİ
-        const OZEL_HESAPLAR = {
-            "mahir": "ahirbenem"
-        };
+        // 1. ÖZEL GİRİŞ
+        const OZEL_HESAPLAR = { "mahir": "ahirbenem" };
 
         function ozelGirisYap(e) {
             e.preventDefault();
@@ -504,6 +567,7 @@
             document.getElementById('ana-panel').classList.remove('hidden');
             document.getElementById('kullanici-etiket').innerText = nick;
             verileriYukle();
+            haritaIstatistikYukle();
             lucide.createIcons();
         }
 
@@ -514,47 +578,167 @@
         }
 
         function oturumKontrol() {
-            const kayitliKullanici = localStorage.getItem('ahirtools_user');
-            if (kayitliKullanici) {
-                oturumAc(kayitliKullanici);
-            }
+            const kayitli = localStorage.getItem('ahirtools_user');
+            if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. MODAL YÖNETİMİ
+        // 2. MODAL VE TAB
         function modalAc(id) { document.getElementById(id).classList.remove('hidden'); }
         function modalKapat(id) { document.getElementById(id).classList.add('hidden'); }
+        function modalOrduAc() { askerAlanlariniGuncelle(); modalAc('modal-ordu'); }
+        function modalRakipAc() { modalAc('modal-rakip'); }
 
-        // 3. SEKME GEÇİŞLERİ
         function tabDegistir(tabAdi) {
-            ['ordular', 'arsiv', 'rakipler', 'operasyon'].forEach(t => {
+            ['ordular', 'arsiv', 'rakipler', 'operasyon', 'veriyonetimi'].forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
                 document.getElementById(`tab-btn-${t}`).className = "px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-2";
-                document.getElementById(`mob-btn-${t}`).className = "flex flex-col items-center py-1 text-slate-400 text-xs";
+                const mob = document.getElementById(`mob-btn-${t}`);
+                if (mob) mob.className = "flex flex-col items-center py-1 text-slate-400 text-xs font-medium";
             });
             document.getElementById(`tab-${tabAdi}`).classList.remove('hidden');
             document.getElementById(`tab-btn-${tabAdi}`).className = "px-3.5 py-2 rounded-xl text-sm font-medium transition bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-2";
-            document.getElementById(`mob-btn-${tabAdi}`).className = "flex flex-col items-center py-1 text-emerald-400 text-xs";
+            const mobAktif = document.getElementById(`mob-btn-${tabAdi}`);
+            if (mobAktif) mobAktif.className = "flex flex-col items-center py-1 text-emerald-400 text-xs font-medium";
             lucide.createIcons();
         }
 
-        // 4. VERİ TABANI KAYITLARI
-        async function orduKaydet(e) {
-            e.preventDefault();
-            const koy = document.getElementById('m-ordu-koy').value;
+        // 3. IRKA GÖRE ASKER ALANLARI YAPISI
+        const IRK_ASKERLERI = {
+            "Cermen": [
+                { id: "piyade_saldiri", ad: "Tokmak Sallayan", carpan: 40 },
+                { id: "piyade_balta", ad: "Balta Sallayan", carpan: 60 },
+                { id: "suvari", ad: "Toyton", carpan: 150 },
+                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
+                { id: "mancinik", ad: "Mancınık", carpan: 70 },
+                { id: "reis", ad: "Reis", carpan: 500 },
+                { id: "savunma", ad: "Mızrakçı / Savunma", carpan: 35 }
+            ],
+            "Roma": [
+                { id: "piyade_saldiri", ad: "Emperyan", carpan: 70 },
+                { id: "piyade_balta", ad: "Lejyoner", carpan: 40 },
+                { id: "suvari", ad: "Roma İmparatoru / Sezar", carpan: 140 },
+                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
+                { id: "mancinik", ad: "Ateş Mancınığı", carpan: 70 },
+                { id: "reis", ad: "Senatör", carpan: 500 },
+                { id: "savunma", ad: "Pretoryan", carpan: 65 }
+            ],
+            "Galya": [
+                { id: "piyade_saldiri", ad: "Kılıçlı", carpan: 65 },
+                { id: "piyade_balta", ad: "Falanks", carpan: 15 },
+                { id: "suvari", ad: "Toytat / Heduan", carpan: 120 },
+                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
+                { id: "mancinik", ad: "Trebüşe", carpan: 70 },
+                { id: "reis", ad: "Kabile Reisi", carpan: 500 },
+                { id: "savunma", ad: "Druyit / Savunma", carpan: 45 }
+            ],
+            "Hun": [
+                { id: "piyade_saldiri", ad: "Paralı Asker", carpan: 35 },
+                { id: "piyade_balta", ad: "Yaylım", carpan: 50 },
+                { id: "suvari", ad: "Bozkır / Marauder", carpan: 115 },
+                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
+                { id: "mancinik", ad: "Mancınık", carpan: 70 },
+                { id: "reis", ad: "Logades", carpan: 500 },
+                { id: "savunma", ad: "Bozkır Savunma", carpan: 40 }
+            ],
+            "Mısır": [
+                { id: "piyade_saldiri", ad: "Khopesh Askeri", carpan: 65 },
+                { id: "piyade_balta", ad: "Kül Kalkanlı", carpan: 30 },
+                { id: "suvari", ad: "Resheph Süvarisi", carpan: 110 },
+                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
+                { id: "mancinik", ad: "Mancınık", carpan: 70 },
+                { id: "reis", ad: "Nomarch", carpan: 500 },
+                { id: "savunma", ad: "Köle Asker / Anhur", carpan: 30 }
+            ]
+        };
+
+        function askerAlanlariniGuncelle() {
             const irk = document.getElementById('m-ordu-irk').value;
+            const baslik = document.getElementById('asker-baslik-etiket');
+            const govde = document.getElementById('asker-input-alani');
+
+            baslik.innerText = `${irk} Asker Kadrosu`;
+            const liste = IRK_ASKERLERI[irk] || IRK_ASKERLERI["Cermen"];
+
+            govde.innerHTML = liste.map(a => `
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-0.5 truncate" title="${a.ad}">${a.ad}</label>
+                    <input type="number" id="asker-${a.id}" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono focus:border-emerald-500 outline-none">
+                </div>
+            `).join('');
+        }
+
+        // 4. KOORDİNAT OTO-SORGULAMA (map.sql Tablosundan)
+        async function koordSorgula(tur) {
+            const x = parseInt(document.getElementById(`m-${tur}-x`).value);
+            const y = parseInt(document.getElementById(`m-${tur}-y`).value);
+
+            if (isNaN(x) || isNaN(y)) return;
+
+            const { data, error } = await supabase.from('harita').select('*').eq('x', x).eq('y', y).limit(1).single();
+
+            if (data) {
+                if (tur === 'ordu') {
+                    document.getElementById('m-ordu-koy').value = data.koy_adi || '';
+                    document.getElementById('m-ordu-nick').value = data.oyuncu_adi || '';
+                    if (data.irk) {
+                        document.getElementById('m-ordu-irk').value = data.irk;
+                        askerAlanlariniGuncelle();
+                    }
+                } else {
+                    document.getElementById('m-rakip-koy').value = data.koy_adi || '';
+                    document.getElementById('m-rakip-nick').value = data.oyuncu_adi || '';
+                    document.getElementById('m-rakip-birlik').value = data.birlik_adi || '';
+                    if (data.irk) document.getElementById('m-rakip-irk').value = data.irk;
+                }
+            }
+        }
+
+        // 5. TOPLU ASKER AYRIŞTIRICI
+        function topluAskerAyristir() {
+            const text = document.getElementById('m-ordu-raw').value.trim();
+            if (!text) return;
+
+            // Metin içerisindeki sayıları bul
+            const sayilar = text.match(/\d+/g);
+            if (!sayilar || sayilar.length === 0) {
+                alert("Metin içinde geçerli asker sayısı bulunamadı!");
+                return;
+            }
+
+            const irk = document.getElementById('m-ordu-irk').value;
+            const liste = IRK_ASKERLERI[irk] || IRK_ASKERLERI["Cermen"];
+
+            liste.forEach((a, i) => {
+                const el = document.getElementById(`asker-${a.id}`);
+                if (el && sayilar[i] !== undefined) {
+                    el.value = parseInt(sayilar[i]);
+                }
+            });
+        }
+
+        // 6. VERİ KAYITLARI
+        async function orduKaydet() {
             const x = parseInt(document.getElementById('m-ordu-x').value);
             const y = parseInt(document.getElementById('m-ordu-y').value);
-            const ty = parseInt(document.getElementById('m-ordu-ty').value);
+            const koy = document.getElementById('m-ordu-koy').value;
+            const nick = document.getElementById('m-ordu-nick').value;
+            const irk = document.getElementById('m-ordu-irk').value;
+            const ty = parseInt(document.getElementById('m-ordu-ty').value) || 0;
 
-            const p = parseInt(document.getElementById('m-asker-piyade').value) || 0;
-            const s = parseInt(document.getElementById('m-asker-suvari').value) || 0;
-            const k = parseInt(document.getElementById('m-asker-kocbasi').value) || 0;
-            const m = parseInt(document.getElementById('m-asker-mancinik').value) || 0;
-            const r = parseInt(document.getElementById('m-asker-reis').value) || 0;
-            const d = parseInt(document.getElementById('m-asker-savunma').value) || 0;
+            if (isNaN(x) || isNaN(y) || !koy || !nick) {
+                alert("Lütfen koordinat, köy adı ve oyuncu adını eksiksiz doldurun!");
+                return;
+            }
 
-            const guc = (p * 50) + (s * 120) + (k * 60) + (m * 70) + (r * 500) + (d * 40);
-            const nick = localStorage.getItem('ahirtools_user') || 'mahir';
+            const liste = IRK_ASKERLERI[irk] || IRK_ASKERLERI["Cermen"];
+            let toplamGuc = 0;
+            let askerDökümü = {};
+
+            liste.forEach(a => {
+                const adet = parseInt(document.getElementById(`asker-${a.id}`)?.value) || 0;
+                askerDökümü[a.ad] = adet;
+                toplamGuc += (adet * a.carpan);
+            });
 
             const { error } = await supabase.from('ordular').insert([{
                 kullanici_adi: nick,
@@ -563,25 +747,25 @@
                 y_koordinat: y,
                 turnuva_yeri: ty,
                 irk: irk,
-                guc_puani: guc,
-                asker_verileri: { piyade: p, suvari: s, kocbasi: k, mancinik: m, reis: r, savunma: d }
+                guc_puani: toplamGuc,
+                asker_verileri: askerDökümü
             }]);
 
             if (error) {
-                alert("Kayıt Hatası: " + error.message);
+                alert("Hata: " + error.message);
             } else {
                 modalKapat('modal-ordu');
                 verileriYukle();
-                alert("Ordu ve Köy başarıyla sisteme işlendi!");
+                alert("Ordu başarıyla kaydedildi!");
             }
         }
 
         async function rakipKaydet(e) {
             e.preventDefault();
-            const nick = document.getElementById('m-rakip-nick').value;
-            const koy = document.getElementById('m-rakip-koy').value;
             const x = parseInt(document.getElementById('m-rakip-x').value);
             const y = parseInt(document.getElementById('m-rakip-y').value);
+            const nick = document.getElementById('m-rakip-nick').value;
+            const koy = document.getElementById('m-rakip-koy').value;
             const birlik = document.getElementById('m-rakip-birlik').value;
             const irk = document.getElementById('m-rakip-irk').value;
             const tur = document.getElementById('m-rakip-tur').value;
@@ -599,7 +783,7 @@
             }]);
 
             if (error) {
-                alert("Kayıt Hatası: " + error.message);
+                alert("Hata: " + error.message);
             } else {
                 modalKapat('modal-rakip');
                 verileriYukle();
@@ -607,9 +791,108 @@
             }
         }
 
-        // 5. VERİLERİ YÜKLEME VE OPERASYON MOTORU
+        // 7. HARİTA (map.sql) VERİ İŞLEME MOTORU
+        const IRK_ID_MAP = { 1: "Roma", 2: "Cermen", 3: "Galya", 4: "Doğa", 5: "Natar", 6: "Hun", 7: "Mısır" };
+
+        function sqlMetniniAyristir(sqlText) {
+            const regex = /\((\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*'([^']*)',\s*(\d+),\s*'([^']*)',\s*(\d+),\s*'([^']*)',\s*(\d+)\)/g;
+            const satirlar = [];
+            let match;
+            while ((match = regex.exec(sqlText)) !== null) {
+                const tid = parseInt(match[4]);
+                satirlar.push({
+                    id: parseInt(match[1]),
+                    x: parseInt(match[2]),
+                    y: parseInt(match[3]),
+                    irk_id: tid,
+                    irk: IRK_ID_MAP[tid] || "Bilinmiyor",
+                    koy_adi: match[6],
+                    oyuncu_id: parseInt(match[7]),
+                    oyuncu_adi: match[8],
+                    birlik_id: parseInt(match[9]),
+                    birlik_adi: match[10],
+                    nufus: parseInt(match[11])
+                });
+            }
+            return satirlar;
+        }
+
+        async function haritaKayitlariniYukle(satirlar) {
+            if (satirlar.length === 0) {
+                alert("Geçerli map.sql verisi bulunamadı!");
+                return;
+            }
+
+            const pContainer = document.getElementById('map-progress-container');
+            const pBar = document.getElementById('map-progress-bar');
+            const pPercent = document.getElementById('map-progress-percent');
+            const pStatus = document.getElementById('map-progress-status');
+
+            pContainer.classList.remove('hidden');
+            pStatus.innerText = `${satirlar.length} adet köy veritabanına aktarılıyor...`;
+
+            const batchSize = 1000;
+            for (let i = 0; i < satirlar.length; i += batchSize) {
+                const batch = satirlar.slice(i, i + batchSize);
+                const { error } = await supabase.from('harita').upsert(batch, { onConflict: 'id' });
+                if (error) {
+                    console.error("Batch yükleme hatası:", error);
+                }
+                const progress = Math.min(100, Math.round(((i + batch.length) / satirlar.length) * 100));
+                pBar.style.width = `${progress}%`;
+                pPercent.innerText = `%${progress}`;
+            }
+
+            pStatus.innerText = "Harita veritabanı başarıyla güncellendi!";
+            haritaIstatistikYukle();
+            alert("map.sql verileri sisteme başarıyla işlendi!");
+        }
+
+        async function haritaVerisiniInternettenCek() {
+            const url = document.getElementById('map-url').value;
+            const btn = document.getElementById('btn-fetch-map');
+            btn.innerText = "Veri İndiriliyor...";
+
+            try {
+                // CORS Proxy üzerinden Travian map.sql çekimi
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                const sqlText = await response.text();
+                const veriler = sqlMetniniAyristir(sqlText);
+                await haritaKayitlariniYukle(veriler);
+            } catch (err) {
+                alert("İnternetten çekme başarısız oldu (CORS engeli). Lütfen dosyayı indirip 'Dosyadan Yükle' kısmını kullanın. Hata: " + err.message);
+            } finally {
+                btn.innerText = "Haritayı Şimdi Güncelle";
+            }
+        }
+
+        function haritaVerisiniDosyadanYukle() {
+            const fileInput = document.getElementById('map-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Lütfen bir map.sql dosyası seçin!");
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const sqlText = e.target.result;
+                const veriler = sqlMetniniAyristir(sqlText);
+                await haritaKayitlariniYukle(veriler);
+            };
+            reader.readAsText(file);
+        }
+
+        async function haritaIstatistikYukle() {
+            const { count, error } = await supabase.from('harita').select('*', { count: 'exact', head: true });
+            if (!error && count !== null) {
+                document.getElementById('toplam-koy-sayisi').innerText = count.toLocaleString('tr-TR');
+            }
+        }
+
+        // 8. TABLOLARI VE OPERASYONLARI YÜKLE
         async function verileriYukle() {
-            // Orduları çek
+            // Ordular
             const { data: ordular } = await supabase.from('ordular').select('*').order('id', { ascending: false });
             const orduGovde = document.getElementById('ordu-tablo-govde');
             const arsivGovde = document.getElementById('arsiv-tablo-govde');
@@ -630,6 +913,7 @@
 
                 arsivGovde.innerHTML = ordular.map(o => {
                     const d = o.asker_verileri || {};
+                    const dokumMetni = Object.entries(d).map(([ad, adet]) => `${ad}: ${adet.toLocaleString()}`).join(' | ');
                     const tarih = new Date(o.son_guncelleme).toLocaleString('tr-TR');
                     return `
                         <tr class="hover:bg-slate-800/40 transition">
@@ -637,7 +921,7 @@
                             <td class="p-3 sm:p-4 text-white font-sans">${o.kullanici_adi}</td>
                             <td class="p-3 sm:p-4 text-emerald-400">${o.koy_adi} (${o.x_koordinat}|${o.y_koordinat})</td>
                             <td class="p-3 sm:p-4 font-bold text-slate-200">${(o.guc_puani || 0).toLocaleString()}</td>
-                            <td class="p-3 sm:p-4 text-slate-300">${d.piyade || 0} / ${d.suvari || 0} / ${d.kocbasi || 0} / ${d.mancinik || 0} / ${d.reis || 0} / ${d.savunma || 0}</td>
+                            <td class="p-3 sm:p-4 text-slate-300">${dokumMetni || '-'}</td>
                         </tr>
                     `;
                 }).join('');
@@ -648,11 +932,11 @@
                     </option>
                 `).join('');
             } else {
-                orduGovde.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">Kayıtlı ordu bulunamadı. "Yeni Ordu Ekle" butonuyla ekleyin.</td></tr>`;
+                orduGovde.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">Kayıtlı ordu bulunamadı.</td></tr>`;
                 arsivGovde.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Arşivde henüz ordu kaydı yok.</td></tr>`;
             }
 
-            // Rakipleri çek
+            // Rakipler
             const { data: rakipler } = await supabase.from('rakipler').select('*').order('id', { ascending: false });
             const rakipGovde = document.getElementById('rakip-tablo-govde');
             const kurguHedef = document.getElementById('kurgu-hedef');
@@ -688,7 +972,7 @@
             const hedefValue = document.getElementById('kurgu-hedef').value;
 
             if (!saldiranValue || !hedefValue) {
-                alert("Lütfen önce veritabanına Ordu ve Rakip ekleyin!");
+                alert("Lütfen önce veritabanına Ordu ve Hedef ekleyin!");
                 return;
             }
 
@@ -743,7 +1027,7 @@
             }]);
 
             if (error) {
-                alert("Kurgu Eklenemedi: " + error.message);
+                alert("Hata: " + error.message);
             } else {
                 operasyonlariListele();
                 alert("Operasyon kurgusu başarıyla kaydedildi!");
