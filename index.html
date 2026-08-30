@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AhirTools - Travian Birlik Portalı</title>
+    <title>AhirTools - Travian Operasyon Portalı</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
@@ -78,8 +78,8 @@
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
                     
-                    <!-- Canlı Harita Durum Butonu -->
-                    <button onclick="manuelSenkronizeEt()" id="btn-sync" title="Haritayı güncellemek için tıklayın" class="hidden sm:flex items-center gap-2 bg-slate-950 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] transition">
+                    <!-- Canlı Harita Senkronizasyon Butonu -->
+                    <button onclick="manuelSenkronizeEt()" id="btn-sync-status" title="Harita verisini güncellemek için tıklayın" class="hidden sm:flex items-center gap-2 bg-slate-950 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] transition">
                         <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         <span id="harita-canli-durum" class="text-slate-300 font-mono">Harita Kontrol Ediliyor...</span>
                     </button>
@@ -336,7 +336,7 @@
         </main>
     </div>
 
-    <!-- MODAL 1: TEKİL ORDU EKLE (KOORDİNATLA OTO-DOLAR) -->
+    <!-- MODAL 1: TEKİL ORDU EKLE -->
     <div id="modal-ordu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -421,7 +421,7 @@
                 </span>
                 <div class="max-h-48 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
                     <table class="w-full text-left text-[11px] text-slate-300">
-                        <thead class="bg-slate-950 sticky top-0 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px]">
+                        <thead class="bg-slate-900 sticky top-0 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px]">
                             <tr>
                                 <th class="p-2">Oyuncu</th>
                                 <th class="p-2">Köy (Koord)</th>
@@ -441,7 +441,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: YENİ RAKİP EKLE (KOORDİNATLA OTO-DOLAR) -->
+    <!-- MODAL 3: YENİ RAKİP EKLE -->
     <div id="modal-rakip" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -516,7 +516,6 @@
     <script>
         lucide.createIcons();
 
-        // 1. GİRİŞ
         const OZEL_HESAPLAR = { "mahir": "ahirbenem" };
 
         function ozelGirisYap(e) {
@@ -552,7 +551,7 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. OTOMATİK HARİTA DURUMU
+        // Harita Durumu ve Otomatik / Manuel Senkronizasyon
         async function haritaDurumKontrolEt() {
             const durumEl = document.getElementById('harita-canli-durum');
             const dotEl = document.getElementById('sync-dot');
@@ -562,11 +561,11 @@
                     durumEl.innerText = `Harita: ${count.toLocaleString('tr-TR')} Köy Güncel`;
                     dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
                 } else {
-                    durumEl.innerText = "Harita Boş (Senkronize Et)";
+                    durumEl.innerText = "Harita Boş (Güncellemek İçin Tıkla)";
                     dotEl.className = "w-2 h-2 rounded-full bg-rose-500 animate-pulse";
                 }
             } catch (e) {
-                durumEl.innerText = "ts11 Harita Bağlantısı";
+                durumEl.innerText = "Harita Bağlantısı Hazır";
             }
         }
 
@@ -592,7 +591,6 @@
             }
         }
 
-        // 3. MODAL & SEKME YÖNETİMİ
         function modalAc(id) { document.getElementById(id).classList.remove('hidden'); }
         function modalKapat(id) { document.getElementById(id).classList.add('hidden'); }
         function modalOrduAc() { askerAlanlariniGuncelle(); modalAc('modal-ordu'); }
@@ -613,7 +611,6 @@
             lucide.createIcons();
         }
 
-        // 4. IRKA GÖRE ASKERLER
         const IRK_ASKERLERI = {
             "Cermen": [
                 { id: "piyade_saldiri", ad: "Tokmak Sallayan", carpan: 40 },
@@ -678,7 +675,7 @@
             `).join('');
         }
 
-        // 5. KOORDİNAT OTO-DOLDURMA MOTORU
+        // Koordinat Sorgusu
         async function koordSorgula(tur) {
             const xGirdi = document.getElementById(`m-${tur}-x`).value.trim();
             const yGirdi = document.getElementById(`m-${tur}-y`).value.trim();
@@ -716,7 +713,6 @@
             }
         }
 
-        // 6. TEKİL ORDU KAYDET
         async function orduKaydet() {
             const x = parseInt(document.getElementById('m-ordu-x').value);
             const y = parseInt(document.getElementById('m-ordu-y').value);
@@ -760,7 +756,6 @@
             }
         }
 
-        // 7. TOPLU ORDU EXCEL AYRIŞTIRICI
         let topluOrdularListesi = [];
 
         function topluOrduOnizle() {
@@ -853,7 +848,6 @@
             lucide.createIcons();
         }
 
-        // 8. RAKİP HEDEF KAYDET
         async function rakipKaydet(e) {
             e.preventDefault();
             const x = parseInt(document.getElementById('m-rakip-x').value);
@@ -885,7 +879,6 @@
             }
         }
 
-        // 9. TABLOLARI YÜKLE
         async function verileriYukle() {
             const { data: ordular } = await supabase.from('ordular').select('*').order('id', { ascending: false });
             const orduGovde = document.getElementById('ordu-tablo-govde');
