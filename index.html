@@ -32,7 +32,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
 
-    <!-- Supabase Veritabanı İstemcisi -->
+    <!-- Supabase Bağlantısı -->
     <script>
         const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
@@ -77,12 +77,7 @@
                         <i data-lucide="swords" class="w-5 h-5"></i>
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
-                    
-                    <!-- Canlı Harita Durum Butonu -->
-                    <button onclick="manuelSenkronizeEt()" id="btn-sync-status" title="Haritayı güncellemek için tıklayın" class="hidden sm:flex items-center gap-2 bg-slate-950 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] transition">
-                        <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span id="harita-canli-durum" class="text-slate-300 font-mono">Harita Kontrol Ediliyor...</span>
-                    </button>
+                    <span class="hidden sm:inline-block text-[11px] bg-slate-950 text-emerald-400 border border-slate-800 px-2.5 py-1 rounded-lg font-mono">ts11 Canlı Harita Aktif</span>
                 </div>
 
                 <!-- Masaüstü Navigasyon -->
@@ -513,7 +508,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT ÇEKİRDEĞİ -->
+    <!-- JAVASCRIPT MOTORU -->
     <script>
         lucide.createIcons();
 
@@ -538,7 +533,6 @@
             document.getElementById('ana-panel').classList.remove('hidden');
             document.getElementById('kullanici-etiket').innerText = nick;
             verileriYukle();
-            haritaDurumKontrolEt();
             lucide.createIcons();
         }
 
@@ -553,47 +547,6 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. HARİTA DURUMU & TEK TIKLA SENKRONİZE ET
-        async function haritaDurumKontrolEt() {
-            const durumEl = document.getElementById('harita-canli-durum');
-            const dotEl = document.getElementById('sync-dot');
-            try {
-                const { count, error } = await db.from('harita').select('*', { count: 'exact', head: true });
-                if (!error && count && count > 0) {
-                    durumEl.innerText = `Harita: ${count.toLocaleString('tr-TR')} Köy Güncel`;
-                    dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
-                } else {
-                    durumEl.innerText = "Harita Boş (Yüklemek İçin Tıkla)";
-                    dotEl.className = "w-2 h-2 rounded-full bg-rose-500 animate-pulse";
-                }
-            } catch (e) {
-                durumEl.innerText = "Harita Bağlantısı Hazır";
-            }
-        }
-
-        async function manuelSenkronizeEt() {
-            const durumEl = document.getElementById('harita-canli-durum');
-            const dotEl = document.getElementById('sync-dot');
-            durumEl.innerText = "Travian'dan İndiriliyor...";
-            dotEl.className = "w-2 h-2 rounded-full bg-amber-400 animate-spin";
-
-            try {
-                const res = await fetch('/api/sync');
-                const data = await res.json();
-                if (data.success) {
-                    alert(data.message);
-                    haritaDurumKontrolEt();
-                } else {
-                    alert("Senkronizasyon Hatası: " + (data.error || "Bilinmiyor"));
-                    haritaDurumKontrolEt();
-                }
-            } catch (err) {
-                alert("İstek Hatası: " + err.message);
-                haritaDurumKontrolEt();
-            }
-        }
-
-        // 3. MODAL & SEKME
         function modalAc(id) { document.getElementById(id).classList.remove('hidden'); }
         function modalKapat(id) { document.getElementById(id).classList.add('hidden'); }
         function modalOrduAc() { askerAlanlariniGuncelle(); modalAc('modal-ordu'); }
@@ -614,7 +567,6 @@
             lucide.createIcons();
         }
 
-        // 4. IRKA GÖRE ASKER LİSTESİ
         const IRK_ASKERLERI = {
             "Cermen": [
                 { id: "piyade_saldiri", ad: "Tokmak Sallayan", carpan: 40 },
@@ -679,48 +631,48 @@
             `).join('');
         }
 
-        // 5. KOORDİNAT OTO-DOLDURMA FONKSİYONU
-        async function koordSorgula(tur) {
-            const xInput = document.getElementById(`m-${tur}-x`);
-            const yInput = document.getElementById(`m-${tur}-y`);
-            if (!xInput || !yInput) return;
+        // CANLI KOORDİNAT SORGULAYICI (api/village)
+        let koordZamanlayici = null;
 
-            const xVal = xInput.value.trim();
-            const yVal = yInput.value.trim();
-            if (xVal === "" || yVal === "") return;
+        function koordSorgula(tur) {
+            clearTimeout(koordZamanlayici);
+            koordZamanlayici = setTimeout(async () => {
+                const xInput = document.getElementById(`m-${tur}-x`);
+                const yInput = document.getElementById(`m-${tur}-y`);
+                if (!xInput || !yInput) return;
 
-            const x = parseInt(xVal, 10);
-            const y = parseInt(yVal, 10);
-            if (isNaN(x) || isNaN(y)) return;
+                const x = xInput.value.trim();
+                const y = yInput.value.trim();
+                if (x === "" || y === "") return;
 
-            const { data, error } = await db.from('harita').select('*').eq('x', x).eq('y', y).limit(1);
+                try {
+                    const res = await fetch(`/api/village?x=${encodeURIComponent(x)}&y=${encodeURIComponent(y)}`);
+                    const data = await res.json();
 
-            if (error) {
-                console.error("Harita sorgu hatası:", error);
-                return;
-            }
-
-            if (data && data.length > 0) {
-                const k = data[0];
-                if (tur === 'ordu') {
-                    document.getElementById('m-ordu-koy').value = k.koy_adi || '';
-                    document.getElementById('m-ordu-nick').value = k.oyuncu_adi || '';
-                    if (k.irk) {
-                        document.getElementById('m-ordu-irk').value = k.irk;
-                        askerAlanlariniGuncelle();
+                    if (data.found) {
+                        if (tur === 'ordu') {
+                            document.getElementById('m-ordu-koy').value = data.koy_adi || '';
+                            document.getElementById('m-ordu-nick').value = data.oyuncu_adi || '';
+                            if (data.irk) {
+                                document.getElementById('m-ordu-irk').value = data.irk;
+                                askerAlanlariniGuncelle();
+                            }
+                        } else {
+                            document.getElementById('m-rakip-koy').value = data.koy_adi || '';
+                            document.getElementById('m-rakip-nick').value = data.oyuncu_adi || '';
+                            document.getElementById('m-rakip-birlik').value = data.birlik_adi || '';
+                            if (data.irk) {
+                                document.getElementById('m-rakip-irk').value = data.irk;
+                            }
+                        }
                     }
-                } else {
-                    document.getElementById('m-rakip-koy').value = k.koy_adi || '';
-                    document.getElementById('m-rakip-nick').value = k.oyuncu_adi || '';
-                    document.getElementById('m-rakip-birlik').value = k.birlik_adi || '';
-                    if (k.irk) {
-                        document.getElementById('m-rakip-irk').value = k.irk;
-                    }
+                } catch (err) {
+                    console.error("Koordinat sorgulanamadı:", err);
                 }
-            }
+            }, 300);
         }
 
-        // 6. TEKİL ORDU KAYDET
+        // Tekil Ordu Kaydet
         async function orduKaydet() {
             const x = parseInt(document.getElementById('m-ordu-x').value, 10);
             const y = parseInt(document.getElementById('m-ordu-y').value, 10);
@@ -764,7 +716,7 @@
             }
         }
 
-        // 7. TOPLU ORDU EXCEL AYRIŞTIRICI
+        // Toplu Ordu
         let topluOrdularListesi = [];
 
         function topluOrduOnizle() {
@@ -857,7 +809,7 @@
             lucide.createIcons();
         }
 
-        // 8. RAKİP HEDEF KAYDET
+        // Rakip Kaydet
         async function rakipKaydet(e) {
             e.preventDefault();
             const x = parseInt(document.getElementById('m-rakip-x').value, 10);
@@ -889,7 +841,7 @@
             }
         }
 
-        // 9. TABLOLARI YÜKLE
+        // Verileri Yükle
         async function verileriYukle() {
             const { data: ordular } = await db.from('ordular').select('*').order('id', { ascending: false });
             const orduGovde = document.getElementById('ordu-tablo-govde');
