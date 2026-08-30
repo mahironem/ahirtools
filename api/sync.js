@@ -1,10 +1,10 @@
 module.exports = async (req, res) => {
   try {
     const MAP_URL = "https://ts11.x1.europe.travian.com/map.sql";
-    const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita?on_conflict=id";
+    const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co/rest/v1/harita";
     const SUPABASE_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
 
-    // 1. map.sql dosyasını indir
+    // 1. Travian sunucusundan map.sql dosyasını indir
     const response = await fetch(MAP_URL);
     if (!response.ok) {
       return res.status(500).json({ error: "Travian map.sql indirilemedi: " + response.statusText });
@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "Harita verisi ayrıştırılamadı." });
     }
 
-    // 2. 500'erli paketlerle veritabanına doğrudan yaz
+    // 2. 500'erli paketlerle doğrudan Supabase'e yaz
     const batchSize = 500;
     let basarili = 0;
     let sonHata = null;
@@ -63,14 +63,14 @@ module.exports = async (req, res) => {
     }
 
     if (basarili === 0 && sonHata) {
-      return res.status(500).json({ error: "Veritabanı kayıt hatası: " + sonHata });
+      return res.status(500).json({ error: "Supabase kayıt hatası: " + sonHata });
     }
 
     return res.status(200).json({
       success: true,
-      message: `${basarili} adet köy veritabanına başarıyla yazıldı.`,
-      toplam: kayitlar.length,
-      tarih: new Date().toISOString()
+      message: `${basarili} adet köy veritabanına başarıyla aktarıldı.`,
+      toplam_koy: kayitlar.length,
+      guncelleme: new Date().toISOString()
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
