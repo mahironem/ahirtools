@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AhirTools - Travian Operasyon & Birlik Portalı</title>
+    <title>AhirTools - Travian Operasyon Portalı</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client -->
@@ -78,10 +78,9 @@
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
                     
-                    <!-- Otomatik Harita Durumu Göstergesi -->
                     <div class="hidden sm:flex items-center gap-2 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-[11px]">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span id="harita-canli-durum" class="text-slate-400 font-mono">Harita: Yükleniyor...</span>
+                        <span id="harita-canli-durum" class="text-slate-400 font-mono">ts11 Otomatik Veri</span>
                     </div>
                 </div>
 
@@ -349,11 +348,11 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                 <div>
                     <label class="block text-[11px] font-semibold text-emerald-400 mb-1">X Koordinatı</label>
-                    <input type="number" id="m-ordu-x" oninput="koordSorgula('ordu')" required placeholder="50" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
+                    <input type="number" id="m-ordu-x" oninput="koordSorgula('ordu')" onkeyup="koordSorgula('ordu')" onchange="koordSorgula('ordu')" required placeholder="50" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-emerald-400 mb-1">Y Koordinatı</label>
-                    <input type="number" id="m-ordu-y" oninput="koordSorgula('ordu')" required placeholder="-20" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
+                    <input type="number" id="m-ordu-y" oninput="koordSorgula('ordu')" onkeyup="koordSorgula('ordu')" onchange="koordSorgula('ordu')" required placeholder="-20" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-amber-400 mb-1">Turnuva Yeri (TY)</label>
@@ -382,7 +381,6 @@
                 </div>
             </div>
 
-            <!-- Dinamik Asker Giriş Alanları -->
             <div class="border-t border-slate-800 pt-3">
                 <span id="asker-baslik-etiket" class="block text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">Asker Kadrosu</span>
                 <div id="asker-input-alani" class="grid grid-cols-3 gap-2.5"></div>
@@ -456,11 +454,11 @@
                 <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                     <div>
                         <label class="block text-[11px] font-semibold text-blue-400 mb-1">X Koordinatı</label>
-                        <input type="number" id="m-rakip-x" oninput="koordSorgula('rakip')" required placeholder="10" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
+                        <input type="number" id="m-rakip-x" oninput="koordSorgula('rakip')" onkeyup="koordSorgula('rakip')" onchange="koordSorgula('rakip')" required placeholder="10" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-blue-400 mb-1">Y Koordinatı</label>
-                        <input type="number" id="m-rakip-y" oninput="koordSorgula('rakip')" required placeholder="-45" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
+                        <input type="number" id="m-rakip-y" oninput="koordSorgula('rakip')" onkeyup="koordSorgula('rakip')" onchange="koordSorgula('rakip')" required placeholder="-45" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
                     </div>
                 </div>
 
@@ -517,7 +515,7 @@
     <script>
         lucide.createIcons();
 
-        // 1. GİRİŞ KONTROLÜ
+        // 1. GİRİŞ
         const OZEL_HESAPLAR = { "mahir": "ahirbenem" };
 
         function ozelGirisYap(e) {
@@ -553,22 +551,21 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. OTOMATİK ARKA PLAN HARİTA SENKRONİZASYONU
+        // 2. OTOMATİK HARİTA DURUMU
         async function haritaDurumKontrolEt() {
             const durumEl = document.getElementById('harita-canli-durum');
             try {
                 const { count, error } = await supabase.from('harita').select('*', { count: 'exact', head: true });
                 if (count && count > 0) {
-                    durumEl.innerText = `Harita: ${count.toLocaleString('tr-TR')} Köy Güncel`;
+                    durumEl.innerText = `Harita: ${count.toLocaleString('tr-TR')} Köy Aktif`;
                 } else {
-                    durumEl.innerText = "Harita: Arka planda çekiliyor...";
-                    // Veritabanı boşsa backend servisini tetikle
+                    durumEl.innerText = "Harita: Senkronize Ediliyor...";
                     fetch('/api/sync').then(r => r.json()).then(res => {
-                        if (res.count) durumEl.innerText = `Harita: ${res.count.toLocaleString('tr-TR')} Köy Güncel`;
+                        if (res.toplam) durumEl.innerText = `Harita: ${res.toplam.toLocaleString('tr-TR')} Köy Aktif`;
                     });
                 }
             } catch (e) {
-                durumEl.innerText = "Harita: Otomatik Takipte";
+                durumEl.innerText = "ts11 Otomatik Veri";
             }
         }
 
@@ -593,7 +590,7 @@
             lucide.createIcons();
         }
 
-        // 4. IRKA GÖRE ASKER LİSTELERİ
+        // 4. IRKA GÖRE ASKERLER
         const IRK_ASKERLERI = {
             "Cermen": [
                 { id: "piyade_saldiri", ad: "Tokmak Sallayan", carpan: 40 },
@@ -658,28 +655,35 @@
             `).join('');
         }
 
-        // 5. KOORDİNAT YAZILINCA OTO-DOLDURMA FONKSİYONU
+        // 5. KOORDİNAT OTO-DOLDURMA MOTORU
         async function koordSorgula(tur) {
-            const x = parseInt(document.getElementById(`m-${tur}-x`).value);
-            const y = parseInt(document.getElementById(`m-${tur}-y`).value);
+            const xGirdi = document.getElementById(`m-${tur}-x`).value;
+            const yGirdi = document.getElementById(`m-${tur}-y`).value;
 
+            if (xGirdi === "" || yGirdi === "") return;
+
+            const x = parseInt(xGirdi);
+            const y = parseInt(yGirdi);
             if (isNaN(x) || isNaN(y)) return;
 
-            const { data } = await supabase.from('harita').select('*').eq('x', x).eq('y', y).limit(1).maybeSingle();
+            const { data } = await supabase.from('harita').select('*').eq('x', x).eq('y', y).limit(1);
 
-            if (data) {
+            if (data && data.length > 0) {
+                const k = data[0];
                 if (tur === 'ordu') {
-                    document.getElementById('m-ordu-koy').value = data.koy_adi || '';
-                    document.getElementById('m-ordu-nick').value = data.oyuncu_adi || '';
-                    if (data.irk) {
-                        document.getElementById('m-ordu-irk').value = data.irk;
+                    document.getElementById('m-ordu-koy').value = k.koy_adi || '';
+                    document.getElementById('m-ordu-nick').value = k.oyuncu_adi || '';
+                    if (k.irk) {
+                        document.getElementById('m-ordu-irk').value = k.irk;
                         askerAlanlariniGuncelle();
                     }
                 } else {
-                    document.getElementById('m-rakip-koy').value = data.koy_adi || '';
-                    document.getElementById('m-rakip-nick').value = data.oyuncu_adi || '';
-                    document.getElementById('m-rakip-birlik').value = data.birlik_adi || '';
-                    if (data.irk) document.getElementById('m-rakip-irk').value = data.irk;
+                    document.getElementById('m-rakip-koy').value = k.koy_adi || '';
+                    document.getElementById('m-rakip-nick').value = k.oyuncu_adi || '';
+                    document.getElementById('m-rakip-birlik').value = k.birlik_adi || '';
+                    if (k.irk) {
+                        document.getElementById('m-rakip-irk').value = k.irk;
+                    }
                 }
             }
         }
@@ -724,11 +728,11 @@
             } else {
                 modalKapat('modal-ordu');
                 verileriYukle();
-                alert("Ordu ve Köy başarıyla kaydedildi!");
+                alert("Ordu başarıyla kaydedildi!");
             }
         }
 
-        // 7. TOPLU ORDU EXCEL AYRIŞTIRICI
+        // 7. TOPLU ORDU
         let topluOrdularListesi = [];
 
         function topluOrduOnizle() {
@@ -853,9 +857,8 @@
             }
         }
 
-        // 9. VERİLERİ YÜKLE
+        // 9. TABLOLARI YÜKLE
         async function verileriYukle() {
-            // Ordular
             const { data: ordular } = await supabase.from('ordular').select('*').order('id', { ascending: false });
             const orduGovde = document.getElementById('ordu-tablo-govde');
             const arsivGovde = document.getElementById('arsiv-tablo-govde');
@@ -899,7 +902,6 @@
                 arsivGovde.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Arşivde henüz ordu kaydı yok.</td></tr>`;
             }
 
-            // Rakipler
             const { data: rakipler } = await supabase.from('rakipler').select('*').order('id', { ascending: false });
             const rakipGovde = document.getElementById('rakip-tablo-govde');
             const kurguHedef = document.getElementById('kurgu-hedef');
