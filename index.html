@@ -81,10 +81,10 @@
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
                     
-                    <!-- Canlı Harita İlerleme Göstergesi -->
+                    <!-- Canlı Harita Durum Göstergesi -->
                     <div class="hidden sm:flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px]">
                         <span id="map-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span id="map-status-text" class="text-slate-300 font-mono">Harita İndiriliyor...</span>
+                        <span id="map-status-text" class="text-slate-300 font-mono">Harita Yükleniyor...</span>
                     </div>
                 </div>
 
@@ -515,7 +515,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT ÇEKİRDEĞİ -->
+    <!-- JAVASCRIPT MOTORU -->
     <script>
         lucide.createIcons();
 
@@ -540,7 +540,7 @@
             document.getElementById('ana-panel').classList.remove('hidden');
             document.getElementById('kullanici-etiket').innerText = nick;
             verileriYukle();
-            haritayiOtomatikYukle();
+            haritayiIndirVeBellegeAl();
             lucide.createIcons();
         }
 
@@ -555,76 +555,42 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. OTOMATİK HARİTA İNDİRİCİ & AYRIŞTIRICI (EXCEL MANTIĞI)
-        async function haritayiOtomatikYukle() {
+        // 2. DOĞRUDAN KENDİ SUNUCUMUZDAN HARİTAYI ÇEKİP BELLEĞE ALMA
+        async function haritayiIndirVeBellegeAl() {
             const durumEl = document.getElementById('map-status-text');
             const dotEl = document.getElementById('map-status-dot');
 
-            // 1. Önce tarayıcı hafızasından kontrol et
-            const onbellek = localStorage.getItem('ahir_harita_v1');
+            // Önce varsa yerel hafızadan hemen göster
+            const onbellek = localStorage.getItem('ahir_harita_v3');
             if (onbellek) {
                 try {
                     window.HARITA_BELLEGI = JSON.parse(onbellek);
                     const sayi = Object.keys(window.HARITA_BELLEGI).length;
-                    durumEl.innerText = `Harita: ${sayi.toLocaleString('tr-TR')} Köy Hazır`;
-                    dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
+                    if (sayi > 0) {
+                        durumEl.innerText = `Harita: ${sayi.toLocaleString('tr-TR')} Köy Hazır`;
+                        dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
+                    }
                 } catch(e){}
             }
 
-            // 2. Travian map.sql dosyasını 3 farklı kanaldan sırayla dene (Garanti İndirme)
-            const proxyLinkleri = [
-                "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://ts11.x1.europe.travian.com/map.sql"),
-                "https://corsproxy.io/?url=" + encodeURIComponent("https://ts11.x1.europe.travian.com/map.sql"),
-                "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent("https://ts11.x1.europe.travian.com/map.sql")
-            ];
+            // Kendi backendimiz üzerinden Travian verisini al
+            try {
+                const res = await fetch('/api/sync');
+                if (!res.ok) throw new Error("Sunucu yanıt vermedi: " + res.status);
+                const data = await res.json();
 
-            let sqlMetni = null;
-            for (const link of proxyLinkleri) {
-                try {
-                    const res = await fetch(link);
-                    if (res.ok) {
-                        sqlMetni = await res.text();
-                        if (sqlMetni && sqlMetni.includes("INSERT INTO `x_world`")) break;
-                    }
-                } catch(e) {
-                    console.warn("Proxy denendi:", link);
+                if (data && data.harita) {
+                    window.HARITA_BELLEGI = data.harita;
+                    localStorage.setItem('ahir_harita_v3', JSON.stringify(data.harita));
+                    durumEl.innerText = `Harita: ${data.count.toLocaleString('tr-TR')} Köy Güncel`;
+                    dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
                 }
-            }
-
-            if (!sqlMetni) {
+            } catch (err) {
+                console.error("Harita çekme hatası:", err);
                 if (Object.keys(window.HARITA_BELLEGI).length === 0) {
                     durumEl.innerText = "Harita Bağlantısı Bekleniyor";
+                    dotEl.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
                 }
-                return;
-            }
-
-            // 3. Haritadaki 5000+ köyü 0.01 saniyede hafızaya al
-            const IRK_KODLARI = { 1: "Roma", 2: "Cermen", 3: "Galya", 4: "Doğa", 5: "Natar", 6: "Hun", 7: "Mısır" };
-            const regex = /\((\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+)/g;
-
-            let match;
-            let count = 0;
-            const tempBellek = {};
-
-            while ((match = regex.exec(sqlMetni)) !== null) {
-                const x = match[2];
-                const y = match[3];
-                const tid = parseInt(match[4], 10);
-                const koy = match[6].replace(/\\'/g, "'").replace(/&#39;/g, "'");
-                const oyuncu = match[8].replace(/\\'/g, "'").replace(/&#39;/g, "'");
-                const birlik = match[10].replace(/\\'/g, "'").replace(/&#39;/g, "'");
-                const irk = IRK_KODLARI[tid] || "Roma";
-                const nufus = parseInt(match[11], 10);
-
-                tempBellek[`${x}|${y}`] = { koy, oyuncu, irk, birlik, nufus };
-                count++;
-            }
-
-            if (count > 0) {
-                window.HARITA_BELLEGI = tempBellek;
-                localStorage.setItem('ahir_harita_v1', JSON.stringify(tempBellek));
-                durumEl.innerText = `Harita: ${count.toLocaleString('tr-TR')} Köy Güncel`;
-                dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
             }
         }
 
@@ -639,19 +605,20 @@
             const k = window.HARITA_BELLEGI[anahtar];
 
             if (k) {
+                // k = [koy, oyuncu, irk, birlik, nufus]
                 if (tur === 'ordu') {
-                    document.getElementById('m-ordu-koy').value = k.koy || '';
-                    document.getElementById('m-ordu-nick').value = k.oyuncu || '';
-                    if (k.irk) {
-                        document.getElementById('m-ordu-irk').value = k.irk;
+                    document.getElementById('m-ordu-koy').value = k[0] || '';
+                    document.getElementById('m-ordu-nick').value = k[1] || '';
+                    if (k[2]) {
+                        document.getElementById('m-ordu-irk').value = k[2];
                         askerAlanlariniGuncelle();
                     }
                 } else {
-                    document.getElementById('m-rakip-koy').value = k.koy || '';
-                    document.getElementById('m-rakip-nick').value = k.oyuncu || '';
-                    document.getElementById('m-rakip-birlik').value = k.birlik || '';
-                    if (k.irk) {
-                        document.getElementById('m-rakip-irk').value = k.irk;
+                    document.getElementById('m-rakip-koy').value = k[0] || '';
+                    document.getElementById('m-rakip-nick').value = k[1] || '';
+                    document.getElementById('m-rakip-birlik').value = k[3] || '';
+                    if (k[2]) {
+                        document.getElementById('m-rakip-irk').value = k[2];
                     }
                 }
             }
