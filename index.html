@@ -290,7 +290,7 @@
                 </div>
             </section>
 
-            <!-- 4. OPERASYON KURGU SEKMESİ (BAŞLANGIÇTA GİZLİ - hidden EKLENDİ) -->
+            <!-- 4. OPERASYON KURGU SEKMESİ (BAŞLANGIÇTA GİZLİ) -->
             <section id="tab-operasyon" class="hidden space-y-8">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-white">Operasyon Kurgu & Planlama Merkezi</h1>
@@ -318,7 +318,6 @@
 
                     <!-- ADIM 1: HEDEF VE SALDIRI TÜRÜ SEÇİMİ -->
                     <div id="sihirbaz-adim-1" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <!-- Sol: Form -->
                         <div class="lg:col-span-5 space-y-4">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Rakip Köyü Seçiniz</label>
@@ -961,6 +960,7 @@
             }
 
             const govde = document.getElementById(hedefAlaniId);
+            if (!govde) return;
             const liste = IRK_ASKERLERI[irk];
 
             govde.innerHTML = liste.map(a => `
@@ -1125,10 +1125,12 @@
         function durumFiltrele(deger) {
             window.durumFiltresi = deger;
             const ikon = document.getElementById('durum-filtre-ikonu');
-            if (deger !== 'Tümü') {
-                ikon.classList.remove('hidden');
-            } else {
-                ikon.classList.add('hidden');
+            if (ikon) {
+                if (deger !== 'Tümü') {
+                    ikon.classList.remove('hidden');
+                } else {
+                    ikon.classList.add('hidden');
+                }
             }
             orduTablosunuCiz();
         }
@@ -1368,6 +1370,7 @@
         // 12. TABLOLARI RENDER ETME
         function orduTablosunuCiz() {
             const orduGovde = document.getElementById('ordu-tablo-govde');
+            if (!orduGovde) return;
 
             ['koord', 'kullanici_adi', 'koy_adi', 'birlik', 'irk', 'turnuva_yeri', 'guc_puani', 'koc', 'manco', 'reis', 'kp', 'son_guncelleme'].forEach(k => {
                 const el = document.getElementById(`sort-icon-${k}`);
@@ -1420,9 +1423,9 @@
                 }
 
                 if (typeof valA === 'string') {
-                    return window.aktifSortYon === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    return window.aktifSortYon === 'asc' ? String(valA).localeCompare(String(valB || '')) : String(valB || '').localeCompare(String(valA));
                 } else {
-                    return window.aktifSortYon === 'asc' ? valA - valB : valB - valA;
+                    return window.aktifSortYon === 'asc' ? (Number(valA) || 0) - (Number(valB) || 0) : (Number(valB) || 0) - (Number(valA) || 0);
                 }
             });
 
@@ -1474,25 +1477,13 @@
                         </tr>
                     `;
                 }).join('');
-
-                const aktifler = enGuncelOrdular.filter(o => (o.durum || 'Aktif') === 'Aktif');
-                if (aktifler.length > 0) {
-                    kurguSaldiran.innerHTML = aktifler.map(o => `
-                        <option value="${o.x_koordinat}|${o.y_koordinat}|${o.turnuva_yeri}|${o.kullanici_adi}">
-                            ${o.kullanici_adi} - (${o.x_koordinat}|${o.y_koordinat}) [TY: ${o.turnuva_yeri}] - Güç: ${(o.guc_puani || 0).toLocaleString('tr-TR')}
-                        </option>
-                    `).join('');
-                } else {
-                    kurguSaldiran.innerHTML = `<option value="">Aktif ordu bulunmuyor (Tümü pasif)</option>`;
-                }
             } else {
                 orduGovde.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500">Kayıtlı ordu bulunamadı.</td></tr>`;
-                kurguSaldiran.innerHTML = `<option value="">Kayıtlı ordu yok</option>`;
             }
             lucide.createIcons();
         }
 
-        // ARŞİV SAYFALAMA
+        // ARŞİV TABLOSUNU ÇİZ
         function arsivSayfaDegistir(yon) {
             const toplamSayfa = Math.ceil(window.tumArsivKayitlari.length / window.sayfaBasiKayit) || 1;
             const yeniSayfa = window.arsivSayfa + yon;
@@ -1507,13 +1498,14 @@
             const sayfaBilgi = document.getElementById('arsiv-sayfa-bilgi');
             const btnPrev = document.getElementById('btn-arsiv-prev');
             const btnNext = document.getElementById('btn-arsiv-next');
+            if (!arsivGovde) return;
 
-            const kayitlar = window.tumArsivKayitlari;
+            const kayitlar = window.tumArsivKayitlari || [];
             const toplamSayfa = Math.ceil(kayitlar.length / window.sayfaBasiKayit) || 1;
 
-            sayfaBilgi.innerText = `Sayfa ${window.arsivSayfa} / ${toplamSayfa} (${kayitlar.length} Kayıt)`;
-            btnPrev.disabled = (window.arsivSayfa <= 1);
-            btnNext.disabled = (window.arsivSayfa >= toplamSayfa);
+            if (sayfaBilgi) sayfaBilgi.innerText = `Sayfa ${window.arsivSayfa} / ${toplamSayfa} (${kayitlar.length} Kayıt)`;
+            if (btnPrev) btnPrev.disabled = (window.arsivSayfa <= 1);
+            if (btnNext) btnNext.disabled = (window.arsivSayfa >= toplamSayfa);
 
             const baslangic = (window.arsivSayfa - 1) * window.sayfaBasiKayit;
             const sayfaKayitlari = kayitlar.slice(baslangic, baslangic + window.sayfaBasiKayit);
@@ -1578,46 +1570,180 @@
         }
 
         async function verileriYukle() {
-            const { data: ordular } = await db.from('ordular').select('*').order('id', { ascending: false });
-            window.tumArsivKayitlari = ordular || [];
-            orduTablosunuCiz();
-            arsivTablosunuCiz();
+            try {
+                // 1. Orduları çek
+                const { data: ordular, error: ordularErr } = await db.from('ordular').select('*').order('id', { ascending: false });
+                if (ordularErr) console.error("Ordular yüklenirken hata:", ordularErr);
+                window.tumArsivKayitlari = ordular || [];
+                orduTablosunuCiz();
+                arsivTablosunuCiz();
 
-            const { data: rakipler } = await db.from('rakipler').select('*').order('id', { ascending: false });
-            window.tumRakipler = rakipler || [];
-            const rakipGovde = document.getElementById('rakip-tablo-govde');
+                // 2. Rakipleri çek
+                const { data: rakipler, error: rakiplerErr } = await db.from('rakipler').select('*').order('id', { ascending: false });
+                if (rakiplerErr) console.error("Rakipler yüklenirken hata:", rakiplerErr);
+                window.tumRakipler = rakipler || [];
+                const rakipGovde = document.getElementById('rakip-tablo-govde');
 
-            if (window.tumRakipler.length > 0) {
-                rakipGovde.innerHTML = window.tumRakipler.map(r => `
-                    <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-3 sm:p-4 text-center">
-                            <input type="checkbox" value="${r.id}" onchange="seciliRakipSayisiniGuncelle()" class="rakip-cb rounded bg-slate-950 border-slate-800 cursor-pointer">
-                        </td>
-                        <td class="p-3 sm:p-4 font-mono font-bold text-rose-400">(${r.x_koordinat}|${r.y_koordinat})</td>
-                        <td class="p-3 sm:p-4 font-medium text-white">${r.oyuncu_adi}</td>
-                        <td class="p-3 sm:p-4 text-slate-300">${r.koy_adi}</td>
-                        <td class="p-3 sm:p-4">${r.birlik || '-'}</td>
-                        <td class="p-3 sm:p-4"><span class="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700">${r.irk || '-'}</span></td>
-                        <td class="p-3 sm:p-4">${r.koy_turu || '-'}</td>
-                        <td class="p-3 sm:p-4 text-slate-400 text-xs">${r.notlar || '-'}</td>
-                        <td class="p-3 sm:p-4 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="rakipDuzenleModalAc(${r.id})" title="Düzenle" class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg border border-slate-700 transition">
-                                    <i data-lucide="edit" class="w-3.5 h-3.5"></i>
-                                </button>
-                                <button onclick="rakipSil(${r.id})" title="Sil" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg border border-slate-700 transition">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </div>
-                        </td>
+                if (rakipGovde) {
+                    if (window.tumRakipler.length > 0) {
+                        rakipGovde.innerHTML = window.tumRakipler.map(r => `
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="p-3 sm:p-4 text-center">
+                                    <input type="checkbox" value="${r.id}" onchange="seciliRakipSayisiniGuncelle()" class="rakip-cb rounded bg-slate-950 border-slate-800 cursor-pointer">
+                                </td>
+                                <td class="p-3 sm:p-4 font-mono font-bold text-rose-400">(${r.x_koordinat}|${r.y_koordinat})</td>
+                                <td class="p-3 sm:p-4 font-medium text-white">${r.oyuncu_adi}</td>
+                                <td class="p-3 sm:p-4 text-slate-300">${r.koy_adi}</td>
+                                <td class="p-3 sm:p-4">${r.birlik || '-'}</td>
+                                <td class="p-3 sm:p-4"><span class="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700">${r.irk || '-'}</span></td>
+                                <td class="p-3 sm:p-4">${r.koy_turu || '-'}</td>
+                                <td class="p-3 sm:p-4 text-slate-400 text-xs">${r.notlar || '-'}</td>
+                                <td class="p-3 sm:p-4 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button onclick="rakipDuzenleModalAc(${r.id})" title="Düzenle" class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg border border-slate-700 transition">
+                                            <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                        <button onclick="rakipSil(${r.id})" title="Sil" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg border border-slate-700 transition">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        rakipGovde.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">Kayıtlı hedef bulunamadı.</td></tr>`;
+                    }
+                }
+
+                // 3. Operasyonları listele
+                operasyonlariListele();
+                lucide.createIcons();
+            } catch (err) {
+                console.error("Veri yükleme hatası:", err);
+            }
+        }
+
+        // 13. TOPLU ORDU EXCEL AYRIŞTIRICI
+        let topluOrdularListesi = [];
+
+        function topluOrduOnizle() {
+            const metin = document.getElementById('toplu-ordu-metin').value.trim();
+            const onizlemeKutu = document.getElementById('toplu-onizleme-kutu');
+            const govde = document.getElementById('toplu-onizleme-govde');
+            const sayiEtiket = document.getElementById('toplu-algilanan-sayi');
+
+            if (!metin) {
+                onizlemeKutu.classList.add('hidden');
+                topluOrdularListesi = [];
+                return;
+            }
+
+            const satirlar = metin.split('\n');
+            topluOrdularListesi = [];
+
+            satirlar.forEach(satir => {
+                const s = satir.split(/\t|;/).map(val => val.trim());
+                if (s.length >= 5) {
+                    const x = parseInt(s[0], 10) || 0;
+                    const y = parseInt(s[1], 10) || 0;
+                    const ty = parseInt(s[2], 10) || 0;
+                    const nick = s[3] || 'Oyuncu';
+                    const koy = s[4] || 'Köy';
+                    const gucPuan = parseInt(s[5], 10) || 0;
+                    const birlik = s[6] || 'TÜRK.';
+                    const irk = s[7] || 'Galya';
+                    const koc = parseInt(s[18], 10) || 0;
+                    const manco = parseInt(s[19], 10) || 0;
+                    const reis = parseInt(s[20], 10) || 0;
+                    const kp = s[21] ? s[21].toUpperCase() : 'YOK';
+
+                    topluOrdularListesi.push({
+                        kullanici_adi: nick,
+                        koy_adi: koy,
+                        x_koordinat: x,
+                        y_koordinat: y,
+                        irk: irk,
+                        turnuva_yeri: ty,
+                        guc_puani: gucPuan,
+                        asker_verileri: { _birlik: birlik, _kp: kp, _koc: koc, _manco: manco, _reis: reis },
+                        durum: 'Aktif'
+                    });
+                }
+            });
+
+            if (topluOrdularListesi.length > 0) {
+                onizlemeKutu.classList.remove('hidden');
+                sayiEtiket.innerText = topluOrdularListesi.length;
+                govde.innerHTML = topluOrdularListesi.map(o => `
+                    <tr class="hover:bg-slate-900/60 transition">
+                        <td class="p-2 text-white font-sans">${o.kullanici_adi}</td>
+                        <td class="p-2 text-emerald-400">${o.koy_adi} (${o.x_koordinat}|${o.y_koordinat})</td>
+                        <td class="p-2">${o.irk}</td>
+                        <td class="p-2 text-amber-400 font-bold">${o.turnuva_yeri}</td>
+                        <td class="p-2 font-bold text-slate-200">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
                     </tr>
                 `).join('');
             } else {
-                rakipGovde.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">Kayıtlı hedef bulunamadı.</td></tr>`;
+                onizlemeKutu.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        async function topluOrdulariSupabaseyeKaydet() {
+            if (topluOrdularListesi.length === 0) {
+                alert("Kaydedilecek ordu bulunamadı!");
+                return;
             }
 
-            operasyonlariListele();
+            const btn = document.getElementById('btn-toplu-kaydet');
+            btn.innerText = "Kayıtlar Aktarılıyor...";
+
+            const { error } = await db.from('ordular').insert(topluOrdularListesi);
+
+            if (error) {
+                alert("Toplu Kayıt Hatası: " + error.message);
+                btn.innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Tüm Orduları Sisteme Aktar`;
+            } else {
+                alert(`${topluOrdularListesi.length} adet ordu veritabanına aktarıldı!`);
+                document.getElementById('toplu-ordu-metin').value = '';
+                topluOrdularListesi = [];
+                modalKapat('modal-toplu-ordu');
+                verileriYukle();
+                btn.innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Tüm Orduları Sisteme Aktar`;
+            }
             lucide.createIcons();
+        }
+
+        // 14. RAKİP EKLEME
+        async function rakipKaydet(e) {
+            e.preventDefault();
+            const x = parseInt(document.getElementById('m-rakip-x').value, 10);
+            const y = parseInt(document.getElementById('m-rakip-y').value, 10);
+            const nick = document.getElementById('m-rakip-nick').value;
+            const koy = document.getElementById('m-rakip-koy').value;
+            const birlik = document.getElementById('m-rakip-birlik').value;
+            const irk = document.getElementById('m-rakip-irk').value;
+            const tur = document.getElementById('m-rakip-tur').value;
+            const not = document.getElementById('m-rakip-not').value;
+
+            const { error } = await db.from('rakipler').insert([{
+                oyuncu_adi: nick,
+                koy_adi: koy,
+                x_koordinat: x,
+                y_koordinat: y,
+                birlik: birlik,
+                irk: irk,
+                koy_turu: tur,
+                notlar: not
+            }]);
+
+            if (error) {
+                alert("Hata: " + error.message);
+            } else {
+                modalKapat('modal-rakip');
+                verileriYukle();
+                alert("Hedef başarıyla eklendi!");
+            }
         }
 
         // ==========================================
@@ -1650,7 +1776,8 @@
                 selectEl.innerHTML = `<option value="">Kayıtlı hedef yok ("Rakipler"den ekleyin)</option>`;
             }
 
-            document.getElementById('wiz-global-varis').value = getYarinSaatYirmiZamani();
+            const varisEl = document.getElementById('wiz-global-varis');
+            if (varisEl) varisEl.value = getYarinSaatYirmiZamani();
             wizAdimGec(1);
         }
 
@@ -1668,22 +1795,22 @@
 
             if (!r) {
                 window.sihirbazSecilenHedef = null;
-                notEl.value = '';
-                nickEl.innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Hedef Oyuncu Profili`;
-                birlikEl.innerText = `Birlik: -`;
-                irkEl.innerText = '-';
-                koySayisiEl.innerText = '-';
-                nufusEl.innerText = '-';
-                koylerGovde.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500 font-sans">Hedef seçilmedi.</td></tr>`;
+                if (notEl) notEl.value = '';
+                if (nickEl) nickEl.innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Hedef Oyuncu Profili`;
+                if (birlikEl) birlikEl.innerText = `Birlik: -`;
+                if (irkEl) irkEl.innerText = '-';
+                if (koySayisiEl) koySayisiEl.innerText = '-';
+                if (nufusEl) nufusEl.innerText = '-';
+                if (koylerGovde) koylerGovde.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500 font-sans">Hedef seçilmedi.</td></tr>`;
                 lucide.createIcons();
                 return;
             }
 
             window.sihirbazSecilenHedef = r;
-            notEl.value = r.notlar || 'Not girilmemiş.';
-            nickEl.innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> ${r.oyuncu_adi}`;
-            birlikEl.innerText = `Birlik: ${r.birlik || 'Yok'}`;
-            irkEl.innerText = r.irk || 'Bilinmiyor';
+            if (notEl) notEl.value = r.notlar || 'Not girilmemiş.';
+            if (nickEl) nickEl.innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> ${r.oyuncu_adi}`;
+            if (birlikEl) birlikEl.innerText = `Birlik: ${r.birlik || 'Yok'}`;
+            if (irkEl) irkEl.innerText = r.irk || 'Bilinmiyor';
 
             const oyuncuKoyleri = [];
             let toplamNufus = 0;
@@ -1701,25 +1828,27 @@
                 });
             }
 
-            koySayisiEl.innerText = oyuncuKoyleri.length > 0 ? `${oyuncuKoyleri.length} Köy` : '1 Köy';
-            nufusEl.innerText = toplamNufus > 0 ? toplamNufus.toLocaleString('tr-TR') : '-';
+            if (koySayisiEl) koySayisiEl.innerText = oyuncuKoyleri.length > 0 ? `${oyuncuKoyleri.length} Köy` : '1 Köy';
+            if (nufusEl) nufusEl.innerText = toplamNufus > 0 ? toplamNufus.toLocaleString('tr-TR') : '-';
 
-            if (oyuncuKoyleri.length > 0) {
-                koylerGovde.innerHTML = oyuncuKoyleri.map(k => `
-                    <tr class="hover:bg-slate-950 transition">
-                        <td class="p-2.5 font-sans text-white">${k.koy}</td>
-                        <td class="p-2.5 text-center text-slate-300">${k.nufus}</td>
-                        <td class="p-2.5 text-right font-bold text-emerald-400">(${k.koord.replace('|', '|')})</td>
-                    </tr>
-                `).join('');
-            } else {
-                koylerGovde.innerHTML = `
-                    <tr>
-                        <td class="p-2.5 font-sans text-white">${r.koy_adi}</td>
-                        <td class="p-2.5 text-center text-slate-300">-</td>
-                        <td class="p-2.5 text-right font-bold text-emerald-400">(${r.x_koordinat}|${r.y_koordinat})</td>
-                    </tr>
-                `;
+            if (koylerGovde) {
+                if (oyuncuKoyleri.length > 0) {
+                    koylerGovde.innerHTML = oyuncuKoyleri.map(k => `
+                        <tr class="hover:bg-slate-950 transition">
+                            <td class="p-2.5 font-sans text-white">${k.koy}</td>
+                            <td class="p-2.5 text-center text-slate-300">${k.nufus}</td>
+                            <td class="p-2.5 text-right font-bold text-emerald-400">(${k.koord.replace('|', '|')})</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    koylerGovde.innerHTML = `
+                        <tr>
+                            <td class="p-2.5 font-sans text-white">${r.koy_adi}</td>
+                            <td class="p-2.5 text-center text-slate-300">-</td>
+                            <td class="p-2.5 text-right font-bold text-emerald-400">(${r.x_koordinat}|${r.y_koordinat})</td>
+                        </tr>
+                    `;
+                }
             }
 
             lucide.createIcons();
@@ -1744,6 +1873,8 @@
             [1, 2, 3].forEach(adim => {
                 const el = document.getElementById(`sihirbaz-adim-${adim}`);
                 const ind = document.getElementById(`step-ind-${adim}`);
+                if (!el || !ind) return;
+
                 if (adim === hedefAdim) {
                     el.classList.remove('hidden');
                     ind.className = "flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm";
@@ -1760,7 +1891,8 @@
 
         function wizAdim2Hazirla() {
             const h = window.sihirbazSecilenHedef;
-            document.getElementById('wiz-step2-hedef-etiket').innerText = `${h.oyuncu_adi} - ${h.koy_adi} (${h.x_koordinat}|${h.y_koordinat})`;
+            const etiket = document.getElementById('wiz-step2-hedef-etiket');
+            if (etiket && h) etiket.innerText = `${h.oyuncu_adi} - ${h.koy_adi} (${h.x_koordinat}|${h.y_koordinat})`;
 
             const gorulenKoyler = new Set();
             const aktifOrdular = [];
@@ -1776,6 +1908,7 @@
             });
 
             const govde = document.getElementById('wiz-ordular-govde');
+            if (!govde) return;
 
             if (aktifOrdular.length > 0) {
                 govde.innerHTML = aktifOrdular.map(o => {
@@ -1886,6 +2019,7 @@
 
         function wizAdim3TabloyuCiz() {
             const govde = document.getElementById('wiz-eslesmeler-govde');
+            if (!govde) return;
 
             govde.innerHTML = window.sihirbazEslesmeler.map((item, index) => {
                 const mesafe = Math.sqrt(Math.pow(item.hedefX - item.saldiranX, 2) + Math.pow(item.hedefY - item.saldiranY, 2));
@@ -2024,9 +2158,10 @@
             const { data: operasyonlar } = await db.from('operasyonlar').select('*').order('cikis_saati', { ascending: true });
             const opGovde = document.getElementById('operasyon-tablo-govde');
             const opSayisi = document.getElementById('kurgu-sayisi');
+            if (!opGovde) return;
 
             if (operasyonlar && operasyonlar.length > 0) {
-                opSayisi.innerText = `${operasyonlar.length} Görev`;
+                if (opSayisi) opSayisi.innerText = `${operasyonlar.length} Görev`;
                 opGovde.innerHTML = operasyonlar.map(op => {
                     const cikis = new Date(op.cikis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     const varis = new Date(op.varis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -2056,7 +2191,7 @@
                     `;
                 }).join('');
             } else {
-                opSayisi.innerText = `0 Görev`;
+                if (opSayisi) opSayisi.innerText = `0 Görev`;
                 opGovde.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-500">Henüz planlanmış operasyon bulunmuyor.</td></tr>`;
             }
             lucide.createIcons();
@@ -2074,129 +2209,6 @@
             const { error } = await db.from('operasyonlar').delete().neq('id', 0);
             if (error) alert("Temizlenemedi: " + error.message);
             else operasyonlariListele();
-        }
-
-        // 13. TOPLU ORDU EXCEL AYRIŞTIRICI
-        let topluOrdularListesi = [];
-
-        function topluOrduOnizle() {
-            const metin = document.getElementById('toplu-ordu-metin').value.trim();
-            const onizlemeKutu = document.getElementById('toplu-onizleme-kutu');
-            const govde = document.getElementById('toplu-onizleme-govde');
-            const sayiEtiket = document.getElementById('toplu-algilanan-sayi');
-
-            if (!metin) {
-                onizlemeKutu.classList.add('hidden');
-                topluOrdularListesi = [];
-                return;
-            }
-
-            const satirlar = metin.split('\n');
-            topluOrdularListesi = [];
-
-            satirlar.forEach(satir => {
-                const s = satir.split(/\t|;/).map(val => val.trim());
-                if (s.length >= 5) {
-                    const x = parseInt(s[0], 10) || 0;
-                    const y = parseInt(s[1], 10) || 0;
-                    const ty = parseInt(s[2], 10) || 0;
-                    const nick = s[3] || 'Oyuncu';
-                    const koy = s[4] || 'Köy';
-                    const gucPuan = parseInt(s[5], 10) || 0;
-                    const birlik = s[6] || 'TÜRK.';
-                    const irk = s[7] || 'Galya';
-                    const koc = parseInt(s[18], 10) || 0;
-                    const manco = parseInt(s[19], 10) || 0;
-                    const reis = parseInt(s[20], 10) || 0;
-                    const kp = s[21] ? s[21].toUpperCase() : 'YOK';
-
-                    topluOrdularListesi.push({
-                        kullanici_adi: nick,
-                        koy_adi: koy,
-                        x_koordinat: x,
-                        y_koordinat: y,
-                        irk: irk,
-                        turnuva_yeri: ty,
-                        guc_puani: gucPuan,
-                        asker_verileri: { _birlik: birlik, _kp: kp, _koc: koc, _manco: manco, _reis: reis },
-                        durum: 'Aktif'
-                    });
-                }
-            });
-
-            if (topluOrdularListesi.length > 0) {
-                onizlemeKutu.classList.remove('hidden');
-                sayiEtiket.innerText = topluOrdularListesi.length;
-                govde.innerHTML = topluOrdularListesi.map(o => `
-                    <tr class="hover:bg-slate-900/60 transition">
-                        <td class="p-2 text-white font-sans">${o.kullanici_adi}</td>
-                        <td class="p-2 text-emerald-400">${o.koy_adi} (${o.x_koordinat}|${o.y_koordinat})</td>
-                        <td class="p-2">${o.irk}</td>
-                        <td class="p-2 text-amber-400 font-bold">${o.turnuva_yeri}</td>
-                        <td class="p-2 font-bold text-slate-200">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
-                    </tr>
-                `).join('');
-            } else {
-                onizlemeKutu.classList.add('hidden');
-            }
-            lucide.createIcons();
-        }
-
-        async function topluOrdulariSupabaseyeKaydet() {
-            if (topluOrdularListesi.length === 0) {
-                alert("Kaydedilecek ordu bulunamadı!");
-                return;
-            }
-
-            const btn = document.getElementById('btn-toplu-kaydet');
-            btn.innerText = "Kayıtlar Aktarılıyor...";
-
-            const { error } = await db.from('ordular').insert(topluOrdularListesi);
-
-            if (error) {
-                alert("Toplu Kayıt Hatası: " + error.message);
-                btn.innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Tüm Orduları Sisteme Aktar`;
-            } else {
-                alert(`${topluOrdularListesi.length} adet ordu veritabanına aktarıldı!`);
-                document.getElementById('toplu-ordu-metin').value = '';
-                topluOrdularListesi = [];
-                modalKapat('modal-toplu-ordu');
-                verileriYukle();
-                btn.innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Tüm Orduları Sisteme Aktar`;
-            }
-            lucide.createIcons();
-        }
-
-        // 14. RAKİP EKLEME
-        async function rakipKaydet(e) {
-            e.preventDefault();
-            const x = parseInt(document.getElementById('m-rakip-x').value, 10);
-            const y = parseInt(document.getElementById('m-rakip-y').value, 10);
-            const nick = document.getElementById('m-rakip-nick').value;
-            const koy = document.getElementById('m-rakip-koy').value;
-            const birlik = document.getElementById('m-rakip-birlik').value;
-            const irk = document.getElementById('m-rakip-irk').value;
-            const tur = document.getElementById('m-rakip-tur').value;
-            const not = document.getElementById('m-rakip-not').value;
-
-            const { error } = await db.from('rakipler').insert([{
-                oyuncu_adi: nick,
-                koy_adi: koy,
-                x_koordinat: x,
-                y_koordinat: y,
-                birlik: birlik,
-                irk: irk,
-                koy_turu: tur,
-                notlar: not
-            }]);
-
-            if (error) {
-                alert("Hata: " + error.message);
-            } else {
-                modalKapat('modal-rakip');
-                verileriYukle();
-                alert("Hedef başarıyla eklendi!");
-            }
         }
 
         window.addEventListener('DOMContentLoaded', oturumKontrol);
