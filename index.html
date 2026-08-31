@@ -32,14 +32,14 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
 
-    <!-- Supabase İstemcisi -->
+    <!-- Supabase İstemcisi & Global Harita Belleği -->
     <script>
         const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Küresel Harita Belleği
-        window.HARITA_DATA = {};
+        // Excel Mantığı: Tüm köyler tarayıcı hafızasında tutulur
+        window.HARITA_BELLEGI = {};
     </script>
 
     <!-- 1. GİRİŞ EKRANI -->
@@ -81,10 +81,10 @@
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
                     
-                    <!-- Canlı Harita Durum Göstergesi -->
+                    <!-- Canlı Harita İlerleme Göstergesi -->
                     <div class="hidden sm:flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px]">
-                        <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span id="harita-canli-durum" class="text-slate-300 font-mono">Harita Yükleniyor...</span>
+                        <span id="map-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span id="map-status-text" class="text-slate-300 font-mono">Harita İndiriliyor...</span>
                     </div>
                 </div>
 
@@ -352,11 +352,11 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                 <div>
                     <label class="block text-[11px] font-semibold text-emerald-400 mb-1">X Koordinatı</label>
-                    <input type="number" id="m-ordu-x" oninput="koordSorgula('ordu')" onkeyup="koordSorgula('ordu')" onchange="koordSorgula('ordu')" required placeholder="50" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
+                    <input type="number" id="m-ordu-x" oninput="koordSorgula('ordu')" onkeyup="koordSorgula('ordu')" required placeholder="50" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-emerald-400 mb-1">Y Koordinatı</label>
-                    <input type="number" id="m-ordu-y" oninput="koordSorgula('ordu')" onkeyup="koordSorgula('ordu')" onchange="koordSorgula('ordu')" required placeholder="-20" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
+                    <input type="number" id="m-ordu-y" oninput="koordSorgula('ordu')" onkeyup="koordSorgula('ordu')" required placeholder="-20" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-emerald-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-amber-400 mb-1">Turnuva Yeri (TY)</label>
@@ -444,7 +444,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: YENİ RAKİP EKLE -->
+    <!-- MODAL 3: YENİ RAKİP EKLE (KOORDİNATLA ANINDA DOLAR) -->
     <div id="modal-rakip" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -458,11 +458,11 @@
                 <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                     <div>
                         <label class="block text-[11px] font-semibold text-blue-400 mb-1">X Koordinatı</label>
-                        <input type="number" id="m-rakip-x" oninput="koordSorgula('rakip')" onkeyup="koordSorgula('rakip')" onchange="koordSorgula('rakip')" required placeholder="10" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
+                        <input type="number" id="m-rakip-x" oninput="koordSorgula('rakip')" onkeyup="koordSorgula('rakip')" required placeholder="10" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-blue-400 mb-1">Y Koordinatı</label>
-                        <input type="number" id="m-rakip-y" oninput="koordSorgula('rakip')" onkeyup="koordSorgula('rakip')" onchange="koordSorgula('rakip')" required placeholder="-45" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
+                        <input type="number" id="m-rakip-y" oninput="koordSorgula('rakip')" onkeyup="koordSorgula('rakip')" required placeholder="-45" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-blue-500">
                     </div>
                 </div>
 
@@ -515,7 +515,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT MOTORU -->
+    <!-- JAVASCRIPT ÇEKİRDEĞİ -->
     <script>
         lucide.createIcons();
 
@@ -540,7 +540,7 @@
             document.getElementById('ana-panel').classList.remove('hidden');
             document.getElementById('kullanici-etiket').innerText = nick;
             verileriYukle();
-            haritaVerisiniBellegeAl();
+            haritayiOtomatikYukle();
             lucide.createIcons();
         }
 
@@ -555,38 +555,80 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. CANLI HARİTA VERİSİNİ İNDİRİP BELLEĞE ALMA
-        async function haritaVerisiniBellegeAl() {
-            const durumEl = document.getElementById('harita-canli-durum');
-            const dotEl = document.getElementById('sync-dot');
+        // 2. OTOMATİK HARİTA İNDİRİCİ & AYRIŞTIRICI (EXCEL MANTIĞI)
+        async function haritayiOtomatikYukle() {
+            const durumEl = document.getElementById('map-status-text');
+            const dotEl = document.getElementById('map-status-dot');
 
-            // 1. Varsa önbellekten anında aç
-            const onbellek = localStorage.getItem('ahir_harita_cache');
+            // 1. Önce tarayıcı hafızasından kontrol et
+            const onbellek = localStorage.getItem('ahir_harita_v1');
             if (onbellek) {
                 try {
-                    window.HARITA_DATA = JSON.parse(onbellek);
-                    const sayi = Object.keys(window.HARITA_DATA).length;
+                    window.HARITA_BELLEGI = JSON.parse(onbellek);
+                    const sayi = Object.keys(window.HARITA_BELLEGI).length;
                     durumEl.innerText = `Harita: ${sayi.toLocaleString('tr-TR')} Köy Hazır`;
                     dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
                 } catch(e){}
             }
 
-            // 2. Arka planda sunucudan en güncel halini çek
-            try {
-                const res = await fetch('/api/sync');
-                const data = await res.json();
-                if (data.success && data.harita) {
-                    window.HARITA_DATA = data.harita;
-                    localStorage.setItem('ahir_harita_cache', JSON.stringify(data.harita));
-                    durumEl.innerText = `Harita: ${data.count.toLocaleString('tr-TR')} Köy Güncel`;
-                    dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
+            // 2. Travian map.sql dosyasını 3 farklı kanaldan sırayla dene (Garanti İndirme)
+            const proxyLinkleri = [
+                "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://ts11.x1.europe.travian.com/map.sql"),
+                "https://corsproxy.io/?url=" + encodeURIComponent("https://ts11.x1.europe.travian.com/map.sql"),
+                "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent("https://ts11.x1.europe.travian.com/map.sql")
+            ];
+
+            let sqlMetni = null;
+            for (const link of proxyLinkleri) {
+                try {
+                    const res = await fetch(link);
+                    if (res.ok) {
+                        sqlMetni = await res.text();
+                        if (sqlMetni && sqlMetni.includes("INSERT INTO `x_world`")) break;
+                    }
+                } catch(e) {
+                    console.warn("Proxy denendi:", link);
                 }
-            } catch (err) {
-                console.error("Harita çekilemedi:", err);
+            }
+
+            if (!sqlMetni) {
+                if (Object.keys(window.HARITA_BELLEGI).length === 0) {
+                    durumEl.innerText = "Harita Bağlantısı Bekleniyor";
+                }
+                return;
+            }
+
+            // 3. Haritadaki 5000+ köyü 0.01 saniyede hafızaya al
+            const IRK_KODLARI = { 1: "Roma", 2: "Cermen", 3: "Galya", 4: "Doğa", 5: "Natar", 6: "Hun", 7: "Mısır" };
+            const regex = /\((\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+),\s*'((?:[^'\\]|\\.)*)',\s*(\d+)/g;
+
+            let match;
+            let count = 0;
+            const tempBellek = {};
+
+            while ((match = regex.exec(sqlMetni)) !== null) {
+                const x = match[2];
+                const y = match[3];
+                const tid = parseInt(match[4], 10);
+                const koy = match[6].replace(/\\'/g, "'").replace(/&#39;/g, "'");
+                const oyuncu = match[8].replace(/\\'/g, "'").replace(/&#39;/g, "'");
+                const birlik = match[10].replace(/\\'/g, "'").replace(/&#39;/g, "'");
+                const irk = IRK_KODLARI[tid] || "Roma";
+                const nufus = parseInt(match[11], 10);
+
+                tempBellek[`${x}|${y}`] = { koy, oyuncu, irk, birlik, nufus };
+                count++;
+            }
+
+            if (count > 0) {
+                window.HARITA_BELLEGI = tempBellek;
+                localStorage.setItem('ahir_harita_v1', JSON.stringify(tempBellek));
+                durumEl.innerText = `Harita: ${count.toLocaleString('tr-TR')} Köy Güncel`;
+                dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
             }
         }
 
-        // 3. ANLIK KOORDİNAT SORGUSU (BELLEKTEN 0 MS GECİKME İLE)
+        // 3. ANLIK KOORDİNAT SORGUSU (Hafızadan 0 Milisaniye)
         function koordSorgula(tur) {
             const xGirdi = document.getElementById(`m-${tur}-x`).value.trim();
             const yGirdi = document.getElementById(`m-${tur}-y`).value.trim();
@@ -594,23 +636,22 @@
             if (xGirdi === "" || yGirdi === "") return;
 
             const anahtar = `${xGirdi}|${yGirdi}`;
-            const k = window.HARITA_DATA[anahtar];
+            const k = window.HARITA_BELLEGI[anahtar];
 
             if (k) {
-                // k = [koy_adi, oyuncu_adi, irk, birlik_adi, nufus]
                 if (tur === 'ordu') {
-                    document.getElementById('m-ordu-koy').value = k[0] || '';
-                    document.getElementById('m-ordu-nick').value = k[1] || '';
-                    if (k[2]) {
-                        document.getElementById('m-ordu-irk').value = k[2];
+                    document.getElementById('m-ordu-koy').value = k.koy || '';
+                    document.getElementById('m-ordu-nick').value = k.oyuncu || '';
+                    if (k.irk) {
+                        document.getElementById('m-ordu-irk').value = k.irk;
                         askerAlanlariniGuncelle();
                     }
                 } else {
-                    document.getElementById('m-rakip-koy').value = k[0] || '';
-                    document.getElementById('m-rakip-nick').value = k[1] || '';
-                    document.getElementById('m-rakip-birlik').value = k[3] || '';
-                    if (k[2]) {
-                        document.getElementById('m-rakip-irk').value = k[2];
+                    document.getElementById('m-rakip-koy').value = k.koy || '';
+                    document.getElementById('m-rakip-nick').value = k.oyuncu || '';
+                    document.getElementById('m-rakip-birlik').value = k.birlik || '';
+                    if (k.irk) {
+                        document.getElementById('m-rakip-irk').value = k.irk;
                     }
                 }
             }
