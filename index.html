@@ -32,7 +32,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
 
-    <!-- Supabase & Global Değişkenler -->
+    <!-- Supabase İstemcisi & Global Değişkenler -->
     <script>
         const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
@@ -42,8 +42,14 @@
         window.acikDetayId = null;
         window.acikArsivDetayId = null;
         window.tumArsivKayitlari = [];
+        window.tumRakipler = [];
         window.arsivSayfa = 1;
         window.sayfaBasiKayit = 50;
+
+        // Sıralama & Filtre Durumları
+        window.aktifSortKolon = 'guc_puani';
+        window.aktifSortYon = 'desc'; // 'asc' veya 'desc'
+        window.durumFiltresi = 'Tümü'; // 'Tümü', 'Aktif', 'Pasif'
     </script>
 
     <!-- 1. GİRİŞ EKRANI -->
@@ -136,12 +142,12 @@
         <!-- Ana Gövde -->
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
             
-            <!-- 1. ORDULAR SEKMESİ (HER KÖYÜN SADECE EN GÜNCEL KAYDI) -->
+            <!-- 1. ORDULAR SEKMESİ (SIRALAMA & DURUM FİLTRESİ) -->
             <section id="tab-ordular" class="space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-white">Birlik Ordu Yönetimi (En Güncel Liste)</h1>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Her köyün son durumu. Asker detaylarını açmak için satıra tıklayın.</p>
+                        <h1 class="text-xl sm:text-2xl font-bold text-white">Birlik Ordu Yönetimi</h1>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Sütun başlıklarına tıklayarak sıralayabilir, Durum başlığından filtreleyebilirsiniz.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button onclick="modalOrduAc()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 text-xs sm:text-sm">
@@ -156,21 +162,31 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs sm:text-sm text-slate-300">
-                            <thead class="bg-slate-950/80 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px] sm:text-[11px]">
+                            <thead class="bg-slate-950/80 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px] sm:text-[11px] select-none">
                                 <tr>
-                                    <th class="p-3">Koord</th>
-                                    <th class="p-3">Oyuncu</th>
-                                    <th class="p-3">Köy</th>
-                                    <th class="p-3">Birlik</th>
-                                    <th class="p-3">Irk</th>
-                                    <th class="p-3 text-amber-400">TY</th>
-                                    <th class="p-3 font-bold text-slate-100">Güç</th>
-                                    <th class="p-3 text-center">Koç</th>
-                                    <th class="p-3 text-center">Manco</th>
-                                    <th class="p-3 text-center">Reis</th>
-                                    <th class="p-3 text-center">KP</th>
-                                    <th class="p-3">Son Güncelleme</th>
-                                    <th class="p-3 text-center">Durum</th>
+                                    <th onclick="kolonSirala('koord')" class="p-3 cursor-pointer hover:text-white transition">Koord <span id="sort-icon-koord"></span></th>
+                                    <th onclick="kolonSirala('kullanici_adi')" class="p-3 cursor-pointer hover:text-white transition">Oyuncu <span id="sort-icon-kullanici_adi"></span></th>
+                                    <th onclick="kolonSirala('koy_adi')" class="p-3 cursor-pointer hover:text-white transition">Köy <span id="sort-icon-koy_adi"></span></th>
+                                    <th onclick="kolonSirala('birlik')" class="p-3 cursor-pointer hover:text-white transition">Birlik <span id="sort-icon-birlik"></span></th>
+                                    <th onclick="kolonSirala('irk')" class="p-3 cursor-pointer hover:text-white transition">Irk <span id="sort-icon-irk"></span></th>
+                                    <th onclick="kolonSirala('turnuva_yeri')" class="p-3 text-amber-400 cursor-pointer hover:text-amber-300 transition">TY <span id="sort-icon-turnuva_yeri"></span></th>
+                                    <th onclick="kolonSirala('guc_puani')" class="p-3 font-bold text-slate-100 cursor-pointer hover:text-emerald-400 transition">Güç <span id="sort-icon-guc_puani"></span></th>
+                                    <th onclick="kolonSirala('koc')" class="p-3 text-center cursor-pointer hover:text-white transition">Koç <span id="sort-icon-koc"></span></th>
+                                    <th onclick="kolonSirala('manco')" class="p-3 text-center cursor-pointer hover:text-white transition">Manco <span id="sort-icon-manco"></span></th>
+                                    <th onclick="kolonSirala('reis')" class="p-3 text-center cursor-pointer hover:text-white transition">Reis <span id="sort-icon-reis"></span></th>
+                                    <th onclick="kolonSirala('kp')" class="p-3 text-center cursor-pointer hover:text-white transition">KP <span id="sort-icon-kp"></span></th>
+                                    <th onclick="kolonSirala('son_guncelleme')" class="p-3 cursor-pointer hover:text-white transition">Son Güncelleme <span id="sort-icon-son_guncelleme"></span></th>
+                                    <!-- Durum Filtresi Başlığı -->
+                                    <th class="p-3 text-center">
+                                        <div class="inline-flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-2 py-1 rounded-lg">
+                                            <span id="durum-filtre-ikonu" class="hidden text-emerald-400"><i data-lucide="filter" class="w-3 h-3"></i></span>
+                                            <select onchange="durumFiltrele(this.value)" id="select-durum-filtre" class="bg-transparent text-xs font-bold text-slate-300 outline-none cursor-pointer">
+                                                <option value="Tümü">Durum (Tümü)</option>
+                                                <option value="Aktif">Yalnızca Aktif</option>
+                                                <option value="Pasif">Yalnızca Pasif</option>
+                                            </select>
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="ordu-tablo-govde" class="divide-y divide-slate-800/60 font-medium">
@@ -181,14 +197,13 @@
                 </div>
             </section>
 
-            <!-- 2. ORDU ARŞİVİ SEKMESİ (TÜM GEÇMİŞ KAYITLAR & SAYFALAMA) -->
+            <!-- 2. ORDU ARŞİVİ SEKMESİ (SİLME & DÜZENLEME) -->
             <section id="tab-arsiv" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h1 class="text-xl sm:text-2xl font-bold text-white">Ordu Arşivi & Gelişim Geçmişi</h1>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Sisteme girilmiş tüm geçmiş ordu güncellemeleri.</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Tüm kayıt geçmişi. Kayıtları düzenleyebilir veya silebilirsiniz.</p>
                     </div>
-                    <!-- Sayfalama Kontrolleri -->
                     <div class="flex items-center gap-2">
                         <button onclick="arsivSayfaDegistir(-1)" id="btn-arsiv-prev" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
                             &larr; Önceki
@@ -217,7 +232,7 @@
                                     <th class="p-3 text-center">Reis</th>
                                     <th class="p-3 text-center">KP</th>
                                     <th class="p-3">Kayıt Tarihi</th>
-                                    <th class="p-3 text-center">Durum</th>
+                                    <th class="p-3 text-center">İşlem</th>
                                 </tr>
                             </thead>
                             <tbody id="arsiv-tablo-govde" class="divide-y divide-slate-800/60 font-medium">
@@ -228,16 +243,21 @@
                 </div>
             </section>
 
-            <!-- 3. RAKİPLER SEKMESİ -->
+            <!-- 3. RAKİPLER SEKMESİ (TOPLU SİLME & DÜZENLEME) -->
             <section id="tab-rakipler" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h1 class="text-xl sm:text-2xl font-bold text-white">Hedef & İstihbarat</h1>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Operasyon hedefleri ve köy tipleri.</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Operasyon hedefleri ve notlar.</p>
                     </div>
-                    <button onclick="modalRakipAc()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
-                        <i data-lucide="crosshair" class="w-5 h-5"></i> Yeni Hedef Ekle
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="seciliRakipleriSil()" id="btn-toplu-rakip-sil" class="hidden bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 font-bold px-3.5 py-2.5 rounded-xl transition text-xs sm:text-sm flex items-center gap-1.5">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Seçilenleri Sil (<span id="secili-rakip-sayisi">0</span>)
+                        </button>
+                        <button onclick="modalRakipAc()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg shadow-blue-500/20 text-xs sm:text-sm">
+                            <i data-lucide="crosshair" class="w-4 h-4"></i> Yeni Hedef Ekle
+                        </button>
+                    </div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -245,6 +265,9 @@
                         <table class="w-full text-left text-xs sm:text-sm text-slate-300">
                             <thead class="bg-slate-950/60 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[11px]">
                                 <tr>
+                                    <th class="p-3 sm:p-4 text-center w-10">
+                                        <input type="checkbox" onchange="tumRakipleriSec(this.checked)" class="rounded bg-slate-950 border-slate-800 cursor-pointer">
+                                    </th>
                                     <th class="p-3 sm:p-4">Koordinat</th>
                                     <th class="p-3 sm:p-4">Rakip</th>
                                     <th class="p-3 sm:p-4">Köy Adı</th>
@@ -252,17 +275,18 @@
                                     <th class="p-3 sm:p-4">Irk</th>
                                     <th class="p-3 sm:p-4">Tür</th>
                                     <th class="p-3 sm:p-4">Notlar</th>
+                                    <th class="p-3 sm:p-4 text-center">İşlemler</th>
                                 </tr>
                             </thead>
-                            <tbody id="rakip-tablo-govde" class="divide-y divide-slate-800/60">
-                                <tr><td colspan="7" class="p-8 text-center text-slate-500">Hedefler yükleniyor...</td></tr>
+                            <tbody id="rakip-tablo-govde" class="divide-y divide-slate-800/60 font-medium">
+                                <tr><td colspan="9" class="p-8 text-center text-slate-500">Hedefler yükleniyor...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- 4. OPERASYON KURGU SEKMESİ (SADECE AKTİF ORDULAR LİSTELENİR) -->
+            <!-- 4. OPERASYON KURGU SEKMESİ -->
             <section id="tab-operasyon" class="hidden space-y-6">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-white">Operasyon Kurgu Motoru</h1>
@@ -369,7 +393,7 @@
         </main>
     </div>
 
-    <!-- MODAL 1: TEKİL ORDU EKLE (DİNAMİK TAARRUZ KADROSU + KP) -->
+    <!-- MODAL 1: YENİ ORDU EKLE -->
     <div id="modal-ordu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -379,7 +403,6 @@
                 <button onclick="modalKapat('modal-ordu')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <!-- Koordinat, TY, Irk ve KP -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                 <div>
                     <label class="block text-[11px] font-semibold text-emerald-400 mb-1">X Koordinatı</label>
@@ -419,7 +442,6 @@
 
             <input type="hidden" id="m-ordu-irk" value="Galya">
 
-            <!-- Yalnızca Seçili Irkın Saldırı Askerleri + Kuşatma -->
             <div class="border-t border-slate-800 pt-3">
                 <span id="asker-baslik-etiket" class="block text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">Galya Saldırı Kadrosu</span>
                 <div id="asker-input-alani" class="grid grid-cols-3 gap-2.5"></div>
@@ -431,7 +453,70 @@
         </div>
     </div>
 
-    <!-- MODAL 2: TOPLU ORDU EKLE (EXCEL) -->
+    <!-- MODAL 2: ORDU DÜZENLEME MODALI -->
+    <div id="modal-ordu-duzenle" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 my-8 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-amber-400"></i> Ordu Kaydını Düzenle
+                </h3>
+                <button onclick="modalKapat('modal-ordu-duzenle')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form onsubmit="orduGuncelle(event)" class="space-y-4">
+                <input type="hidden" id="edit-ordu-id">
+                <input type="hidden" id="edit-ordu-irk">
+
+                <div class="grid grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">X</label>
+                        <input type="number" id="edit-ordu-x" required class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Y</label>
+                        <input type="number" id="edit-ordu-y" required class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-amber-400 mb-1">TY</label>
+                        <input type="number" id="edit-ordu-ty" min="0" max="20" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-amber-400 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-indigo-400 mb-1">KP</label>
+                        <select id="edit-ordu-kp" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white">
+                            <option value="YOK">YOK</option>
+                            <option value="VAR">VAR</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
+                        <input type="text" id="edit-ordu-koy" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Oyuncu</label>
+                        <input type="text" id="edit-ordu-nick" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Birlik</label>
+                        <input type="text" id="edit-ordu-birlik" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-3">
+                    <span id="edit-asker-baslik" class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">Asker Kadrosunu Güncelle</span>
+                    <div id="edit-asker-alani" class="grid grid-cols-3 gap-2.5"></div>
+                </div>
+
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3.5 rounded-xl transition shadow-lg shadow-amber-500/20">
+                    Değişiklikleri Kaydet
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: TOPLU ORDU EKLE (EXCEL) -->
     <div id="modal-toplu-ordu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -479,7 +564,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: YENİ RAKİP EKLE -->
+    <!-- MODAL 4: YENİ RAKİP EKLE -->
     <div id="modal-rakip" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -550,6 +635,79 @@
         </div>
     </div>
 
+    <!-- MODAL 5: RAKİP DÜZENLEME MODALI -->
+    <div id="modal-rakip-duzenle" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 my-8 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="edit" class="w-5 h-5 text-blue-400"></i> Rakip Hedefi Düzenle
+                </h3>
+                <button onclick="modalKapat('modal-rakip-duzenle')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form onsubmit="rakipGuncelle(event)" class="space-y-4">
+                <input type="hidden" id="edit-rakip-id">
+
+                <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-blue-400 mb-1">X Koordinatı</label>
+                        <input type="number" id="edit-rakip-x" required class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-blue-400 mb-1">Y Koordinatı</label>
+                        <input type="number" id="edit-rakip-y" required class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Rakip Oyuncu</label>
+                        <input type="text" id="edit-rakip-nick" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
+                        <input type="text" id="edit-rakip-koy" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Birlik</label>
+                        <input type="text" id="edit-rakip-birlik" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Irk</label>
+                        <select id="edit-rakip-irk" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                            <option value="Roma">Roma</option>
+                            <option value="Cermen">Cermen</option>
+                            <option value="Galya">Galya</option>
+                            <option value="Hun">Hun</option>
+                            <option value="Mısır">Mısır</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Türü</label>
+                        <select id="edit-rakip-tur" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                            <option value="Merkez">Merkez</option>
+                            <option value="15T">15T</option>
+                            <option value="9T">9T</option>
+                            <option value="Standart">Standart</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">İstihbarat Notu</label>
+                    <textarea id="edit-rakip-not" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-blue-500"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-blue-500/20">
+                    Hedef Bilgilerini Güncelle
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT MOTORU -->
     <script>
         lucide.createIcons();
@@ -590,7 +748,7 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. HARİTA VERİSİNİ SUNUCUDAN İNDİRİP BELLEĞE ALMA
+        // 2. DOĞRUDAN SUNUCUDAN HARİTA VERİSİNİ BELLEĞE ALMA
         async function haritayiIndirVeBellegeAl() {
             const durumEl = document.getElementById('map-status-text');
             const dotEl = document.getElementById('map-status-dot');
@@ -666,20 +824,22 @@
             ]
         };
 
-        function askerAlanlariniGuncelle() {
-            let irk = document.getElementById('m-ordu-irk').value;
+        function askerAlanlariniGuncelle(hedefAlaniId = 'asker-input-alani', irkDegeri = null) {
+            let irk = irkDegeri || document.getElementById('m-ordu-irk').value;
             if (!IRK_ASKERLERI[irk]) irk = "Galya";
 
             const baslik = document.getElementById('asker-baslik-etiket');
-            const govde = document.getElementById('asker-input-alani');
+            if (baslik && hedefAlaniId === 'asker-input-alani') {
+                baslik.innerText = `${irk} Saldırı & Kuşatma Kadrosu`;
+            }
 
-            baslik.innerText = `${irk} Saldırı & Kuşatma Kadrosu`;
+            const govde = document.getElementById(hedefAlaniId);
             const liste = IRK_ASKERLERI[irk];
 
             govde.innerHTML = liste.map(a => `
                 <div>
                     <label class="block text-[10px] text-slate-400 mb-0.5 truncate" title="${a.ad} (Saldırı: ${a.carpan})">${a.ad} (${a.carpan})</label>
-                    <input type="number" id="asker-${a.id}" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono focus:border-emerald-500 outline-none">
+                    <input type="number" id="${hedefAlaniId === 'asker-input-alani' ? 'asker-' : 'edit-asker-'}${a.id}" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white font-mono focus:border-emerald-500 outline-none">
                 </div>
             `).join('');
         }
@@ -821,7 +981,29 @@
             }
         }
 
-        // 7. DETAY SATIRI AÇMA/KAPATMA (ORDULAR İÇİN)
+        // 7. SIRALAMA & DURUM FİLTRELEME FONKSİYONLARI (ORDULAR SEKMESİ)
+        function kolonSirala(kolon) {
+            if (window.aktifSortKolon === kolon) {
+                window.aktifSortYon = window.aktifSortYon === 'asc' ? 'desc' : 'asc';
+            } else {
+                window.aktifSortKolon = kolon;
+                window.aktifSortYon = (['guc_puani', 'turnuva_yeri', 'koc', 'manco', 'reis', 'son_guncelleme'].includes(kolon)) ? 'desc' : 'asc';
+            }
+            orduTablosunuCiz();
+        }
+
+        function durumFiltrele(deger) {
+            window.durumFiltresi = deger;
+            const ikon = document.getElementById('durum-filtre-ikonu');
+            if (deger !== 'Tümü') {
+                ikon.classList.remove('hidden');
+            } else {
+                ikon.classList.add('hidden');
+            }
+            orduTablosunuCiz();
+        }
+
+        // 8. DETAY SATIRI AÇMA/KAPATMA
         function detaySatiriGoster(id) {
             const row = document.getElementById(`detay-satir-${id}`);
             if (!row) return;
@@ -840,7 +1022,6 @@
             }
         }
 
-        // ARŞİV DETAY SATIRI AÇMA/KAPATMA
         function arsivDetayGoster(id) {
             const row = document.getElementById(`arsiv-detay-satir-${id}`);
             if (!row) return;
@@ -859,7 +1040,7 @@
             }
         }
 
-        // 8. DURUM DEĞİŞTİR (AKTİF / PASİF)
+        // 9. DURUM DEĞİŞTİR (AKTİF / PASİF)
         async function durumDegistir(id, yeniDurum, event) {
             if (event) event.stopPropagation();
             const { error } = await db.from('ordular').update({ durum: yeniDurum }).eq('id', id);
@@ -870,11 +1051,328 @@
             }
         }
 
-        // ARŞİV SAYFALAMA KONTROLLERİ
+        // 10. ORDU SİLME & DÜZENLEME
+        async function orduSil(id, event) {
+            if (event) event.stopPropagation();
+            if (!confirm("Bu ordu kaydını kalıcı olarak silmek istediğinize emin misiniz?")) return;
+
+            const { error } = await db.from('ordular').delete().eq('id', id);
+            if (error) {
+                alert("Silinemedi: " + error.message);
+            } else {
+                verileriYukle();
+            }
+        }
+
+        function orduDuzenleModalAc(id, event) {
+            if (event) event.stopPropagation();
+            const o = window.tumArsivKayitlari.find(item => item.id === id);
+            if (!o) return;
+
+            const d = o.asker_verileri || {};
+            document.getElementById('edit-ordu-id').value = o.id;
+            document.getElementById('edit-ordu-x').value = o.x_koordinat;
+            document.getElementById('edit-ordu-y').value = o.y_koordinat;
+            document.getElementById('edit-ordu-ty').value = o.turnuva_yeri || 0;
+            document.getElementById('edit-ordu-kp').value = d._kp || 'YOK';
+            document.getElementById('edit-ordu-koy').value = o.koy_adi || '';
+            document.getElementById('edit-ordu-nick').value = o.kullanici_adi || '';
+            document.getElementById('edit-ordu-birlik').value = d._birlik || '-';
+            document.getElementById('edit-ordu-irk').value = o.irk || 'Galya';
+
+            askerAlanlariniGuncelle('edit-asker-alani', o.irk);
+
+            // Mevcut asker sayılarını doldur
+            const liste = IRK_ASKERLERI[o.irk] || IRK_ASKERLERI["Galya"];
+            liste.forEach(a => {
+                const inputEl = document.getElementById(`edit-asker-${a.id}`);
+                if (inputEl && d[a.ad] !== undefined) {
+                    inputEl.value = d[a.ad];
+                }
+            });
+
+            modalAc('modal-ordu-duzenle');
+        }
+
+        async function orduGuncelle(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-ordu-id').value, 10);
+            const x = parseInt(document.getElementById('edit-ordu-x').value, 10);
+            const y = parseInt(document.getElementById('edit-ordu-y').value, 10);
+            const ty = parseInt(document.getElementById('edit-ordu-ty').value, 10) || 0;
+            const kp = document.getElementById('edit-ordu-kp').value || 'YOK';
+            const koy = document.getElementById('edit-ordu-koy').value;
+            const nick = document.getElementById('edit-ordu-nick').value;
+            const birlik = document.getElementById('edit-ordu-birlik').value || '-';
+            const irk = document.getElementById('edit-ordu-irk').value || 'Galya';
+
+            const liste = IRK_ASKERLERI[irk] || IRK_ASKERLERI["Galya"];
+            let toplamGuc = 0;
+            let askerDökümü = {};
+            let koc = 0, manco = 0, reis = 0;
+
+            liste.forEach(a => {
+                const adet = parseInt(document.getElementById(`edit-asker-${a.id}`)?.value, 10) || 0;
+                askerDökümü[a.ad] = adet;
+                toplamGuc += (adet * a.carpan);
+
+                if (a.id === 'kocbasi') koc = adet;
+                if (a.id === 'mancinik') manco = adet;
+                if (a.id === 'reis') reis = adet;
+            });
+
+            const payloadData = {
+                ...askerDökümü,
+                _birlik: birlik,
+                _kp: kp,
+                _koc: koc,
+                _manco: manco,
+                _reis: reis
+            };
+
+            const { error } = await db.from('ordular').update({
+                kullanici_adi: nick,
+                koy_adi: koy,
+                x_koordinat: x,
+                y_koordinat: y,
+                turnuva_yeri: ty,
+                guc_puani: toplamGuc,
+                asker_verileri: payloadData,
+                son_guncelleme: new Date().toISOString()
+            }).eq('id', id);
+
+            if (error) {
+                alert("Güncelleme Hatası: " + error.message);
+            } else {
+                modalKapat('modal-ordu-duzenle');
+                verileriYukle();
+                alert("Ordu kaydı başarıyla güncellendi!");
+            }
+        }
+
+        // 11. RAKİP SİLME & DÜZENLEME & TOPLU SİLME
+        async function rakipSil(id) {
+            if (!confirm("Bu hedefi silmek istediğinize emin misiniz?")) return;
+            const { error } = await db.from('rakipler').delete().eq('id', id);
+            if (error) alert("Silinemedi: " + error.message);
+            else verileriYukle();
+        }
+
+        function rakipDuzenleModalAc(id) {
+            const r = window.tumRakipler.find(item => item.id === id);
+            if (!r) return;
+
+            document.getElementById('edit-rakip-id').value = r.id;
+            document.getElementById('edit-rakip-x').value = r.x_koordinat;
+            document.getElementById('edit-rakip-y').value = r.y_koordinat;
+            document.getElementById('edit-rakip-nick').value = r.oyuncu_adi;
+            document.getElementById('edit-rakip-koy').value = r.koy_adi;
+            document.getElementById('edit-rakip-birlik').value = r.birlik || '';
+            document.getElementById('edit-rakip-irk').value = r.irk || 'Roma';
+            document.getElementById('edit-rakip-tur').value = r.koy_turu || 'Merkez';
+            document.getElementById('edit-rakip-not').value = r.notlar || '';
+
+            modalAc('modal-rakip-duzenle');
+        }
+
+        async function rakipGuncelle(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-rakip-id').value, 10);
+            const x = parseInt(document.getElementById('edit-rakip-x').value, 10);
+            const y = parseInt(document.getElementById('edit-rakip-y').value, 10);
+            const nick = document.getElementById('edit-rakip-nick').value;
+            const koy = document.getElementById('edit-rakip-koy').value;
+            const birlik = document.getElementById('edit-rakip-birlik').value;
+            const irk = document.getElementById('edit-rakip-irk').value;
+            const tur = document.getElementById('edit-rakip-tur').value;
+            const not = document.getElementById('edit-rakip-not').value;
+
+            const { error } = await db.from('rakipler').update({
+                oyuncu_adi: nick,
+                koy_adi: koy,
+                x_koordinat: x,
+                y_koordinat: y,
+                birlik: birlik,
+                irk: irk,
+                koy_turu: tur,
+                notlar: not
+            }).eq('id', id);
+
+            if (error) {
+                alert("Güncelleme Hatası: " + error.message);
+            } else {
+                modalKapat('modal-rakip-duzenle');
+                verileriYukle();
+                alert("Hedef başarıyla güncellendi!");
+            }
+        }
+
+        function tumRakipleriSec(durum) {
+            document.querySelectorAll('.rakip-cb').forEach(cb => cb.checked = durum);
+            seciliRakipSayisiniGuncelle();
+        }
+
+        function seciliRakipSayisiniGuncelle() {
+            const secilenler = document.querySelectorAll('.rakip-cb:checked');
+            const btn = document.getElementById('btn-toplu-rakip-sil');
+            const sayiEl = document.getElementById('secili-rakip-sayisi');
+
+            if (secilenler.length > 0) {
+                btn.classList.remove('hidden');
+                sayiEl.innerText = secilenler.length;
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        async function seciliRakipleriSil() {
+            const secilenler = Array.from(document.querySelectorAll('.rakip-cb:checked')).map(cb => parseInt(cb.value, 10));
+            if (secilenler.length === 0) return;
+
+            if (!confirm(`Seçilen ${secilenler.length} hedefi silmek istediğinize emin misiniz?`)) return;
+
+            const { error } = await db.from('rakipler').delete().in('id', secilenler);
+            if (error) alert("Toplu silme hatası: " + error.message);
+            else verileriYukle();
+        }
+
+        // 12. TABLOLARI RENDER ETME (SIRALAMA & FİLTRELEME İLE)
+        function orduTablosunuCiz() {
+            const orduGovde = document.getElementById('ordu-tablo-govde');
+            const kurguSaldiran = document.getElementById('kurgu-saldiran');
+
+            // Sıralama ikonu güncelleme
+            ['koord', 'kullanici_adi', 'koy_adi', 'birlik', 'irk', 'turnuva_yeri', 'guc_puani', 'koc', 'manco', 'reis', 'kp', 'son_guncelleme'].forEach(k => {
+                const el = document.getElementById(`sort-icon-${k}`);
+                if (el) el.innerHTML = '';
+            });
+            const aktifIkon = document.getElementById(`sort-icon-${window.aktifSortKolon}`);
+            if (aktifIkon) {
+                aktifIkon.innerHTML = window.aktifSortYon === 'asc' ? ' &uarr;' : ' &darr;';
+            }
+
+            // Her köyden yalnızca en son kaydı al
+            const gorulenKoyler = new Set();
+            let enGuncelOrdular = [];
+
+            window.tumArsivKayitlari.forEach(o => {
+                const koordKey = `${o.x_koordinat}|${o.y_koordinat}`;
+                if (!gorulenKoyler.has(koordKey)) {
+                    gorulenKoyler.add(koordKey);
+                    enGuncelOrdular.push(o);
+                }
+            });
+
+            // Durum Filtresi
+            if (window.durumFiltresi !== 'Tümü') {
+                enGuncelOrdular = enGuncelOrdular.filter(o => (o.durum || 'Aktif') === window.durumFiltresi);
+            }
+
+            // Kolon Sıralaması
+            enGuncelOrdular.sort((a, b) => {
+                const dA = a.asker_verileri || {};
+                const dB = b.asker_verileri || {};
+                let valA = a[window.aktifSortKolon];
+                let valB = b[window.aktifSortKolon];
+
+                if (window.aktifSortKolon === 'koord') {
+                    valA = a.x_koordinat * 1000 + a.y_koordinat;
+                    valB = b.x_koordinat * 1000 + b.y_koordinat;
+                } else if (window.aktifSortKolon === 'birlik') {
+                    valA = dA._birlik || '';
+                    valB = dB._birlik || '';
+                } else if (window.aktifSortKolon === 'kp') {
+                    valA = dA._kp || 'YOK';
+                    valB = dB._kp || 'YOK';
+                } else if (window.aktifSortKolon === 'koc') {
+                    valA = dA._koc !== undefined ? dA._koc : (dA['Koç'] || 0);
+                    valB = dB._koc !== undefined ? dB._koc : (dB['Koç'] || 0);
+                } else if (window.aktifSortKolon === 'manco') {
+                    valA = dA._manco !== undefined ? dA._manco : (dA['Manco'] || 0);
+                    valB = dB._manco !== undefined ? dB._manco : (dB['Manco'] || 0);
+                } else if (window.aktifSortKolon === 'reis') {
+                    valA = dA._reis !== undefined ? dA._reis : (dA['Reis'] || 0);
+                    valB = dB._reis !== undefined ? dB._reis : (dB['Reis'] || 0);
+                }
+
+                if (typeof valA === 'string') {
+                    return window.aktifSortYon === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    return window.aktifSortYon === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+
+            if (enGuncelOrdular.length > 0) {
+                orduGovde.innerHTML = enGuncelOrdular.map(o => {
+                    const d = o.asker_verileri || {};
+                    const birlik = d._birlik || '-';
+                    const kp = d._kp || 'YOK';
+                    const koc = d._koc !== undefined ? d._koc : (d['Koç'] || d['Koçbaşı'] || 0);
+                    const manco = d._manco !== undefined ? d._manco : (d['Manco'] || d['Mancınık'] || d['Trebüşe'] || d['Ateş Mancınığı'] || 0);
+                    const reis = d._reis !== undefined ? d._reis : (d['Reis'] || d['Senatör'] || d['Kabile Reisi'] || 0);
+                    const durum = o.durum || 'Aktif';
+                    const tarih = new Date(o.son_guncelleme).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                    const detayAskerler = Object.entries(d)
+                        .filter(([k]) => !k.startsWith('_') && !['Koç', 'Koçbaşı', 'Manco', 'Mancınık', 'Trebüşe', 'Ateş Mancınığı', 'Reis', 'Senatör', 'Kabile Reisi'].includes(k))
+                        .map(([k, v]) => `<span class="bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-slate-300"><b class="text-white">${k}:</b> ${Number(v).toLocaleString('tr-TR')}</span>`)
+                        .join(' ');
+
+                    return `
+                        <tr onclick="detaySatiriGoster(${o.id})" class="hover:bg-slate-800/60 cursor-pointer transition select-none">
+                            <td class="p-3 font-mono font-bold text-emerald-400">(${o.x_koordinat}|${o.y_koordinat})</td>
+                            <td class="p-3 font-medium text-white">${o.kullanici_adi}</td>
+                            <td class="p-3 text-slate-300">${o.koy_adi}</td>
+                            <td class="p-3 text-slate-400">${birlik}</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 border border-slate-700">${o.irk}</span></td>
+                            <td class="p-3 font-bold text-amber-400">TY ${o.turnuva_yeri}</td>
+                            <td class="p-3 font-mono font-bold text-slate-100">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
+                            <td class="p-3 text-center font-mono">${koc.toLocaleString('tr-TR')}</td>
+                            <td class="p-3 text-center font-mono">${manco.toLocaleString('tr-TR')}</td>
+                            <td class="p-3 text-center font-mono">${reis.toLocaleString('tr-TR')}</td>
+                            <td class="p-3 text-center">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${kp === 'VAR' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}">${kp}</span>
+                            </td>
+                            <td class="p-3 text-slate-400 text-xs">${tarih}</td>
+                            <td class="p-3 text-center">
+                                <button onclick="durumDegistir(${o.id}, '${durum === 'Aktif' ? 'Pasif' : 'Aktif'}', event)" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${durum === 'Aktif' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30'}">
+                                    ${durum}
+                                </button>
+                            </td>
+                        </tr>
+                        <tr id="detay-satir-${o.id}" class="hidden bg-slate-950/80 border-y border-slate-800">
+                            <td colspan="13" class="p-3 text-xs">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-emerald-400 font-bold flex items-center gap-1"><i data-lucide="info" class="w-3.5 h-3.5"></i> Taarruz Kadrosu:</span>
+                                    ${detayAskerler || '<span class="text-slate-500">Piyade/Süvari detayı yok</span>'}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Operasyon Motoru Seçenekleri
+                const aktifler = enGuncelOrdular.filter(o => (o.durum || 'Aktif') === 'Aktif');
+                if (aktifler.length > 0) {
+                    kurguSaldiran.innerHTML = aktifler.map(o => `
+                        <option value="${o.x_koordinat}|${o.y_koordinat}|${o.turnuva_yeri}|${o.kullanici_adi}">
+                            ${o.kullanici_adi} - (${o.x_koordinat}|${o.y_koordinat}) [TY: ${o.turnuva_yeri}] - Güç: ${(o.guc_puani || 0).toLocaleString('tr-TR')}
+                        </option>
+                    `).join('');
+                } else {
+                    kurguSaldiran.innerHTML = `<option value="">Aktif ordu bulunmuyor (Tümü pasif)</option>`;
+                }
+            } else {
+                orduGovde.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500">Kayıtlı ordu bulunamadı.</td></tr>`;
+                kurguSaldiran.innerHTML = `<option value="">Kayıtlı ordu yok</option>`;
+            }
+            lucide.createIcons();
+        }
+
+        // ARŞİV SAYFALAMA
         function arsivSayfaDegistir(yon) {
             const toplamSayfa = Math.ceil(window.tumArsivKayitlari.length / window.sayfaBasiKayit) || 1;
             const yeniSayfa = window.arsivSayfa + yon;
-
             if (yeniSayfa >= 1 && yeniSayfa <= toplamSayfa) {
                 window.arsivSayfa = yeniSayfa;
                 arsivTablosunuCiz();
@@ -930,7 +1428,14 @@
                             </td>
                             <td class="p-3 text-slate-400 text-xs">${tarih}</td>
                             <td class="p-3 text-center">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${durum === 'Aktif' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">${durum}</span>
+                                <div class="flex items-center justify-center gap-1.5" onclick="event.stopPropagation()">
+                                    <button onclick="orduDuzenleModalAc(${o.id}, event)" title="Düzenle" class="p-1.5 text-amber-400 hover:bg-amber-500/10 rounded-lg border border-slate-700 transition">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="orduSil(${o.id}, event)" title="Sil" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg border border-slate-700 transition">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <tr id="arsiv-detay-satir-${o.id}" class="hidden bg-slate-950/80 border-y border-slate-800">
@@ -949,105 +1454,24 @@
             lucide.createIcons();
         }
 
-        // 9. VERİLERİ YÜKLEME VE FİLTRELEME MOTORU
         async function verileriYukle() {
-            // Tüm kayıtları id'ye göre azalan sırada çek
             const { data: ordular } = await db.from('ordular').select('*').order('id', { ascending: false });
-            const orduGovde = document.getElementById('ordu-tablo-govde');
-            const kurguSaldiran = document.getElementById('kurgu-saldiran');
+            window.tumArsivKayitlari = ordular || [];
+            orduTablosunuCiz();
+            arsivTablosunuCiz();
 
-            if (ordular && ordular.length > 0) {
-                // A) TÜM KAYITLARI ARŞİV İÇİN SAKLA
-                window.tumArsivKayitlari = ordular;
-                arsivTablosunuCiz();
-
-                // B) ORDULAR SEKMESİ İÇİN: HER KÖYDEN (X|Y KOORDİNATI BAZINDA) YALNIZCA EN SON GÜNCEL KAYDI AL
-                const gorulenKoyler = new Set();
-                const enGuncelOrdular = [];
-
-                ordular.forEach(o => {
-                    const koordKey = `${o.x_koordinat}|${o.y_koordinat}`;
-                    if (!gorulenKoyler.has(koordKey)) {
-                        gorulenKoyler.add(koordKey);
-                        enGuncelOrdular.push(o);
-                    }
-                });
-
-                // En güncel orduları ana tabloya çiz
-                orduGovde.innerHTML = enGuncelOrdular.map(o => {
-                    const d = o.asker_verileri || {};
-                    const birlik = d._birlik || '-';
-                    const kp = d._kp || 'YOK';
-                    const koc = d._koc !== undefined ? d._koc : (d['Koç'] || d['Koçbaşı'] || 0);
-                    const manco = d._manco !== undefined ? d._manco : (d['Manco'] || d['Mancınık'] || d['Trebüşe'] || d['Ateş Mancınığı'] || 0);
-                    const reis = d._reis !== undefined ? d._reis : (d['Reis'] || d['Senatör'] || d['Kabile Reisi'] || 0);
-                    const durum = o.durum || 'Aktif';
-                    const tarih = new Date(o.son_guncelleme).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-                    const detayAskerler = Object.entries(d)
-                        .filter(([k]) => !k.startsWith('_') && !['Koç', 'Koçbaşı', 'Manco', 'Mancınık', 'Trebüşe', 'Ateş Mancınığı', 'Reis', 'Senatör', 'Kabile Reisi'].includes(k))
-                        .map(([k, v]) => `<span class="bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-slate-300"><b class="text-white">${k}:</b> ${Number(v).toLocaleString('tr-TR')}</span>`)
-                        .join(' ');
-
-                    return `
-                        <tr onclick="detaySatiriGoster(${o.id})" class="hover:bg-slate-800/60 cursor-pointer transition select-none">
-                            <td class="p-3 font-mono font-bold text-emerald-400">(${o.x_koordinat}|${o.y_koordinat})</td>
-                            <td class="p-3 font-medium text-white">${o.kullanici_adi}</td>
-                            <td class="p-3 text-slate-300">${o.koy_adi}</td>
-                            <td class="p-3 text-slate-400">${birlik}</td>
-                            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 border border-slate-700">${o.irk}</span></td>
-                            <td class="p-3 font-bold text-amber-400">TY ${o.turnuva_yeri}</td>
-                            <td class="p-3 font-mono font-bold text-slate-100">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center font-mono">${koc.toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center font-mono">${manco.toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center font-mono">${reis.toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${kp === 'VAR' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}">${kp}</span>
-                            </td>
-                            <td class="p-3 text-slate-400 text-xs">${tarih}</td>
-                            <td class="p-3 text-center">
-                                <button onclick="durumDegistir(${o.id}, '${durum === 'Aktif' ? 'Pasif' : 'Aktif'}', event)" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${durum === 'Aktif' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30'}">
-                                    ${durum}
-                                </button>
-                            </td>
-                        </tr>
-                        <!-- Açılan Detay Şeridi -->
-                        <tr id="detay-satir-${o.id}" class="hidden bg-slate-950/80 border-y border-slate-800">
-                            <td colspan="13" class="p-3 text-xs">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-emerald-400 font-bold flex items-center gap-1"><i data-lucide="info" class="w-3.5 h-3.5"></i> Taarruz Kadrosu:</span>
-                                    ${detayAskerler || '<span class="text-slate-500">Piyade/Süvari detayı yok</span>'}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-
-                // OPERASYON MOTORU: YALNIZCA GÜNCEL VE AKTİF OLANLARI LİSTELE
-                const aktifOrdular = enGuncelOrdular.filter(o => (o.durum || 'Aktif') === 'Aktif');
-                if (aktifOrdular.length > 0) {
-                    kurguSaldiran.innerHTML = aktifOrdular.map(o => `
-                        <option value="${o.x_koordinat}|${o.y_koordinat}|${o.turnuva_yeri}|${o.kullanici_adi}">
-                            ${o.kullanici_adi} - (${o.x_koordinat}|${o.y_koordinat}) [TY: ${o.turnuva_yeri}] - Güç: ${(o.guc_puani || 0).toLocaleString('tr-TR')}
-                        </option>
-                    `).join('');
-                } else {
-                    kurguSaldiran.innerHTML = `<option value="">Aktif ordu bulunmuyor (Tümü pasif)</option>`;
-                }
-            } else {
-                orduGovde.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500">Kayıtlı ordu bulunamadı. "Ordu Ekle" butonuyla ekleyin.</td></tr>`;
-                document.getElementById('arsiv-tablo-govde').innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500">Arşivde henüz kayıt yok.</td></tr>`;
-                kurguSaldiran.innerHTML = `<option value="">Kayıtlı ordu yok</option>`;
-            }
-
-            // Rakipler
+            // Rakipleri çek
             const { data: rakipler } = await db.from('rakipler').select('*').order('id', { ascending: false });
+            window.tumRakipler = rakipler || [];
             const rakipGovde = document.getElementById('rakip-tablo-govde');
             const kurguHedef = document.getElementById('kurgu-hedef');
 
-            if (rakipler && rakipler.length > 0) {
-                rakipGovde.innerHTML = rakipler.map(r => `
+            if (window.tumRakipler.length > 0) {
+                rakipGovde.innerHTML = window.tumRakipler.map(r => `
                     <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3 sm:p-4 text-center">
+                            <input type="checkbox" value="${r.id}" onchange="seciliRakipSayisiniGuncelle()" class="rakip-cb rounded bg-slate-950 border-slate-800 cursor-pointer">
+                        </td>
                         <td class="p-3 sm:p-4 font-mono font-bold text-rose-400">(${r.x_koordinat}|${r.y_koordinat})</td>
                         <td class="p-3 sm:p-4 font-medium text-white">${r.oyuncu_adi}</td>
                         <td class="p-3 sm:p-4 text-slate-300">${r.koy_adi}</td>
@@ -1055,23 +1479,33 @@
                         <td class="p-3 sm:p-4"><span class="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700">${r.irk || '-'}</span></td>
                         <td class="p-3 sm:p-4">${r.koy_turu || '-'}</td>
                         <td class="p-3 sm:p-4 text-slate-400 text-xs">${r.notlar || '-'}</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="rakipDuzenleModalAc(${r.id})" title="Düzenle" class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg border border-slate-700 transition">
+                                    <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="rakipSil(${r.id})" title="Sil" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg border border-slate-700 transition">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 `).join('');
 
-                kurguHedef.innerHTML = rakipler.map(r => `
+                kurguHedef.innerHTML = window.tumRakipler.map(r => `
                     <option value="${r.x_koordinat}|${r.y_koordinat}|${r.oyuncu_adi}|${r.koy_adi}">
                         ${r.oyuncu_adi} - ${r.koy_adi} (${r.x_koordinat}|${r.y_koordinat})
                     </option>
                 `).join('');
             } else {
-                rakipGovde.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">Kayıtlı hedef bulunamadı.</td></tr>`;
+                rakipGovde.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">Kayıtlı hedef bulunamadı.</td></tr>`;
             }
 
             operasyonlariListele();
             lucide.createIcons();
         }
 
-        // 10. TOPLU ORDU EXCEL AYRIŞTIRICI
+        // 13. TOPLU ORDU EXCEL AYRIŞTIRICI
         let topluOrdularListesi = [];
 
         function topluOrduOnizle() {
@@ -1162,7 +1596,7 @@
             lucide.createIcons();
         }
 
-        // 11. RAKİP KAYDET & OPERASYON KURGU
+        // 14. RAKİP EKLEME & OPERASYON MOTORU
         async function rakipKaydet(e) {
             e.preventDefault();
             const x = parseInt(document.getElementById('m-rakip-x').value, 10);
