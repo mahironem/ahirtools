@@ -147,7 +147,7 @@
         <!-- Ana Gövde -->
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
             
-            <!-- 1. ORDULAR SEKMESİ -->
+            <!-- 1. ORDULAR SEKMESİ (VARSAYILAN AKTİF) -->
             <section id="tab-ordular" class="space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -201,7 +201,7 @@
                 </div>
             </section>
 
-            <!-- 2. ORDU ARŞİVİ SEKMESİ -->
+            <!-- 2. ORDU ARŞİVİ SEKMESİ (BAŞLANGIÇTA GİZLİ) -->
             <section id="tab-arsiv" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -247,7 +247,7 @@
                 </div>
             </section>
 
-            <!-- 3. RAKİPLER SEKMESİ -->
+            <!-- 3. RAKİPLER SEKMESİ (BAŞLANGIÇTA GİZLİ) -->
             <section id="tab-rakipler" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -290,8 +290,8 @@
                 </div>
             </section>
 
-            <!-- 4. OPERASYON KURGU SEKMESİ (3 ADIMLI SİHİRBAZ + CANLI LİSTE) -->
-            <section id="tab-operasyon" class="space-y-8">
+            <!-- 4. OPERASYON KURGU SEKMESİ (BAŞLANGIÇTA GİZLİ - hidden EKLENDİ) -->
+            <section id="tab-operasyon" class="hidden space-y-8">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-white">Operasyon Kurgu & Planlama Merkezi</h1>
                     <p class="text-xs sm:text-sm text-slate-400 mt-0.5">3 adımlı sihirbaz ile milisaniyelik çıkış saatlerini kurgulayın.</p>
@@ -858,6 +858,7 @@
             document.getElementById('auth-ekrani').classList.add('hidden');
             document.getElementById('ana-panel').classList.remove('hidden');
             document.getElementById('kullanici-etiket').innerText = nick;
+            tabDegistir('ordular');
             verileriYukle();
             haritayiIndirVeBellegeAl();
             lucide.createIcons();
@@ -874,7 +875,7 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. DOĞRUDAN SUNUCUDAN HARİTA VERİSİNİ BELLEĞE ALMA
+        // 2. HARİTA VERİSİNİ SUNUCUDAN İNDİRİP BELLEĞE ALMA
         async function haritayiIndirVeBellegeAl() {
             const durumEl = document.getElementById('map-status-text');
             const dotEl = document.getElementById('map-status-dot');
@@ -1473,13 +1474,25 @@
                         </tr>
                     `;
                 }).join('');
+
+                const aktifler = enGuncelOrdular.filter(o => (o.durum || 'Aktif') === 'Aktif');
+                if (aktifler.length > 0) {
+                    kurguSaldiran.innerHTML = aktifler.map(o => `
+                        <option value="${o.x_koordinat}|${o.y_koordinat}|${o.turnuva_yeri}|${o.kullanici_adi}">
+                            ${o.kullanici_adi} - (${o.x_koordinat}|${o.y_koordinat}) [TY: ${o.turnuva_yeri}] - Güç: ${(o.guc_puani || 0).toLocaleString('tr-TR')}
+                        </option>
+                    `).join('');
+                } else {
+                    kurguSaldiran.innerHTML = `<option value="">Aktif ordu bulunmuyor (Tümü pasif)</option>`;
+                }
             } else {
                 orduGovde.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500">Kayıtlı ordu bulunamadı.</td></tr>`;
+                kurguSaldiran.innerHTML = `<option value="">Kayıtlı ordu yok</option>`;
             }
             lucide.createIcons();
         }
 
-        // ARŞİV TABLOSUNU ÇİZ
+        // ARŞİV SAYFALAMA
         function arsivSayfaDegistir(yon) {
             const toplamSayfa = Math.ceil(window.tumArsivKayitlari.length / window.sayfaBasiKayit) || 1;
             const yeniSayfa = window.arsivSayfa + yon;
@@ -1611,7 +1624,6 @@
         // OPERASYON SİHİRBAZI MOTORU (3 ADIMLI)
         // ==========================================
 
-        // Varsayılan Varış Zamanı: Yarın Saat 20:00:00
         function getYarinSaatYirmiZamani() {
             const simdi = new Date();
             const yarin = new Date(simdi);
@@ -1673,13 +1685,11 @@
             birlikEl.innerText = `Birlik: ${r.birlik || 'Yok'}`;
             irkEl.innerText = r.irk || 'Bilinmiyor';
 
-            // Harita Belleğinden Bu Oyuncunun Tüm Köylerini Tara
             const oyuncuKoyleri = [];
             let toplamNufus = 0;
 
             if (window.HARITA_BELLEGI) {
                 Object.entries(window.HARITA_BELLEGI).forEach(([koord, k]) => {
-                    // k = [koy, oyuncu, irk, birlik, nufus]
                     if (k[1] && k[1].toLowerCase() === r.oyuncu_adi.toLowerCase()) {
                         oyuncuKoyleri.push({
                             koy: k[0],
@@ -1748,7 +1758,6 @@
             lucide.createIcons();
         }
 
-        // ADIM 2: ORDULARI LİSTELE & HEDEFE GÖRE MESAFE / SÜRE HESAPLA
         function wizAdim2Hazirla() {
             const h = window.sihirbazSecilenHedef;
             document.getElementById('wiz-step2-hedef-etiket').innerText = `${h.oyuncu_adi} - ${h.koy_adi} (${h.x_koordinat}|${h.y_koordinat})`;
@@ -1777,10 +1786,8 @@
                     const reis = d._reis !== undefined ? d._reis : (d['Reis'] || 0);
                     const ty = o.turnuva_yeri || 0;
 
-                    // Mesafe Hesabı
                     const mesafe = Math.sqrt(Math.pow(h.x_koordinat - o.x_koordinat, 2) + Math.pow(h.y_koordinat - o.y_koordinat, 2));
 
-                    // Mancınık (Hız: 3) Süre Hesabı
                     let sureSaat = 0;
                     const hiz = 3;
                     const pabucBonus = kp === 'VAR' ? 0.50 : 0;
@@ -1827,7 +1834,6 @@
             document.querySelectorAll('.wiz-ordu-cb').forEach(cb => cb.checked = durum);
         }
 
-        // ADIM 3: İNCE AYAR, ZAMANLAMA VE EŞLEŞTİRME TABLOSU
         function wizAdim3Hazirla(secilenOrduIdleri) {
             const h = window.sihirbazSecilenHedef;
             const saldiriTuru = document.getElementById('wiz-saldiri-turu').value;
@@ -1851,7 +1857,7 @@
                     hedefX: h.x_koordinat,
                     hedefY: h.y_koordinat,
                     saldiriTuru: saldiriTuru,
-                    hiz: 3, // Varsayılan Mancınık
+                    hiz: 3,
                     pabuc: kp === 'VAR' ? 0.50 : 0,
                     tilsim: 1,
                     varisZamani: globalVarisStr,
@@ -1882,7 +1888,6 @@
             const govde = document.getElementById('wiz-eslesmeler-govde');
 
             govde.innerHTML = window.sihirbazEslesmeler.map((item, index) => {
-                // Seyahat Süresi & Çıkış Saati Hesaplama
                 const mesafe = Math.sqrt(Math.pow(item.hedefX - item.saldiranX, 2) + Math.pow(item.hedefY - item.saldiranY, 2));
                 const hiz = parseFloat(item.hiz);
                 const pabuc = parseFloat(item.pabuc);
@@ -2069,6 +2074,129 @@
             const { error } = await db.from('operasyonlar').delete().neq('id', 0);
             if (error) alert("Temizlenemedi: " + error.message);
             else operasyonlariListele();
+        }
+
+        // 13. TOPLU ORDU EXCEL AYRIŞTIRICI
+        let topluOrdularListesi = [];
+
+        function topluOrduOnizle() {
+            const metin = document.getElementById('toplu-ordu-metin').value.trim();
+            const onizlemeKutu = document.getElementById('toplu-onizleme-kutu');
+            const govde = document.getElementById('toplu-onizleme-govde');
+            const sayiEtiket = document.getElementById('toplu-algilanan-sayi');
+
+            if (!metin) {
+                onizlemeKutu.classList.add('hidden');
+                topluOrdularListesi = [];
+                return;
+            }
+
+            const satirlar = metin.split('\n');
+            topluOrdularListesi = [];
+
+            satirlar.forEach(satir => {
+                const s = satir.split(/\t|;/).map(val => val.trim());
+                if (s.length >= 5) {
+                    const x = parseInt(s[0], 10) || 0;
+                    const y = parseInt(s[1], 10) || 0;
+                    const ty = parseInt(s[2], 10) || 0;
+                    const nick = s[3] || 'Oyuncu';
+                    const koy = s[4] || 'Köy';
+                    const gucPuan = parseInt(s[5], 10) || 0;
+                    const birlik = s[6] || 'TÜRK.';
+                    const irk = s[7] || 'Galya';
+                    const koc = parseInt(s[18], 10) || 0;
+                    const manco = parseInt(s[19], 10) || 0;
+                    const reis = parseInt(s[20], 10) || 0;
+                    const kp = s[21] ? s[21].toUpperCase() : 'YOK';
+
+                    topluOrdularListesi.push({
+                        kullanici_adi: nick,
+                        koy_adi: koy,
+                        x_koordinat: x,
+                        y_koordinat: y,
+                        irk: irk,
+                        turnuva_yeri: ty,
+                        guc_puani: gucPuan,
+                        asker_verileri: { _birlik: birlik, _kp: kp, _koc: koc, _manco: manco, _reis: reis },
+                        durum: 'Aktif'
+                    });
+                }
+            });
+
+            if (topluOrdularListesi.length > 0) {
+                onizlemeKutu.classList.remove('hidden');
+                sayiEtiket.innerText = topluOrdularListesi.length;
+                govde.innerHTML = topluOrdularListesi.map(o => `
+                    <tr class="hover:bg-slate-900/60 transition">
+                        <td class="p-2 text-white font-sans">${o.kullanici_adi}</td>
+                        <td class="p-2 text-emerald-400">${o.koy_adi} (${o.x_koordinat}|${o.y_koordinat})</td>
+                        <td class="p-2">${o.irk}</td>
+                        <td class="p-2 text-amber-400 font-bold">${o.turnuva_yeri}</td>
+                        <td class="p-2 font-bold text-slate-200">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
+                    </tr>
+                `).join('');
+            } else {
+                onizlemeKutu.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        async function topluOrdulariSupabaseyeKaydet() {
+            if (topluOrdularListesi.length === 0) {
+                alert("Kaydedilecek ordu bulunamadı!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-toplu-kaydet');
+            btn.innerText = "Kayıtlar Aktarılıyor...";
+
+            const { error } = await db.from('ordular').insert(topluOrdularListesi);
+
+            if (error) {
+                alert("Toplu Kayıt Hatası: " + error.message);
+                btn.innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Tüm Orduları Sisteme Aktar`;
+            } else {
+                alert(`${topluOrdularListesi.length} adet ordu veritabanına aktarıldı!`);
+                document.getElementById('toplu-ordu-metin').value = '';
+                topluOrdularListesi = [];
+                modalKapat('modal-toplu-ordu');
+                verileriYukle();
+                btn.innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Tüm Orduları Sisteme Aktar`;
+            }
+            lucide.createIcons();
+        }
+
+        // 14. RAKİP EKLEME
+        async function rakipKaydet(e) {
+            e.preventDefault();
+            const x = parseInt(document.getElementById('m-rakip-x').value, 10);
+            const y = parseInt(document.getElementById('m-rakip-y').value, 10);
+            const nick = document.getElementById('m-rakip-nick').value;
+            const koy = document.getElementById('m-rakip-koy').value;
+            const birlik = document.getElementById('m-rakip-birlik').value;
+            const irk = document.getElementById('m-rakip-irk').value;
+            const tur = document.getElementById('m-rakip-tur').value;
+            const not = document.getElementById('m-rakip-not').value;
+
+            const { error } = await db.from('rakipler').insert([{
+                oyuncu_adi: nick,
+                koy_adi: koy,
+                x_koordinat: x,
+                y_koordinat: y,
+                birlik: birlik,
+                irk: irk,
+                koy_turu: tur,
+                notlar: not
+            }]);
+
+            if (error) {
+                alert("Hata: " + error.message);
+            } else {
+                modalKapat('modal-rakip');
+                verileriYukle();
+                alert("Hedef başarıyla eklendi!");
+            }
         }
 
         window.addEventListener('DOMContentLoaded', oturumKontrol);
