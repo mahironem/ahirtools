@@ -32,14 +32,14 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
 
-    <!-- Supabase İstemcisi & Global Harita Belleği -->
+    <!-- Supabase & Global Değişkenler -->
     <script>
         const SUPABASE_URL = "https://tsvuouufkmfikgtpuafb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_RZdSsnQJtExtKixTfKqnTQ_EUUuFs83";
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         window.HARITA_BELLEGI = {};
-        let acikDetayId = null;
+        window.acikDetayId = null;
     </script>
 
     <!-- 1. GİRİŞ EKRANI -->
@@ -81,6 +81,7 @@
                     </div>
                     <span class="text-lg sm:text-xl font-bold tracking-wider text-white">AHIR<span class="text-emerald-400">TOOLS</span></span>
                     
+                    <!-- Canlı Harita Durum Göstergesi -->
                     <div class="hidden sm:flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px]">
                         <span id="map-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         <span id="map-status-text" class="text-slate-300 font-mono">Harita Yükleniyor...</span>
@@ -132,12 +133,12 @@
         <!-- Ana Gövde -->
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
             
-            <!-- 1. ORDULAR SEKMESİ (EXCEL GÖRÜNÜMÜ & DİNAMİK SATIR) -->
+            <!-- 1. ORDULAR SEKMESİ (EXCEL DÜZENİ & DİNAMİK SATIR) -->
             <section id="tab-ordular" class="space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h1 class="text-xl sm:text-2xl font-bold text-white">Birlik Ordu Yönetimi</h1>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Kayıtlı ordular. Detay askerleri görmek için satıra tıklayın.</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Kayıtlı ordular. Detay askerleri görmek için ilgili satıra tıklayın.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button onclick="modalOrduAc()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 text-xs sm:text-sm">
@@ -237,7 +238,7 @@
                 </div>
             </section>
 
-            <!-- 4. OPERASYON KURGU SEKMESİ (SADECE AKTİF ORDULAR) -->
+            <!-- 4. OPERASYON KURGU SEKMESİ (SADECE AKTİF ORDULAR LİSTELENİR) -->
             <section id="tab-operasyon" class="hidden space-y-6">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-white">Operasyon Kurgu Motoru</h1>
@@ -344,7 +345,7 @@
         </main>
     </div>
 
-    <!-- MODAL 1: TEKİL ORDU EKLE -->
+    <!-- MODAL 1: TEKİL ORDU EKLE (DİNAMİK TAARRUZ KADROSU + KP) -->
     <div id="modal-ordu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -371,7 +372,7 @@
                 <div>
                     <label class="block text-[11px] font-semibold text-indigo-400 mb-1">KP (Pabuç)</label>
                     <select id="m-ordu-kp" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-xs text-white">
-                        <option value="YOK">YOK</option>
+                        <option value="YOK" selected>YOK</option>
                         <option value="VAR">VAR</option>
                     </select>
                 </div>
@@ -380,23 +381,21 @@
             <div class="grid grid-cols-3 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Köy Adı</label>
-                    <input type="text" id="m-ordu-koy" required placeholder="Otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                    <input type="text" id="m-ordu-koy" required placeholder="Otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Oyuncu Adı</label>
-                    <input type="text" id="m-ordu-nick" required placeholder="Otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                    <input type="text" id="m-ordu-nick" required placeholder="Otomatik dolar" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Birlik</label>
-                    <input type="text" id="m-ordu-birlik" placeholder="Birlik Adı" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                    <input type="text" id="m-ordu-birlik" placeholder="Birlik Adı" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
                 </div>
             </div>
 
-            <div>
-                <input type="hidden" id="m-ordu-irk" value="Galya">
-            </div>
+            <input type="hidden" id="m-ordu-irk" value="Galya">
 
-            <!-- Sadece Seçili Irkın Saldırı Askerleri + Kuşatma -->
+            <!-- Yalnızca Seçili Irkın Saldırı Askerleri + Kuşatma -->
             <div class="border-t border-slate-800 pt-3">
                 <span id="asker-baslik-etiket" class="block text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">Galya Saldırı Kadrosu</span>
                 <div id="asker-input-alani" class="grid grid-cols-3 gap-2.5"></div>
@@ -531,7 +530,7 @@
     <script>
         lucide.createIcons();
 
-        // 1. GİRİŞ
+        // 1. ÖZEL GİRİŞ
         const OZEL_HESAPLAR = { "mahir": "ahirbenem" };
 
         function ozelGirisYap(e) {
@@ -567,12 +566,12 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. DOĞRUDAN SUNUCUDAN HARİTA VERİSİNİ BELLEĞE ALMA
+        // 2. HARİTA VERİSİNİ SUNUCUDAN İNDİRİP BELLEĞE ALMA
         async function haritayiIndirVeBellegeAl() {
             const durumEl = document.getElementById('map-status-text');
             const dotEl = document.getElementById('map-status-dot');
 
-            const onbellek = localStorage.getItem('ahir_harita_v4');
+            const onbellek = localStorage.getItem('ahir_harita_v5');
             if (onbellek) {
                 try {
                     window.HARITA_BELLEGI = JSON.parse(onbellek);
@@ -591,7 +590,7 @@
 
                 if (data && data.harita) {
                     window.HARITA_BELLEGI = data.harita;
-                    localStorage.setItem('ahir_harita_v4', JSON.stringify(data.harita));
+                    localStorage.setItem('ahir_harita_v5', JSON.stringify(data.harita));
                     durumEl.innerText = `Harita: ${data.count.toLocaleString('tr-TR')} Köy Güncel`;
                     dotEl.className = "w-2 h-2 rounded-full bg-emerald-400";
                 }
@@ -600,32 +599,46 @@
             }
         }
 
-        // 3. IRKLARA ÖZEL SALDIRI VE KUŞATMA ASKERLERİ (SAVUNMASIZ)
+        // 3. IRKLARA ÖZEL TAARRUZ KADROLARI (SAVUNMASIZ)
         const IRK_ASKERLERI = {
             "Cermen": [
-                { id: "tokmak", ad: "Tokmak Sallayan", carpan: 40 },
-                { id: "balta", ad: "Balta Sallayan", carpan: 60 },
+                { id: "tokmak", ad: "Tokmak", carpan: 40 },
+                { id: "balta", ad: "Balta", carpan: 60 },
                 { id: "toyton", ad: "Toyton", carpan: 150 },
-                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
-                { id: "mancinik", ad: "Mancınık", carpan: 70 },
+                { id: "kocbasi", ad: "Koç", carpan: 60 },
+                { id: "mancinik", ad: "Manco", carpan: 70 },
                 { id: "reis", ad: "Reis", carpan: 500 }
             ],
             "Galya": [
                 { id: "kilicli", ad: "Kılıçlı", carpan: 65 },
-                { id: "toytat", ad: "Toytat Şimşeği", carpan: 100 },
+                { id: "toytat", ad: "Toytat", carpan: 100 },
                 { id: "heduan", ad: "Heduan", carpan: 140 },
-                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
-                { id: "mancinik", ad: "Trebüşe", carpan: 70 },
-                { id: "reis", ad: "Kabile Reisi", carpan: 500 }
+                { id: "kocbasi", ad: "Koç", carpan: 60 },
+                { id: "mancinik", ad: "Manco", carpan: 70 },
+                { id: "reis", ad: "Reis", carpan: 500 }
             ],
             "Roma": [
                 { id: "lejyoner", ad: "Lejyoner", carpan: 40 },
                 { id: "emperyan", ad: "Emperyan", carpan: 70 },
-                { id: "imparator", ad: "Roma İmparatoru", carpan: 120 },
+                { id: "imparator", ad: "İmparator", carpan: 120 },
                 { id: "sezar", ad: "Sezar", carpan: 180 },
-                { id: "kocbasi", ad: "Koçbaşı", carpan: 60 },
-                { id: "mancinik", ad: "Ateş Mancınığı", carpan: 70 },
-                { id: "reis", ad: "Senatör", carpan: 500 }
+                { id: "kocbasi", ad: "Koç", carpan: 60 },
+                { id: "mancinik", ad: "Manco", carpan: 70 },
+                { id: "reis", ad: "Reis", carpan: 500 }
+            ],
+            "Hun": [
+                { id: "nisanci", ad: "Nişancı", carpan: 50 },
+                { id: "bozkir", ad: "Bozkır", carpan: 115 },
+                { id: "kocbasi", ad: "Koç", carpan: 60 },
+                { id: "mancinik", ad: "Manco", carpan: 70 },
+                { id: "reis", ad: "Reis", carpan: 500 }
+            ],
+            "Mısır": [
+                { id: "khopesh", ad: "Khopesh", carpan: 65 },
+                { id: "reshef", ad: "Resheph", carpan: 110 },
+                { id: "kocbasi", ad: "Koç", carpan: 60 },
+                { id: "mancinik", ad: "Manco", carpan: 70 },
+                { id: "reis", ad: "Reis", carpan: 500 }
             ]
         };
 
@@ -678,7 +691,52 @@
             }
         }
 
-        // 5. ORDU KAYDET
+        // 5. MODAL & SEKME FONKSİYONLARI (KUSURSUZ ÇALIŞAN BUTONLAR)
+        window.modalAc = function(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.remove('hidden');
+        };
+
+        window.modalKapat = function(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('hidden');
+        };
+
+        window.modalOrduAc = function() {
+            askerAlanlariniGuncelle();
+            modalAc('modal-ordu');
+        };
+
+        window.modalTopluOrduAc = function() {
+            modalAc('modal-toplu-ordu');
+        };
+
+        window.modalRakipAc = function() {
+            modalAc('modal-rakip');
+        };
+
+        window.tabDegistir = function(tabAdi) {
+            ['ordular', 'arsiv', 'rakipler', 'operasyon'].forEach(t => {
+                const sekme = document.getElementById(`tab-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const mob = document.getElementById(`mob-btn-${t}`);
+                if (sekme) sekme.classList.add('hidden');
+                if (btn) btn.className = "px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-2";
+                if (mob) mob.className = "flex flex-col items-center py-1 text-slate-400 text-xs font-medium";
+            });
+
+            const aktifSekme = document.getElementById(`tab-${tabAdi}`);
+            const aktifBtn = document.getElementById(`tab-btn-${tabAdi}`);
+            const mobAktif = document.getElementById(`mob-btn-${tabAdi}`);
+
+            if (aktifSekme) aktifSekme.classList.remove('hidden');
+            if (aktifBtn) aktifBtn.className = "px-3.5 py-2 rounded-xl text-sm font-medium transition bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-2";
+            if (mobAktif) mobAktif.className = "flex flex-col items-center py-1 text-emerald-400 text-xs font-medium";
+
+            lucide.createIcons();
+        };
+
+        // 6. TEKİL ORDU KAYDET
         async function orduKaydet() {
             const x = parseInt(document.getElementById('m-ordu-x').value, 10);
             const y = parseInt(document.getElementById('m-ordu-y').value, 10);
@@ -709,7 +767,6 @@
                 if (a.id === 'reis') reis = adet;
             });
 
-            // asker_verileri içine tüm bilgileri güvenle paketle
             const payloadData = {
                 ...askerDökümü,
                 _birlik: birlik,
@@ -740,26 +797,26 @@
             }
         }
 
-        // 6. DETAY SATIRI AÇMA/KAPATMA (ACCORDION)
+        // 7. DETAY SATIRI AÇMA/KAPATMA
         function detaySatiriGoster(id) {
             const row = document.getElementById(`detay-satir-${id}`);
             if (!row) return;
 
-            if (acikDetayId && acikDetayId !== id) {
-                const eski = document.getElementById(`detay-satir-${acikDetayId}`);
+            if (window.acikDetayId && window.acikDetayId !== id) {
+                const eski = document.getElementById(`detay-satir-${window.acikDetayId}`);
                 if (eski) eski.classList.add('hidden');
             }
 
             if (row.classList.contains('hidden')) {
                 row.classList.remove('hidden');
-                acikDetayId = id;
+                window.acikDetayId = id;
             } else {
                 row.classList.add('hidden');
-                acikDetayId = null;
+                window.acikDetayId = null;
             }
         }
 
-        // 7. DURUM DEĞİŞTİR (AKTİF / PASİF)
+        // 8. DURUM DEĞİŞTİR (AKTİF / PASİF)
         async function durumDegistir(id, yeniDurum, event) {
             if (event) event.stopPropagation();
             const { error } = await db.from('ordular').update({ durum: yeniDurum }).eq('id', id);
@@ -770,7 +827,7 @@
             }
         }
 
-        // 8. VERİLERİ YÜKLEME VE LİSTELEME
+        // 9. VERİLERİ YÜKLE
         async function verileriYukle() {
             const { data: ordular } = await db.from('ordular').select('*').order('id', { ascending: false });
             const orduGovde = document.getElementById('ordu-tablo-govde');
@@ -782,15 +839,15 @@
                     const d = o.asker_verileri || {};
                     const birlik = d._birlik || '-';
                     const kp = d._kp || 'YOK';
-                    const koc = d._koc !== undefined ? d._koc : (d['Koçbaşı'] || 0);
-                    const manco = d._manco !== undefined ? d._manco : (d['Mancınık'] || d['Ateş Mancınığı'] || d['Trebüşe'] || 0);
+                    const koc = d._koc !== undefined ? d._koc : (d['Koç'] || d['Koçbaşı'] || 0);
+                    const manco = d._manco !== undefined ? d._manco : (d['Manco'] || d['Mancınık'] || d['Trebüşe'] || d['Ateş Mancınığı'] || 0);
                     const reis = d._reis !== undefined ? d._reis : (d['Reis'] || d['Senatör'] || d['Kabile Reisi'] || 0);
                     const durum = o.durum || 'Aktif';
                     const tarih = new Date(o.son_guncelleme).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-                    // Detay asker dökümü (Özel alanlar hariç)
+                    // Yalnızca seçili taarruz askerleri listelenir (Koç, Manco, Reis hariç)
                     const detayAskerler = Object.entries(d)
-                        .filter(([k]) => !k.startsWith('_'))
+                        .filter(([k]) => !k.startsWith('_') && !['Koç', 'Koçbaşı', 'Manco', 'Mancınık', 'Trebüşe', 'Ateş Mancınığı', 'Reis', 'Senatör', 'Kabile Reisi'].includes(k))
                         .map(([k, v]) => `<span class="bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-slate-300"><b class="text-white">${k}:</b> ${Number(v).toLocaleString('tr-TR')}</span>`)
                         .join(' ');
 
@@ -816,12 +873,12 @@
                                 </button>
                             </td>
                         </tr>
-                        <!-- Tıklanınca Açılan Detay Satırı -->
+                        <!-- Açılan Detay Şeridi -->
                         <tr id="detay-satir-${o.id}" class="hidden bg-slate-950/80 border-y border-slate-800">
                             <td colspan="13" class="p-3 text-xs">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-emerald-400 font-bold flex items-center gap-1"><i data-lucide="info" class="w-3.5 h-3.5"></i> Asker Dağılımı:</span>
-                                    ${detayAskerler || '<span class="text-slate-500">Asker detayı yok</span>'}
+                                    <span class="text-emerald-400 font-bold flex items-center gap-1"><i data-lucide="info" class="w-3.5 h-3.5"></i> Taarruz Kadrosu:</span>
+                                    ${detayAskerler || '<span class="text-slate-500">Piyade/Süvari detayı girilmemiş</span>'}
                                 </div>
                             </td>
                         </tr>
@@ -843,7 +900,7 @@
                     `;
                 }).join('');
 
-                // OPERASYON MOTORU: YALNIZCA AKTİF OLAN ORDULARI LİSTELE
+                // OPERASYON MOTORU: YALNIZCA AKTİF OLANLARI LİSTELE
                 const aktifOrdular = ordular.filter(o => (o.durum || 'Aktif') === 'Aktif');
                 if (aktifOrdular.length > 0) {
                     kurguSaldiran.innerHTML = aktifOrdular.map(o => `
@@ -891,7 +948,7 @@
             lucide.createIcons();
         }
 
-        // 9. TOPLU ORDU EXCEL AYRIŞTIRICI
+        // 10. TOPLU ORDU EXCEL AYRIŞTIRICI
         let topluOrdularListesi = [];
 
         function topluOrduOnizle() {
@@ -982,7 +1039,7 @@
             lucide.createIcons();
         }
 
-        // 10. RAKİP KAYIT & OPERASYON KURGU
+        // 11. RAKİP KAYDET & OPERASYON KURGU MOTORU
         async function rakipKaydet(e) {
             e.preventDefault();
             const x = parseInt(document.getElementById('m-rakip-x').value, 10);
