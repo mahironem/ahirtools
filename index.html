@@ -47,10 +47,17 @@
         window.arsivSayfa = 1;
         window.sayfaBasiKayit = 50;
 
-        // Sıralama & Filtre Durumları
+        // Ordular Sekmesi Sıralama & Filtre
         window.aktifSortKolon = 'guc_puani';
         window.aktifSortYon = 'desc';
         window.durumFiltresi = 'Tümü';
+
+        // Planlanan Operasyon Listesi Sıralama & Filtre
+        window.opFilterSaldiran = 'Tümü';
+        window.opFilterHedef = 'Tümü';
+        window.opFilterTur = 'Tümü';
+        window.opSortKolon = 'cikis_saati';
+        window.opSortYon = 'asc';
 
         // Operasyon Sihirbazı Durumları
         window.sihirbazSecilenHedef = null;
@@ -480,31 +487,68 @@
                     </div>
                 </div>
 
-                <!-- CANLI OPERASYON TABLOSU (PLANLANAN TÜM GÖREVLER) -->
+                <!-- CANLI OPERASYON TABLOSU (PLANLANAN TÜM GÖREVLER + GELİŞMİŞ FİLTRE & SIRALAMA) -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-0">
-                    <div class="p-4 bg-slate-950/80 border-b border-slate-800 flex justify-between items-center">
+                    <div class="p-4 bg-slate-950/80 border-b border-slate-800 flex flex-col md:flex-row justify-between md:items-center gap-4">
                         <div class="flex items-center gap-2">
                             <i data-lucide="flame" class="w-5 h-5 text-amber-400"></i>
                             <span class="font-bold text-white text-sm sm:text-base">Planlanan Operasyon Listesi</span>
+                            <span id="kurgu-sayisi" class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700 ml-2">0 Görev</span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span id="kurgu-sayisi" class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">0 Görev</span>
-                            <button onclick="tumOperasyonlariTemizle()" class="text-xs text-rose-400 hover:underline">Listeyi Temizle</button>
+
+                        <!-- Filtreleme Çubuğu (Saldıran, Hedef, Tür) -->
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <!-- 1. Saldıran Filtresi -->
+                            <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-xl">
+                                <span class="text-[11px] text-slate-400 font-semibold">Saldıran:</span>
+                                <select onchange="opFiltrele('saldiran', this.value)" id="op-filter-saldiran" class="bg-transparent text-xs font-bold text-emerald-400 outline-none cursor-pointer max-w-[130px] truncate">
+                                    <option value="Tümü">Tümü</option>
+                                </select>
+                            </div>
+
+                            <!-- 2. Hedef Filtresi -->
+                            <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-xl">
+                                <span class="text-[11px] text-slate-400 font-semibold">Hedef:</span>
+                                <select onchange="opFiltrele('hedef', this.value)" id="op-filter-hedef" class="bg-transparent text-xs font-bold text-rose-400 outline-none cursor-pointer max-w-[130px] truncate">
+                                    <option value="Tümü">Tümü</option>
+                                </select>
+                            </div>
+
+                            <!-- 3. Saldırı Türü Filtresi -->
+                            <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-xl">
+                                <span class="text-[11px] text-slate-400 font-semibold">Tür:</span>
+                                <select onchange="opFiltrele('tur', this.value)" id="op-filter-tur" class="bg-transparent text-xs font-bold text-amber-400 outline-none cursor-pointer">
+                                    <option value="Tümü">Tümü</option>
+                                    <option value="Saldırı">Saldırı</option>
+                                    <option value="Sahte">Sahte</option>
+                                    <option value="Reisleme">Reisleme</option>
+                                    <option value="Yağma">Yağma</option>
+                                    <option value="Casuslama">Casuslama</option>
+                                </select>
+                            </div>
+
+                            <button onclick="tumOperasyonlariTemizle()" class="text-xs text-rose-400 hover:underline ml-2">Temizle</button>
                         </div>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs sm:text-sm text-slate-300">
-                            <thead class="bg-slate-950/40 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px] sm:text-[11px]">
+                            <thead class="bg-slate-950/60 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px] sm:text-[11px] select-none">
                                 <tr>
                                     <th class="p-3">Saldıran</th>
                                     <th class="p-3">Hedef</th>
                                     <th class="p-3 text-center">Tür</th>
                                     <th class="p-3">Asker Hızı</th>
                                     <th class="p-3">Bonuslar / Etkiler</th>
-                                    <th class="p-3">Süre</th>
-                                    <th class="p-3 text-amber-400">Çıkış Saati</th>
-                                    <th class="p-3 text-emerald-400">Varış Saati</th>
+                                    <th onclick="opKolonSirala('sure')" class="p-3 cursor-pointer hover:text-white transition font-mono">
+                                        Süre <span id="op-sort-icon-sure"></span>
+                                    </th>
+                                    <th onclick="opKolonSirala('cikis_saati')" class="p-3 text-amber-400 cursor-pointer hover:text-amber-300 transition font-mono">
+                                        Çıkış Saati <span id="op-sort-icon-cikis_saati"></span>
+                                    </th>
+                                    <th onclick="opKolonSirala('varis_saati')" class="p-3 text-emerald-400 cursor-pointer hover:text-emerald-300 transition font-mono">
+                                        Varış Saati <span id="op-sort-icon-varis_saati"></span>
+                                    </th>
                                     <th class="p-3 text-center">Saldırı</th>
                                     <th class="p-3">Not</th>
                                     <th class="p-3 text-center">İşlem</th>
@@ -976,7 +1020,7 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. HARİTA VERİSİNİ SUNUCUDAN İNDİRİP BELLEĞE ALMA
+        // 2. DOĞRUDAN SUNUCUDAN HARİTA VERİSİNİ BELLEĞE ALMA
         async function haritayiIndirVeBellegeAl() {
             const durumEl = document.getElementById('map-status-text');
             const dotEl = document.getElementById('map-status-dot');
@@ -1719,7 +1763,7 @@
             lucide.createIcons();
         }
 
-        // SİHİRBAZ HEDEF DROPDOWN DOLDURMA
+        // SİHİRBAZ HEDEF DROPDOWN DOLDURMA (GÜVENLİ VE ANINDA ÇALIŞIR)
         function wizHedefListesiniDoldur() {
             const selectEl = document.getElementById('wiz-hedef-select');
             if (!selectEl) return;
@@ -2284,19 +2328,83 @@
         }
 
         // ==========================================
-        // OPERASYON LİSTESİ DÜZENLEME / SİLME MOTORU
+        // PLANLANAN OPERASYON LİSTESİ FİLTRE & SIRALAMA & DÜZENLEME
         // ==========================================
-        async function operasyonlariListele() {
-            const { data: operasyonlar } = await db.from('operasyonlar').select('*').order('cikis_saati', { ascending: true });
-            window.tumOperasyonlar = operasyonlar || [];
 
+        function opFiltrele(tur, deger) {
+            if (tur === 'saldiran') window.opFilterSaldiran = deger;
+            if (tur === 'hedef') window.opFilterHedef = deger;
+            if (tur === 'tur') window.opFilterTur = deger;
+            operasyonTablosunuCiz();
+        }
+
+        function opKolonSirala(kolon) {
+            if (window.opSortKolon === kolon) {
+                window.opSortYon = window.opSortYon === 'asc' ? 'desc' : 'asc';
+            } else {
+                window.opSortKolon = kolon;
+                window.opSortYon = 'asc';
+            }
+            operasyonTablosunuCiz();
+        }
+
+        function operasyonTablosunuCiz() {
             const opGovde = document.getElementById('operasyon-tablo-govde');
             const opSayisi = document.getElementById('kurgu-sayisi');
             if (!opGovde) return;
 
-            if (window.tumOperasyonlar.length > 0) {
-                if (opSayisi) opSayisi.innerText = `${window.tumOperasyonlar.length} Görev`;
-                opGovde.innerHTML = window.tumOperasyonlar.map(op => {
+            // Sıralama Oklarını Güncelle
+            ['sure', 'cikis_saati', 'varis_saati'].forEach(k => {
+                const el = document.getElementById(`op-sort-icon-${k}`);
+                if (el) el.innerHTML = '';
+            });
+            const aktifIkon = document.getElementById(`op-sort-icon-${window.opSortKolon}`);
+            if (aktifIkon) {
+                aktifIkon.innerHTML = window.opSortYon === 'asc' ? ' &uarr;' : ' &darr;';
+            }
+
+            let liste = [...window.tumOperasyonlar];
+
+            // 1. Filtrele
+            if (window.opFilterSaldiran !== 'Tümü') {
+                liste = liste.filter(op => op.saldiran_oyuncu === window.opFilterSaldiran);
+            }
+            if (window.opFilterHedef !== 'Tümü') {
+                liste = liste.filter(op => (op.hedef_oyuncu || '').includes(window.opFilterHedef));
+            }
+            if (window.opFilterTur !== 'Tümü') {
+                liste = liste.filter(op => op.saldiri_turu === window.opFilterTur);
+            }
+
+            // 2. Sırala
+            liste.sort((a, b) => {
+                let valA = a[window.opSortKolon];
+                let valB = b[window.opSortKolon];
+
+                if (window.opSortKolon === 'sure') {
+                    const toSec = (s) => {
+                        if (!s) return 0;
+                        const p = s.split(':').map(Number);
+                        return (p[0] || 0) * 3600 + (p[1] || 0) * 60 + (p[2] || 0);
+                    };
+                    valA = toSec(valA);
+                    valB = toSec(valB);
+                } else if (window.opSortKolon === 'cikis_saati' || window.opSortKolon === 'varis_saati') {
+                    valA = new Date(valA).getTime() || 0;
+                    valB = new Date(valB).getTime() || 0;
+                }
+
+                if (typeof valA === 'string') {
+                    return window.opSortYon === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    return window.opSortYon === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+
+            if (opSayisi) opSayisi.innerText = `${liste.length} / ${window.tumOperasyonlar.length} Görev`;
+
+            if (liste.length > 0) {
+                opGovde.innerHTML = liste.map(op => {
                     const cikis = new Date(op.cikis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     const varis = new Date(op.varis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     const tySeviye = op.turnuva_yeri !== undefined ? op.turnuva_yeri : 0;
@@ -2343,10 +2451,34 @@
                     `;
                 }).join('');
             } else {
-                if (opSayisi) opSayisi.innerText = `0 Görev`;
-                opGovde.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-500">Henüz planlanmış operasyon bulunmuyor.</td></tr>`;
+                opGovde.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-500">Filtreye uygun operasyon görevi bulunamadı.</td></tr>`;
             }
             lucide.createIcons();
+        }
+
+        async function operasyonlariListele() {
+            const { data: operasyonlar } = await db.from('operasyonlar').select('*').order('cikis_saati', { ascending: true });
+            window.tumOperasyonlar = operasyonlar || [];
+
+            // Filtre Dropdownlarını Doldur (Saldıran & Hedef)
+            const saldiranSelect = document.getElementById('op-filter-saldiran');
+            const hedefSelect = document.getElementById('op-filter-hedef');
+
+            if (saldiranSelect) {
+                const uniqueSaldiranlar = Array.from(new Set(window.tumOperasyonlar.map(o => o.saldiran_oyuncu))).filter(Boolean);
+                saldiranSelect.innerHTML = `<option value="Tümü">Tümü (${uniqueSaldiranlar.length})</option>` + uniqueSaldiranlar.map(s => `
+                    <option value="${s}" ${window.opFilterSaldiran === s ? 'selected' : ''}>${s}</option>
+                `).join('');
+            }
+
+            if (hedefSelect) {
+                const uniqueHedefler = Array.from(new Set(window.tumOperasyonlar.map(o => o.hedef_oyuncu))).filter(Boolean);
+                hedefSelect.innerHTML = `<option value="Tümü">Tümü (${uniqueHedefler.length})</option>` + uniqueHedefler.map(h => `
+                    <option value="${h}" ${window.opFilterHedef === h ? 'selected' : ''}>${h}</option>
+                `).join('');
+            }
+
+            operasyonTablosunuCiz();
         }
 
         function operasyonDuzenleModalAc(id) {
