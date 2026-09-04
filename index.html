@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- html2canvas: DOM'dan Görsel Üretme Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -183,7 +185,7 @@
         <!-- Ana Gövde -->
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
             
-            <!-- 1. ORDULAR SEKMESİ (TOPLU ORDU EKLE BUTONU KALDIRILDI) -->
+            <!-- 1. ORDULAR SEKMESİ -->
             <section id="tab-ordular" class="space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -233,7 +235,7 @@
                 </div>
             </section>
 
-            <!-- 2. ORDU ARŞİVİ SEKMESİ (FİLTRELEME VE SIRALAMA EKLENDİ) -->
+            <!-- 2. ORDU ARŞİVİ SEKMESİ -->
             <section id="tab-arsiv" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -256,15 +258,12 @@
                         <table class="w-full text-left text-xs sm:text-sm text-slate-300">
                             <thead class="bg-slate-950/90 uppercase tracking-wider text-slate-400 border-b border-slate-800 text-[10px] sm:text-[11px] select-none">
                                 <tr>
-                                    <!-- KOORD (FİLTRE) -->
                                     <th class="p-2.5 align-top min-w-[110px]">
                                         <div class="space-y-1">
                                             <span class="font-bold text-slate-200">KOORD</span>
                                             <input type="text" placeholder="Koord ara..." oninput="arsivFiltrele('koord', this.value)" id="arsiv-filter-koord" class="w-full bg-slate-900 border border-slate-700 text-emerald-400 text-[10px] font-mono rounded px-1.5 py-1 outline-none focus:border-emerald-500">
                                         </div>
                                     </th>
-
-                                    <!-- OYUNCU (FİLTRE) -->
                                     <th class="p-2.5 align-top min-w-[130px]">
                                         <div class="space-y-1">
                                             <span class="font-bold text-slate-200">OYUNCU</span>
@@ -273,16 +272,12 @@
                                             </select>
                                         </div>
                                     </th>
-
-                                    <!-- KÖY (FİLTRE) -->
                                     <th class="p-2.5 align-top min-w-[130px]">
                                         <div class="space-y-1">
                                             <span class="font-bold text-slate-200">KÖY</span>
                                             <input type="text" placeholder="Köy ara..." oninput="arsivFiltrele('koy', this.value)" id="arsiv-filter-koy" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-[10px] rounded px-1.5 py-1 outline-none focus:border-emerald-500">
                                         </div>
                                     </th>
-
-                                    <!-- BİRLİK (FİLTRE) -->
                                     <th class="p-2.5 align-top min-w-[100px]">
                                         <div class="space-y-1">
                                             <span class="font-bold text-slate-200">BİRLİK</span>
@@ -291,8 +286,6 @@
                                             </select>
                                         </div>
                                     </th>
-
-                                    <!-- IRK (FİLTRE) -->
                                     <th class="p-2.5 align-top min-w-[90px]">
                                         <div class="space-y-1">
                                             <span class="font-bold text-slate-200">IRK</span>
@@ -306,33 +299,21 @@
                                             </select>
                                         </div>
                                     </th>
-
-                                    <!-- TY (SIRALANABİLİR) -->
                                     <th onclick="arsivKolonSirala('turnuva_yeri')" class="p-2.5 align-top cursor-pointer hover:text-amber-300 transition text-amber-400 font-bold">
                                         <span class="block pt-1">TY <span id="arsiv-sort-turnuva_yeri"></span></span>
                                     </th>
-
-                                    <!-- GÜÇ (SIRALANABİLİR) -->
                                     <th onclick="arsivKolonSirala('guc_puani')" class="p-2.5 align-top cursor-pointer hover:text-emerald-300 transition text-slate-100 font-bold">
                                         <span class="block pt-1">GÜÇ <span id="arsiv-sort-guc_puani"></span></span>
                                     </th>
-
-                                    <!-- KOÇ (SIRALANABİLİR) -->
                                     <th onclick="arsivKolonSirala('koc')" class="p-2.5 align-top text-center cursor-pointer hover:text-white transition">
                                         <span class="block pt-1">KOÇ <span id="arsiv-sort-koc"></span></span>
                                     </th>
-
-                                    <!-- MANCO (SIRALANABİLİR) -->
                                     <th onclick="arsivKolonSirala('manco')" class="p-2.5 align-top text-center cursor-pointer hover:text-white transition">
                                         <span class="block pt-1">MANCO <span id="arsiv-sort-manco"></span></span>
                                     </th>
-
-                                    <!-- REİS (SIRALANABİLİR) -->
                                     <th onclick="arsivKolonSirala('reis')" class="p-2.5 align-top text-center cursor-pointer hover:text-white transition">
                                         <span class="block pt-1">REİS <span id="arsiv-sort-reis"></span></span>
                                     </th>
-
-                                    <!-- KP BOŞLUĞU (FİLTRE) -->
                                     <th class="p-2.5 align-top min-w-[90px] text-center">
                                         <div class="space-y-1">
                                             <span class="font-bold text-slate-200 block">KP</span>
@@ -343,12 +324,9 @@
                                             </select>
                                         </div>
                                     </th>
-
-                                    <!-- KAYIT TARİHİ (SIRALANABİLİR) -->
                                     <th onclick="arsivKolonSirala('son_guncelleme')" class="p-2.5 align-top cursor-pointer hover:text-white transition">
                                         <span class="block pt-1">KAYIT TARİHİ <span id="arsiv-sort-son_guncelleme"></span></span>
                                     </th>
-
                                     <th class="p-2.5 align-top text-center">
                                         <span class="block pt-1">İŞLEM</span>
                                     </th>
@@ -362,7 +340,7 @@
                 </div>
             </section>
 
-            <!-- 3. RAKİPLER SEKMESİ (BAŞLANGIÇTA GİZLİ) -->
+            <!-- 3. RAKİPLER SEKMESİ -->
             <section id="tab-rakipler" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -405,7 +383,7 @@
                 </div>
             </section>
 
-            <!-- 4. OPERASYON KURGU SEKMESİ (BAŞLANGIÇTA GİZLİ) -->
+            <!-- 4. OPERASYON KURGU SEKMESİ -->
             <section id="tab-operasyon" class="hidden space-y-8">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-white">Operasyon Kurgu & Planlama Merkezi</h1>
@@ -415,7 +393,6 @@
                 <!-- 3 ADIMLI SİHİRBAZ KARTI -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-6">
                     
-                    <!-- Adım İlerleme Başlıkları -->
                     <div class="grid grid-cols-3 gap-2 border-b border-slate-800 pb-4">
                         <div id="step-ind-1" class="flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm">
                             <span class="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs">1</span>
@@ -507,7 +484,7 @@
                         </div>
                     </div>
 
-                    <!-- ADIM 2: SALDIRACAK ORDULARI SEÇME (TAM SÜTUN SIRALAMASI & SEÇİM KORUMA) -->
+                    <!-- ADIM 2: SALDIRACAK ORDULARI SEÇME -->
                     <div id="sihirbaz-adim-2" class="hidden space-y-4">
                         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
                             <div>
@@ -551,7 +528,7 @@
                         </div>
                     </div>
 
-                    <!-- ADIM 3: İNCE AYAR, ZAMANLAMA VE OTOMATİK ÇIKIŞ SAATİ (SANİYE AYARLI step="1") -->
+                    <!-- ADIM 3: İNCE AYAR, ZAMANLAMA VE OTOMATİK ÇIKIŞ SAATİ -->
                     <div id="sihirbaz-adim-3" class="hidden space-y-4">
                         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between md:items-center gap-4">
                             <div>
@@ -594,15 +571,23 @@
                     </div>
                 </div>
 
-                <!-- CANLI OPERASYON TABLOSU (PLANLANAN TÜM GÖREVLER + SÜTUN ALTI FİLTRELER & SIRALAMA) -->
+                <!-- CANLI OPERASYON TABLOSU + WHATSAPP DAĞITIM BUTONU -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-0">
-                    <div class="p-4 bg-slate-950/80 border-b border-slate-800 flex justify-between items-center">
+                    <div class="p-4 bg-slate-950/80 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div class="flex items-center gap-2">
                             <i data-lucide="flame" class="w-5 h-5 text-amber-400"></i>
                             <span class="font-bold text-white text-sm sm:text-base">Planlanan Operasyon Listesi</span>
                             <span id="kurgu-sayisi" class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700 ml-2">0 Görev</span>
                         </div>
-                        <button onclick="tumOperasyonlariTemizle()" class="text-xs text-rose-400 hover:underline">Listeyi Temizle</button>
+                        
+                        <div class="flex items-center gap-3">
+                            <!-- WHATSAPP GÖREV DAĞITIM BUTONU -->
+                            <button onclick="whatsappDagitimModalAc()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 font-bold px-3.5 py-2 rounded-xl transition text-xs flex items-center gap-2 shadow-md shadow-emerald-950">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                <span>📱 WhatsApp Görev Dağıtımı</span>
+                            </button>
+                            <button onclick="tumOperasyonlariTemizle()" class="text-xs text-rose-400 hover:underline ml-1">Listeyi Temizle</button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -652,17 +637,17 @@
                                         <span class="font-bold text-slate-200 block pt-1">BONUSLAR / ETKİLER</span>
                                     </th>
 
-                                    <!-- SÜRE (SIRALANABİLİR) -->
+                                    <!-- SÜRE -->
                                     <th onclick="opKolonSirala('sure')" class="p-3 align-top cursor-pointer hover:text-white transition font-mono">
                                         <span class="font-bold text-slate-200 block pt-1">SÜRE <span id="op-sort-icon-sure"></span></span>
                                     </th>
 
-                                    <!-- ÇIKIŞ SAATİ (SIRALANABİLİR) -->
+                                    <!-- ÇIKIŞ SAATİ -->
                                     <th onclick="opKolonSirala('cikis_saati')" class="p-3 align-top cursor-pointer hover:text-amber-300 transition font-mono">
                                         <span class="font-bold text-amber-400 block pt-1">ÇIKIŞ SAATİ <span id="op-sort-icon-cikis_saati"></span></span>
                                     </th>
 
-                                    <!-- VARIŞ SAATİ (SIRALANABİLİR) -->
+                                    <!-- VARIŞ SAATİ -->
                                     <th onclick="opKolonSirala('varis_saati')" class="p-3 align-top cursor-pointer hover:text-emerald-300 transition font-mono">
                                         <span class="font-bold text-emerald-400 block pt-1">VARIŞ SAATİ <span id="op-sort-icon-varis_saati"></span></span>
                                     </th>
@@ -690,7 +675,7 @@
         </main>
     </div>
 
-    <!-- MODAL 1: YENİ ORDU EKLE (-200..200 KOORDİNAT & 0..20 TY SINIRI & KP BOŞLUĞU) -->
+    <!-- MODAL 1: YENİ ORDU EKLE -->
     <div id="modal-ordu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 my-8 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -1057,6 +1042,31 @@
         </div>
     </div>
 
+    <!-- MODAL 6: WHATSAPP GÖREV DAĞITIM MERKEZİ -->
+    <div id="modal-whatsapp-dagitim" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 my-8 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">WhatsApp Görev Dağıtım Merkezi</h3>
+                        <p class="text-xs text-slate-400">Her oyuncunun görev kartını tek tıkla kopyalayıp WhatsApp sohbetine yapıştırın.</p>
+                    </div>
+                </div>
+                <button onclick="modalKapat('modal-whatsapp-dagitim')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="max-h-96 overflow-y-auto space-y-3 pr-1" id="whatsapp-oyuncu-listesi">
+                <!-- Javascript ile doldurulacak -->
+            </div>
+        </div>
+    </div>
+
+    <!-- GİZLİ BRİFİNG KART ALANI (HTML2CANVAS İLE GÖRSEL ÜRETİLİR) -->
+    <div id="brifing-kart-alani" style="position: fixed; left: -9999px; top: 0; width: 950px; background-color: #090d16; z-index: -50;"></div>
+
     <!-- JAVASCRIPT MOTORU -->
     <script>
         lucide.createIcons();
@@ -1098,7 +1108,7 @@
             if (kayitli) oturumAc(kayitli);
         }
 
-        // 2. DOĞRUDAN SUNUCUDAN HARİTA VERİSİNİ BELLEĞE ALMA
+        // 2. HARİTA VERİSİNİ SUNUCUDAN İNDİRİP BELLEĞE ALMA
         async function haritayiIndirVeBellegeAl() {
             const durumEl = document.getElementById('map-status-text');
             const dotEl = document.getElementById('map-status-dot');
@@ -1131,7 +1141,7 @@
             }
         }
 
-        // 3. IRKLARA ÖZEL TAARRUZ KADROLARI (SAVUNMASIZ)
+        // 3. IRKLARA ÖZEL TAARRUZ KADROLARI
         const IRK_ASKERLERI = {
             "Cermen": [
                 { id: "tokmak", ad: "Tokmak", carpan: 40 },
@@ -1195,7 +1205,7 @@
             `).join('');
         }
 
-        // 4. ANLIK KOORDİNAT SORGUSU (Hafızadan 0 Milisaniye)
+        // 4. ANLIK KOORDİNAT SORGUSU
         function koordSorgula(tur) {
             const xGirdi = document.getElementById(`m-${tur}-x`).value.trim();
             const yGirdi = document.getElementById(`m-${tur}-y`).value.trim();
@@ -1237,7 +1247,6 @@
         };
 
         window.modalOrduAc = function() {
-            // Varsayılan TY 0 olarak sıfırlanır
             const tyInput = document.getElementById('m-ordu-ty');
             if (tyInput) tyInput.value = 0;
             askerAlanlariniGuncelle();
@@ -1273,7 +1282,7 @@
             lucide.createIcons();
         };
 
-        // 6. TEKİL ORDU KAYDET (İSTEK 2: X-Y -200..200 KONTROLÜ | İSTEK 3: TY 0..20 KONTROLÜ)
+        // 6. TEKİL ORDU KAYDET
         async function orduKaydet() {
             const x = parseInt(document.getElementById('m-ordu-x').value, 10);
             const y = parseInt(document.getElementById('m-ordu-y').value, 10);
@@ -1346,7 +1355,7 @@
             }
         }
 
-        // 7. SIRALAMA & DURUM FİLTRELEME FONKSİYONLARI (ORDULAR SEKMESİ)
+        // 7. SIRALAMA & DURUM FİLTRELEME FONKSİYONLARI
         function kolonSirala(kolon) {
             if (window.aktifSortKolon === kolon) {
                 window.aktifSortYon = window.aktifSortYon === 'asc' ? 'desc' : 'asc';
@@ -1399,7 +1408,7 @@
             }
         }
 
-        // 9. DURUM DEĞİŞTİR (AKTİF / PASİF)
+        // 9. DURUM DEĞİŞTİR
         async function durumDegistir(id, yeniDurum, event) {
             if (event) event.stopPropagation();
             const { error } = await db.from('ordular').update({ durum: yeniDurum }).eq('id', id);
@@ -1608,7 +1617,7 @@
         }
 
         // ==========================================
-        // SEYAHAT SÜRESİ HESAPLAMA MOTORU (DÜZELTİLDİ)
+        // SEYAHAT SÜRESİ HESAPLAMA MOTORU
         // ==========================================
         function hesaplaSeyahatSuresiSaniye(sX, sY, hX, hY, hiz, ty, pabucBonus, tilsimCarpan) {
             const mesafe = Math.sqrt(Math.pow(hX - sX, 2) + Math.pow(hY - sY, 2));
@@ -1979,7 +1988,7 @@
                 window.tumArsivKayitlari = ordular || [];
                 orduTablosunuCiz();
 
-                // Ordu Arşivi Oyuncu & Birlik Filtre Seçeneklerini Güncelle
+                // Ordu Arşivi Filtre Seçenekleri
                 const arsivOyuncuSelect = document.getElementById('arsiv-filter-oyuncu');
                 if (arsivOyuncuSelect) {
                     const uniqueOyuncular = Array.from(new Set(window.tumArsivKayitlari.map(o => o.kullanici_adi))).filter(Boolean);
@@ -2076,473 +2085,8 @@
         }
 
         // ==========================================
-        // OPERASYON SİHİRBAZI MOTORU (3 ADIMLI)
+        // PLANLANAN OPERASYON LİSTESİ FİLTRE & SIRALAMA
         // ==========================================
-
-        function getYarinSaatYirmiZamani() {
-            const simdi = new Date();
-            const yarin = new Date(simdi);
-            yarin.setDate(yarin.getDate() + 1);
-            yarin.setHours(20, 0, 0, 0);
-
-            const yil = yarin.getFullYear();
-            const ay = String(yarin.getMonth() + 1).padStart(2, '0');
-            const gun = String(yarin.getDate()).padStart(2, '0');
-            const saat = String(yarin.getHours()).padStart(2, '0');
-            const dakika = String(yarin.getMinutes()).padStart(2, '0');
-            const saniye = String(yarin.getSeconds()).padStart(2, '0');
-            return `${yil}-${ay}-${gun}T${saat}:${dakika}:${saniye}`;
-        }
-
-        function wizBaslat() {
-            wizHedefListesiniDoldur();
-            const varisEl = document.getElementById('wiz-global-varis');
-            if (varisEl) varisEl.value = getYarinSaatYirmiZamani();
-            wizAdimGec(1);
-        }
-
-        function wizHedefDegisti() {
-            const val = document.getElementById('wiz-hedef-select').value;
-            const r = window.tumRakipler.find(item => String(item.id) === String(val));
-
-            const notEl = document.getElementById('wiz-hedef-not');
-            const nickEl = document.getElementById('wiz-profil-nick');
-            const birlikEl = document.getElementById('wiz-profil-birlik');
-            const irkEl = document.getElementById('wiz-profil-irk');
-            const koySayisiEl = document.getElementById('wiz-profil-koysayisi');
-            const nufusEl = document.getElementById('wiz-profil-nufus');
-            const koylerGovde = document.getElementById('wiz-profil-koyler-govde');
-
-            window.wizSeciliOrduIdleri = new Set();
-
-            if (!r) {
-                window.sihirbazSecilenHedef = null;
-                if (notEl) notEl.value = '';
-                if (nickEl) nickEl.innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Hedef Oyuncu Profili`;
-                if (birlikEl) birlikEl.innerText = `Birlik: -`;
-                if (irkEl) irkEl.innerText = '-';
-                if (koySayisiEl) koySayisiEl.innerText = '-';
-                if (nufusEl) nufusEl.innerText = '-';
-                if (koylerGovde) koylerGovde.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500 font-sans">Hedef seçilmedi.</td></tr>`;
-                lucide.createIcons();
-                return;
-            }
-
-            window.sihirbazSecilenHedef = r;
-            if (notEl) notEl.value = r.notlar || 'Not girilmemiş.';
-            if (nickEl) nickEl.innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> ${r.oyuncu_adi}`;
-            if (birlikEl) birlikEl.innerText = `Birlik: ${r.birlik || 'Yok'}`;
-            if (irkEl) irkEl.innerText = r.irk || 'Bilinmiyor';
-
-            const oyuncuKoyleri = [];
-            let toplamNufus = 0;
-
-            if (window.HARITA_BELLEGI) {
-                Object.entries(window.HARITA_BELLEGI).forEach(([koord, k]) => {
-                    if (k[1] && k[1].toLowerCase() === r.oyuncu_adi.toLowerCase()) {
-                        oyuncuKoyleri.push({
-                            koy: k[0],
-                            koord: koord,
-                            nufus: k[4] || 0
-                        });
-                        toplamNufus += (k[4] || 0);
-                    }
-                });
-            }
-
-            if (koySayisiEl) koySayisiEl.innerText = oyuncuKoyleri.length > 0 ? `${oyuncuKoyleri.length} Köy` : '1 Köy';
-            if (nufusEl) nufusEl.innerText = toplamNufus > 0 ? toplamNufus.toLocaleString('tr-TR') : '-';
-
-            if (koylerGovde) {
-                if (oyuncuKoyleri.length > 0) {
-                    koylerGovde.innerHTML = oyuncuKoyleri.map(k => `
-                        <tr class="hover:bg-slate-950 transition">
-                            <td class="p-2.5 font-sans text-white">${k.koy}</td>
-                            <td class="p-2.5 text-center text-slate-300">${k.nufus}</td>
-                            <td class="p-2.5 text-right font-bold text-emerald-400">(${k.koord.replace('|', '|')})</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    koylerGovde.innerHTML = `
-                        <tr>
-                            <td class="p-2.5 font-sans text-white">${r.koy_adi}</td>
-                            <td class="p-2.5 text-center text-slate-300">-</td>
-                            <td class="p-2.5 text-right font-bold text-emerald-400">(${r.x_koordinat}|${r.y_koordinat})</td>
-                        </tr>
-                    `;
-                }
-            }
-
-            lucide.createIcons();
-        }
-
-        function wizAdimGec(hedefAdim) {
-            if (hedefAdim === 2) {
-                if (!window.sihirbazSecilenHedef) {
-                    alert("Lütfen önce bir hedef seçiniz!");
-                    return;
-                }
-                wizAdim2Hazirla();
-            } else if (hedefAdim === 3) {
-                const secilenler = Array.from(window.wizSeciliOrduIdleri);
-                if (secilenler.length === 0) {
-                    alert("Lütfen saldırmak üzere en az 1 ordu seçiniz!");
-                    return;
-                }
-                wizAdim3Hazirla(secilenler);
-            }
-
-            [1, 2, 3].forEach(adim => {
-                const el = document.getElementById(`sihirbaz-adim-${adim}`);
-                const ind = document.getElementById(`step-ind-${adim}`);
-                if (!el || !ind) return;
-
-                if (adim === hedefAdim) {
-                    el.classList.remove('hidden');
-                    ind.className = "flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm";
-                    ind.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs text-emerald-400";
-                } else {
-                    el.classList.add('hidden');
-                    ind.className = "flex items-center gap-2 text-slate-500 font-bold text-xs sm:text-sm";
-                    ind.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs text-slate-400";
-                }
-            });
-
-            lucide.createIcons();
-        }
-
-        // 2. ADIM: ORDULARI HAZIRLA, SIRALA VE SEÇİMLERİ KORU
-        function wizAdim2Hazirla() {
-            const h = window.sihirbazSecilenHedef;
-            const etiket = document.getElementById('wiz-step2-hedef-etiket');
-            if (etiket && h) etiket.innerText = `${h.oyuncu_adi} - ${h.koy_adi} (${h.x_koordinat}|${h.y_koordinat})`;
-
-            const gorulenKoyler = new Set();
-            const aktifOrdular = [];
-
-            window.tumArsivKayitlari.forEach(o => {
-                const koordKey = `${o.x_koordinat}|${o.y_koordinat}`;
-                if (!gorulenKoyler.has(koordKey)) {
-                    gorulenKoyler.add(koordKey);
-                    if ((o.durum || 'Aktif') === 'Aktif') {
-                        const d = o.asker_verileri || {};
-                        const kp = d._kp || 'YOK';
-                        const koc = d._koc !== undefined ? d._koc : (d['Koç'] || 0);
-                        const manco = d._manco !== undefined ? d._manco : (d['Manco'] || 0);
-                        const reis = d._reis !== undefined ? d._reis : (d['Reis'] || 0);
-                        const ty = o.turnuva_yeri || 0;
-                        const pabucBonus = kp === 'VAR' ? 0.50 : 0;
-
-                        const mesafe = Math.sqrt(Math.pow(h.x_koordinat - o.x_koordinat, 2) + Math.pow(h.y_koordinat - o.y_koordinat, 2));
-                        const toplamSaniye = hesaplaSeyahatSuresiSaniye(o.x_koordinat, o.y_koordinat, h.x_koordinat, h.y_koordinat, 3, ty, pabucBonus, 1.0);
-                        const sureMetni = formatSureSaniye(toplamSaniye);
-
-                        aktifOrdular.push({
-                            ...o,
-                            _kpVal: kp,
-                            _kocVal: koc,
-                            _mancoVal: manco,
-                            _reisVal: reis,
-                            _mesafe: mesafe,
-                            _toplamSaniye: toplamSaniye,
-                            _sureMetni: sureMetni
-                        });
-                    }
-                }
-            });
-
-            window.wizAktifOrdularListesi = aktifOrdular;
-            wizAdim2TablosunuCiz();
-        }
-
-        function wizOrduSirala(kolon) {
-            if (window.wizSortKolon === kolon) {
-                window.wizSortYon = window.wizSortYon === 'asc' ? 'desc' : 'asc';
-            } else {
-                window.wizSortKolon = kolon;
-                window.wizSortYon = ['guc_puani', 'koc', 'manco', 'reis'].includes(kolon) ? 'desc' : 'asc';
-            }
-            wizAdim2TablosunuCiz();
-        }
-
-        function wizOrduCbDegisti(id, checked) {
-            if (checked) {
-                window.wizSeciliOrduIdleri.add(id);
-            } else {
-                window.wizSeciliOrduIdleri.delete(id);
-            }
-        }
-
-        function wizTumOrdulariSec(durum) {
-            document.querySelectorAll('.wiz-ordu-cb').forEach(cb => {
-                cb.checked = durum;
-                const id = parseInt(cb.value, 10);
-                if (durum) {
-                    window.wizSeciliOrduIdleri.add(id);
-                } else {
-                    window.wizSeciliOrduIdleri.delete(id);
-                }
-            });
-        }
-
-        function wizAdim2TablosunuCiz() {
-            const govde = document.getElementById('wiz-ordular-govde');
-            if (!govde) return;
-
-            ['kullanici_adi', 'koy_adi', 'guc_puani', 'koc', 'manco', 'reis', 'kp', 'mesafe', 'sure'].forEach(k => {
-                const el = document.getElementById(`wiz-sort-${k}`);
-                if (el) el.innerHTML = '';
-            });
-            const aktifIkon = document.getElementById(`wiz-sort-${window.wizSortKolon}`);
-            if (aktifIkon) {
-                aktifIkon.innerHTML = window.wizSortYon === 'asc' ? ' &uarr;' : ' &darr;';
-            }
-
-            let liste = [...window.wizAktifOrdularListesi];
-
-            liste.sort((a, b) => {
-                let valA, valB;
-                if (window.wizSortKolon === 'kullanici_adi') {
-                    valA = a.kullanici_adi || '';
-                    valB = b.kullanici_adi || '';
-                } else if (window.wizSortKolon === 'koy_adi') {
-                    valA = a.koy_adi || '';
-                    valB = b.koy_adi || '';
-                } else if (window.wizSortKolon === 'guc_puani') {
-                    valA = a.guc_puani || 0;
-                    valB = b.guc_puani || 0;
-                } else if (window.wizSortKolon === 'koc') {
-                    valA = a._kocVal || 0;
-                    valB = b._kocVal || 0;
-                } else if (window.wizSortKolon === 'manco') {
-                    valA = a._mancoVal || 0;
-                    valB = b._mancoVal || 0;
-                } else if (window.wizSortKolon === 'reis') {
-                    valA = a._reisVal || 0;
-                    valB = b._reisVal || 0;
-                } else if (window.wizSortKolon === 'kp') {
-                    valA = a._kpVal || 'YOK';
-                    valB = b._kpVal || 'YOK';
-                } else if (window.wizSortKolon === 'mesafe') {
-                    valA = a._mesafe || 0;
-                    valB = b._mesafe || 0;
-                } else if (window.wizSortKolon === 'sure') {
-                    valA = a._toplamSaniye || 0;
-                    valB = b._toplamSaniye || 0;
-                }
-
-                if (typeof valA === 'string') {
-                    return window.wizSortYon === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                } else {
-                    return window.wizSortYon === 'asc' ? valA - valB : valB - valA;
-                }
-            });
-
-            const allChecked = liste.length > 0 && liste.every(o => window.wizSeciliOrduIdleri.has(o.id));
-            const thCb = document.getElementById('wiz-th-cb');
-            if (thCb) thCb.checked = allChecked;
-
-            if (liste.length > 0) {
-                govde.innerHTML = liste.map(o => {
-                    const isChecked = window.wizSeciliOrduIdleri.has(o.id) ? 'checked' : '';
-                    return `
-                        <tr class="hover:bg-slate-900 transition">
-                            <td class="p-3 text-center">
-                                <input type="checkbox" value="${o.id}" onchange="wizOrduCbDegisti(${o.id}, this.checked)" ${isChecked} class="wiz-ordu-cb rounded bg-slate-950 border-slate-800 cursor-pointer">
-                            </td>
-                            <td class="p-3 font-medium text-white">${o.kullanici_adi}</td>
-                            <td class="p-3 text-slate-300">${o.koy_adi} <span class="text-xs text-slate-500 font-mono">(${o.x_koordinat}|${o.y_koordinat})</span></td>
-                            <td class="p-3 font-mono font-bold text-slate-100">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center font-mono">${o._kocVal.toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center font-mono">${o._mancoVal.toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center font-mono">${o._reisVal.toLocaleString('tr-TR')}</td>
-                            <td class="p-3 text-center">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${o._kpVal === 'VAR' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}">${o._kpVal}</span>
-                            </td>
-                            <td class="p-3 font-mono text-amber-400">${o._mesafe.toFixed(2)} Kr</td>
-                            <td class="p-3 font-mono text-emerald-400 font-bold">${o._sureMetni}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } else {
-                govde.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-500">Aktif ordu bulunmuyor.</td></tr>`;
-            }
-        }
-
-        // 3. ADIM: İNCE AYAR, ZAMANLAMA VE EŞLEŞTİRME TABLOSU (SANİYELİ)
-        function wizAdim3Hazirla(secilenOrduIdleri) {
-            const h = window.sihirbazSecilenHedef;
-            const saldiriTuru = document.getElementById('wiz-saldiri-turu').value;
-            let globalVarisStr = document.getElementById('wiz-global-varis').value || getYarinSaatYirmiZamani();
-            if (globalVarisStr.length === 16) globalVarisStr += ":00";
-
-            window.sihirbazEslesmeler = secilenOrduIdleri.map(id => {
-                const o = window.tumArsivKayitlari.find(item => item.id === id);
-                const d = o.asker_verileri || {};
-                const kp = d._kp || 'YOK';
-
-                return {
-                    orduId: o.id,
-                    saldiranNick: o.kullanici_adi,
-                    saldiranKoy: o.koy_adi,
-                    saldiranX: o.x_koordinat,
-                    saldiranY: o.y_koordinat,
-                    turnuvaYeri: o.turnuva_yeri || 0,
-                    gucPuani: o.guc_puani || 0,
-                    hedefOyuncu: h.oyuncu_adi,
-                    hedefKoy: h.koy_adi,
-                    hedefX: h.x_koordinat,
-                    hedefY: h.y_koordinat,
-                    saldiriTuru: saldiriTuru,
-                    hiz: 3,
-                    pabuc: kp === 'VAR' ? 0.50 : 0,
-                    tilsim: 1,
-                    varisZamani: globalVarisStr,
-                    saldiriSayisi: 1,
-                    not: ''
-                };
-            });
-
-            wizAdim3TabloyuCiz();
-        }
-
-        function wizGlobalVarisGuncelle() {
-            let yeniVaris = document.getElementById('wiz-global-varis').value;
-            if (!yeniVaris) return;
-            if (yeniVaris.length === 16) yeniVaris += ":00";
-            window.sihirbazEslesmeler.forEach(item => {
-                item.varisZamani = yeniVaris;
-            });
-            wizAdim3TabloyuCiz();
-        }
-
-        function wizEslesmeGuncelle(index, alan, deger) {
-            if (!window.sihirbazEslesmeler[index]) return;
-            window.sihirbazEslesmeler[index][alan] = deger;
-            wizAdim3TabloyuCiz();
-        }
-
-        function wizAdim3TabloyuCiz() {
-            const govde = document.getElementById('wiz-eslesmeler-govde');
-            if (!govde) return;
-
-            govde.innerHTML = window.sihirbazEslesmeler.map((item, index) => {
-                const toplamSaniye = hesaplaSeyahatSuresiSaniye(item.saldiranX, item.saldiranY, item.hedefX, item.hedefY, item.hiz, item.turnuvaYeri, item.pabuc, item.tilsim);
-                const sureMetni = formatSureSaniye(toplamSaniye);
-
-                const varisDate = new Date(item.varisZamani);
-                const cikisDate = new Date(varisDate.getTime() - (toplamSaniye * 1000));
-                const cikisMetni = cikisDate.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                item.hesaplananSure = sureMetni;
-                item.hesaplananCikis = cikisDate.toISOString();
-
-                return `
-                    <tr class="hover:bg-slate-900 transition">
-                        <td class="p-2.5">
-                            <span class="font-bold text-white block">${item.saldiranNick} <span class="text-[10px] text-amber-400 font-mono">[TY: ${item.turnuvaYeri}]</span></span>
-                            <span class="text-[11px] text-slate-400 font-mono">${item.saldiranKoy} (${item.saldiranX}|${item.saldiranY})</span>
-                            <span class="text-[10px] text-emerald-400 font-bold block">${item.gucPuani.toLocaleString('tr-TR')} Güç</span>
-                        </td>
-                        <td class="p-2.5">
-                            <span class="font-bold text-white block">${item.hedefOyuncu}</span>
-                            <span class="text-[11px] text-rose-400 font-mono">${item.hedefKoy} (${item.hedefX}|${item.hedefY})</span>
-                        </td>
-                        <td class="p-2.5">
-                            <select onchange="wizEslesmeGuncelle(${index}, 'saldiriTuru', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
-                                <option value="Saldırı" ${item.saldiriTuru === 'Saldırı' ? 'selected' : ''}>Saldırı</option>
-                                <option value="Sahte" ${item.saldiriTuru === 'Sahte' ? 'selected' : ''}>Sahte</option>
-                                <option value="Reisleme" ${item.saldiriTuru === 'Reisleme' ? 'selected' : ''}>Reisleme</option>
-                                <option value="Yağma" ${item.saldiriTuru === 'Yağma' ? 'selected' : ''}>Yağma</option>
-                                <option value="Casuslama" ${item.saldiriTuru === 'Casuslama' ? 'selected' : ''}>Casuslama</option>
-                            </select>
-                        </td>
-                        <td class="p-2.5">
-                            <select onchange="wizEslesmeGuncelle(${index}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
-                                <option value="3" ${item.hiz == 3 ? 'selected' : ''}>3 (Mancınık)</option>
-                                <option value="4" ${item.hiz == 4 ? 'selected' : ''}>4 (Koçbaşı / Reis)</option>
-                                <option value="5" ${item.hiz == 5 ? 'selected' : ''}>5 (Pretoryan)</option>
-                                <option value="6" ${item.hiz == 6 ? 'selected' : ''}>6 (Lejyoner / Balta / Kılıç)</option>
-                                <option value="7" ${item.hiz == 7 ? 'selected' : ''}>7 (Emperyan / Tokmak)</option>
-                                <option value="9" ${item.hiz == 9 ? 'selected' : ''}>9 (Toyton / Casus)</option>
-                                <option value="19" ${item.hiz == 19 ? 'selected' : ''}>19 (Toytat Şimşeği)</option>
-                            </select>
-                        </td>
-                        <td class="p-2.5">
-                            <div class="flex flex-col gap-1">
-                                <select onchange="wizEslesmeGuncelle(${index}, 'pabuc', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1 text-[11px] text-indigo-400 font-bold">
-                                    <option value="0" ${item.pabuc == 0 ? 'selected' : ''}>%0 Çizme</option>
-                                    <option value="0.25" ${item.pabuc == 0.25 ? 'selected' : ''}>%25 Çizme</option>
-                                    <option value="0.50" ${item.pabuc == 0.50 ? 'selected' : ''}>%50 Çizme</option>
-                                    <option value="0.75" ${item.pabuc == 0.75 ? 'selected' : ''}>%75 Lider Çizmesi</option>
-                                </select>
-                                <select onchange="wizEslesmeGuncelle(${index}, 'tilsim', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1 text-[11px] text-amber-400 font-bold">
-                                    <option value="1" ${item.tilsim == 1 ? 'selected' : ''}>1x Normal</option>
-                                    <option value="1.5" ${item.tilsim == 1.5 ? 'selected' : ''}>1.5x Hızlı</option>
-                                    <option value="2" ${item.tilsim == 2 ? 'selected' : ''}>2x Hızlı</option>
-                                </select>
-                            </div>
-                        </td>
-                        <td class="p-2.5 font-mono text-xs font-bold text-slate-300">${sureMetni}</td>
-                        <td class="p-2.5 font-mono text-xs font-bold text-amber-400 whitespace-nowrap">${cikisMetni}</td>
-                        <td class="p-2.5">
-                            <input type="datetime-local" step="1" value="${item.varisZamani}" onchange="wizEslesmeGuncelle(${index}, 'varisZamani', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-emerald-400 font-mono outline-none">
-                        </td>
-                        <td class="p-2.5 text-center">
-                            <input type="number" min="1" max="20" value="${item.saldiriSayisi}" onchange="wizEslesmeGuncelle(${index}, 'saldiriSayisi', parseInt(this.value, 10))" class="w-12 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-center text-white font-bold">
-                        </td>
-                        <td class="p-2.5">
-                            <input type="text" value="${item.not}" placeholder="Not..." onchange="wizEslesmeGuncelle(${index}, 'not', this.value)" class="w-24 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-slate-300">
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function wizOperasyonlariKaydet() {
-            if (!window.sihirbazEslesmeler || window.sihirbazEslesmeler.length === 0) {
-                alert("Kaydedilecek eşleşme bulunamadı!");
-                return;
-            }
-
-            const btn = document.getElementById('btn-wiz-kaydet');
-            btn.innerText = "Kayıtlar Aktarılıyor...";
-
-            const kayitlar = window.sihirbazEslesmeler.map(item => ({
-                saldiran_oyuncu: item.saldiranNick,
-                saldiran_koordinat: `(${item.saldiranX}|${item.saldiranY})`,
-                turnuva_yeri: item.turnuvaYeri,
-                hedef_oyuncu: `${item.hedefOyuncu} - ${item.hedefKoy}`,
-                hedef_koordinat: `(${item.hedefX}|${item.hedefY})`,
-                saldiri_turu: item.saldiriTuru,
-                asker_hizi: `${item.hiz} Alan/Saat`,
-                papuc: item.pabuc > 0 ? `%${item.pabuc * 100} Çizme` : 'Yok (%0)',
-                tilsim: `${item.tilsim}x Hızlı`,
-                sure: item.hesaplananSure,
-                cikis_saati: item.hesaplananCikis,
-                varis_saati: new Date(item.varisZamani).toISOString(),
-                saldiri_sayisi: item.saldiriSayisi || 1,
-                oyuncu_notu: item.not || ''
-            }));
-
-            const { error } = await db.from('operasyonlar').insert(kayitlar);
-
-            if (error) {
-                alert("Operasyon Kayıt Hatası: " + error.message);
-                btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> <span>Kurguyu Operasyon Listesine Aktar</span>`;
-            } else {
-                alert(`${kayitlar.length} adet saldırı görevi başarıyla kurgulandı ve operasyon listesine eklendi!`);
-                btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> <span>Kurguyu Operasyon Listesine Aktar</span>`;
-                wizBaslat();
-                operasyonlariListele();
-            }
-            lucide.createIcons();
-        }
-
-        // ==========================================
-        // PLANLANAN OPERASYON LİSTESİ FİLTRE & SIRALAMA & DÜZENLEME
-        // ==========================================
-
         function opFiltrele(tur, deger) {
             if (tur === 'saldiran') window.opFilterSaldiran = deger;
             if (tur === 'hedef') window.opFilterHedef = deger;
@@ -2622,6 +2166,9 @@
                         <tr class="hover:bg-slate-800/40 transition">
                             <td class="p-3 font-medium text-white">
                                 <div class="flex items-center gap-1.5 flex-wrap">
+                                    <button onclick="oyuncuGorevResmiKopyala('${op.saldiran_oyuncu}')" title="${op.saldiran_oyuncu} Görev Kartını Kopyala" class="p-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 transition">
+                                        <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                                    </button>
                                     <span class="font-bold text-white">${op.saldiran_oyuncu}</span>
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30">TY: ${tySeviye}</span>
                                 </div>
@@ -2796,6 +2343,205 @@
             const { error } = await db.from('operasyonlar').delete().neq('id', 0);
             if (error) alert("Temizlenemedi: " + error.message);
             else operasyonlariListele();
+        }
+
+        // ==========================================
+        // WHATSAPP GÖREV DAĞITIM VE GÖRSEL ÜRETİM MOTORU
+        // ==========================================
+        function whatsappDagitimModalAc() {
+            const listeEl = document.getElementById('whatsapp-oyuncu-listesi');
+            if (!listeEl) return;
+
+            if (!window.tumOperasyonlar || window.tumOperasyonlar.length === 0) {
+                listeEl.innerHTML = `<div class="p-8 text-center text-slate-500 font-medium">Henüz planlanmış operasyon bulunmuyor.</div>`;
+                modalAc('modal-whatsapp-dagitim');
+                return;
+            }
+
+            // Oyuncu bazında görev sayılarını grupla
+            const oyuncuGorevSayilari = {};
+            window.tumOperasyonlar.forEach(op => {
+                const o = op.saldiran_oyuncu || 'Bilinmeyen';
+                oyuncuGorevSayilari[o] = (oyuncuGorevSayilari[o] || 0) + 1;
+            });
+
+            const uniqueOyuncular = Object.keys(oyuncuGorevSayilari).sort();
+
+            listeEl.innerHTML = uniqueOyuncular.map(nick => `
+                <div class="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-xl hover:border-slate-700 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                            ${nick.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <span class="font-bold text-white text-sm block">${nick}</span>
+                            <span class="text-[11px] text-slate-400">${oyuncuGorevSayilari[nick]} Adet Saldırı Görevi</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="oyuncuGorevMetniKopyala('${nick}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center gap-1.5" title="WhatsApp Metni Kopyala">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>Metin</span>
+                        </button>
+                        <button onclick="oyuncuGorevResmiKopyala('${nick}')" id="btn-img-copy-${nick.replace(/[^a-zA-Z0-9]/g, '')}" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-md shadow-emerald-950" title="Resim Olarak Kopyala">
+                            <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                            <span>Resmi Kopyala</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+            modalAc('modal-whatsapp-dagitim');
+        }
+
+        async function oyuncuGorevResmiKopyala(oyuncuAdi) {
+            const gorevler = window.tumOperasyonlar.filter(o => o.saldiran_oyuncu === oyuncuAdi);
+            if (!gorevler || gorevler.length === 0) return;
+
+            // Güvenli buton id
+            const btnId = `btn-img-copy-${oyuncuAdi.replace(/[^a-zA-Z0-9]/g, '')}`;
+            const btn = document.getElementById(btnId);
+            const eskiHtml = btn ? btn.innerHTML : '';
+            if (btn) btn.innerText = "Hazırlanıyor...";
+
+            const kartAlani = document.getElementById('brifing-kart-alani');
+
+            // Askeri Brifing Kartı Şablonu (Tüm Sütunlar Eksiksiz Dahil)
+            kartAlani.innerHTML = `
+                <div style="padding: 24px; background-color: #090d16; color: #f8fafc; font-family: sans-serif; border: 2px solid #1e293b; border-radius: 16px; width: 950px;">
+                    <!-- Başlık & Görev Emri -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 14px; margin-bottom: 16px;">
+                        <div>
+                            <h2 style="font-size: 20px; font-weight: 900; color: #10b981; margin: 0; letter-spacing: 1px;">AHIRTOOLS - OPERASYON GÖREV EMRİ</h2>
+                            <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 0 0;">Bu kart sadece komuta kademesi tarafından size özel oluşturulmuştur.</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 15px; font-weight: bold; color: #ffffff; display: block;">Komutan: ${oyuncuAdi}</span>
+                            <span style="font-size: 11px; color: #f59e0b; font-family: monospace;">Toplam: ${gorevler.length} Görev</span>
+                        </div>
+                    </div>
+
+                    <!-- Görev Tablosu -->
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+                        <thead>
+                            <tr style="background-color: #0f172a; color: #94a3b8; border-bottom: 1px solid #1e293b; text-transform: uppercase;">
+                                <th style="padding: 10px;">Saldıran Köy</th>
+                                <th style="padding: 10px;">Hedef</th>
+                                <th style="padding: 10px; text-align: center;">Tür</th>
+                                <th style="padding: 10px;">Asker Hızı</th>
+                                <th style="padding: 10px;">Bonuslar</th>
+                                <th style="padding: 10px;">Süre</th>
+                                <th style="padding: 10px; color: #fbbf24;">ÇIKIŞ SAATİ</th>
+                                <th style="padding: 10px; color: #34d399;">VARIŞ SAATİ</th>
+                                <th style="padding: 10px; text-align: center;">Dalga</th>
+                                <th style="padding: 10px;">Not</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${gorevler.map(g => {
+                                const cikis = new Date(g.cikis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                const varis = new Date(g.varis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                const ty = g.turnuva_yeri !== undefined ? g.turnuva_yeri : 0;
+                                return `
+                                    <tr style="border-bottom: 1px solid #1e293b; background-color: #090d16;">
+                                        <td style="padding: 10px; font-weight: bold; color: #f8fafc;">
+                                            ${g.saldiran_koordinat}
+                                            <span style="font-size: 10px; color: #fbbf24; display: block; font-family: monospace;">TY Seviye: ${ty}</span>
+                                        </td>
+                                        <td style="padding: 10px; color: #e2e8f0;">
+                                            ${g.hedef_oyuncu}
+                                            <span style="font-size: 10px; color: #f43f5e; display: block; font-family: monospace;">${g.hedef_koordinat}</span>
+                                        </td>
+                                        <td style="padding: 10px; text-align: center;">
+                                            ${getSaldiriTuruRozet(g.saldiri_turu)}
+                                        </td>
+                                        <td style="padding: 10px; font-family: monospace; color: #94a3b8;">${g.asker_hizi}</td>
+                                        <td style="padding: 10px; font-size: 10px;">
+                                            <span style="display: block; color: #818cf8;">👟 ${g.papuc || 'Yok'}</span>
+                                            <span style="display: block; color: #fbbf24;">⚡ ${g.tilsim || '1x'}</span>
+                                        </td>
+                                        <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${g.sure}</td>
+                                        <td style="padding: 10px; font-family: monospace; font-weight: 900; color: #fbbf24; font-size: 12px; white-space: nowrap;">${cikis}</td>
+                                        <td style="padding: 10px; font-family: monospace; font-weight: 900; color: #34d399; font-size: 12px; white-space: nowrap;">${varis}</td>
+                                        <td style="padding: 10px; text-align: center; font-weight: bold; font-family: monospace; color: #ffffff;">${g.saldiri_sayisi || 1}</td>
+                                        <td style="padding: 10px; color: #94a3b8; font-size: 10px;">${g.oyuncu_notu || '-'}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <!-- Alt Not -->
+                    <div style="margin-top: 16px; padding-top: 10px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11px; color: #ef4444; font-weight: bold;">⚠️ Belirtilen saniyelik Çıkış Saatlerine ve Kahraman Pabuçlarına kesinlikle uyunuz!</span>
+                        <span style="font-size: 10px; color: #64748b; font-family: monospace;">AhirTools Operasyon Karargahı</span>
+                    </div>
+                </div>
+            `;
+
+            try {
+                // html2canvas ile görünmez alandaki kartı fotoğrafla
+                const canvas = await html2canvas(kartAlani.firstElementChild, {
+                    backgroundColor: '#090d16',
+                    scale: 2 // Yüksek çözünürlük (HD)
+                });
+
+                // Panoya Doğrudan Resim Yazma (Clipboard API)
+                canvas.toBlob(async (blob) => {
+                    try {
+                        const item = new ClipboardItem({ "image/png": blob });
+                        await navigator.clipboard.write([item]);
+                        if (btn) btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Kopyalandı!`;
+                        alert(`✅ ${oyuncuAdi} için görev brifing kartı görsel olarak panoya kopyalandı!\n\nŞimdi WhatsApp'a gidip ${oyuncuAdi}'ın sohbetine Ctrl + V (Yapıştır) yapıp Enter'a basabilirsiniz.`);
+                    } catch (clipErr) {
+                        console.warn("Panoya resim kopyalama kısıtlandı, alternatif indirme yapılıyor:", clipErr);
+                        const link = document.createElement('a');
+                        link.download = `${oyuncuAdi}_Operasyon_Gorevi.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                        alert(`✅ ${oyuncuAdi} için görev kartı resim olarak bilgisayarınıza indirildi. WhatsApp'tan gönderebilirsiniz.`);
+                    }
+                    if (btn) setTimeout(() => { btn.innerHTML = eskiHtml; lucide.createIcons(); }, 3000);
+                });
+            } catch (err) {
+                console.error("Görsel oluşturma hatası:", err);
+                alert("Görsel oluşturulurken bir hata oluştu: " + err.message);
+                if (btn) btn.innerHTML = eskiHtml;
+            }
+            lucide.createIcons();
+        }
+
+        function oyuncuGorevMetniKopyala(oyuncuAdi) {
+            const gorevler = window.tumOperasyonlar.filter(o => o.saldiran_oyuncu === oyuncuAdi);
+            if (!gorevler || gorevler.length === 0) return;
+
+            let msg = `⚔️ *AHIRTOOLS - OPERASYON GÖREV EMRİ* ⚔️\n`;
+            msg += `👤 *Komutan:* ${oyuncuAdi}\n`;
+            msg += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+            gorevler.forEach((g, idx) => {
+                const cikis = new Date(g.cikis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const varis = new Date(g.varis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const ty = g.turnuva_yeri !== undefined ? g.turnuva_yeri : 0;
+
+                msg += `🎯 *GÖREV #${idx + 1} - [${g.saldiri_turu.toUpperCase()}]*\n`;
+                msg += `📍 *Saldıran:* ${g.saldiran_koordinat} [TY: ${ty}]\n`;
+                msg += `🚩 *Hedef:* ${g.hedef_oyuncu} ${g.hedef_koordinat}\n`;
+                msg += `🐎 *Hız / Bonus:* ${g.asker_hizi} | Pabuç: ${g.papuc || 'Yok'} | Tılsım: ${g.tilsim || '1x'}\n`;
+                msg += `⏳ *Süre:* ${g.sure}\n`;
+                msg += `🚀 *ÇIKIŞ SAATİ:* ${cikis}\n`;
+                msg += `🎯 *VARIŞ SAATİ:* ${varis}\n`;
+                msg += `🌊 *Saldırı Sayısı:* ${g.saldiri_sayisi || 1}\n`;
+                if (g.oyuncu_notu && g.oyuncu_notu !== '-') msg += `📝 *Not:* ${g.oyuncu_notu}\n`;
+                msg += `───────────────────────\n`;
+            });
+
+            msg += `⚠️ *Lütfen çıkış saniyelerine ve pabuçlara dikkat ediniz!*`;
+
+            navigator.clipboard.writeText(msg).then(() => {
+                alert(`📋 ${oyuncuAdi} için görev metni panoya kopyalandı! WhatsApp'a yapıştırabilirsiniz.`);
+            });
         }
 
         window.addEventListener('DOMContentLoaded', oturumKontrol);
