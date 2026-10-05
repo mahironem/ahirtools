@@ -1652,113 +1652,126 @@
                 case 'Yağma':
                     return `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/40 shadow-sm shadow-blue-950">Yağma</span>`;
                 case 'Casuslama':
-                    return `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-sm shadow-purple-950">Casuslama</span>`;
+                    return `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 shadow-sm shadow-indigo-950">Casuslama</span>`;
                 default:
-                    return `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700">${tur || 'Bilinmiyor'}</span>`;
+                    return `<span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700">${tur}</span>`;
             }
         }
 
         // ==========================================
-        // TABLOLARI ÇİZME VE VERİ YÜKLEME
+        // VERİ YÜKLEME VE TABLOLARI ÇİZME
         // ==========================================
         async function verileriYukle() {
-            // Ordular
-            const { data: ordular, error: ordularErr } = await db.from('ordular').select('*').order('id', { ascending: false });
-            if (!ordularErr && ordular) {
-                window.tumArsivKayitlari = ordular;
+            try {
+                // Orduları Yükle
+                const { data: ordular, error: orduErr } = await db.from('ordular').select('*').order('son_guncelleme', { ascending: false });
+                if (orduErr) throw orduErr;
+                window.tumArsivKayitlari = ordular || [];
+
+                // Rakipleri Yükle
+                const { data: rakipler, error: rakipErr } = await db.from('rakipler').select('*').order('id', { ascending: false });
+                if (rakipErr) throw rakipErr;
+                window.tumRakipler = rakipler || [];
+
+                // Operasyonları Yükle
+                const { data: operasyonlar, error: opErr } = await db.from('operasyonlar').select('*').order('cikis_saati', { ascending: true });
+                if (opErr) throw opErr;
+                window.tumOperasyonlar = operasyonlar || [];
+
                 orduTablosunuCiz();
                 arsivTablosunuCiz();
-            }
-
-            // Rakipler
-            const { data: rakipler, error: rakiplerErr } = await db.from('rakipler').select('*').order('id', { ascending: false });
-            if (!rakiplerErr && rakipler) {
-                window.tumRakipler = rakipler;
                 rakipTablosunuCiz();
-            }
-
-            // Operasyonlar
-            const { data: operasyonlar, error: opErr } = await db.from('operasyonlar').select('*').order('cikis_saati', { ascending: true });
-            if (!opErr && operasyonlar) {
-                window.tumOperasyonlar = operasyonlar;
                 operasyonTablosunuCiz();
+            } catch (err) {
+                console.error("Veri yükleme hatası:", err);
             }
         }
 
+        // 1. ORDULAR TABLOSU ÇİZİMİ
         function orduTablosunuCiz() {
             const govde = document.getElementById('ordu-tablo-govde');
             if (!govde) return;
 
-            let liste = [...window.tumArsivKayitlari];
+            // Yalnızca her köy için en son aktif kaydı süz
+            const sonAktifKoyler = {};
+            window.tumArsivKayitlari.forEach(o => {
+                const key = `${o.x_koordinat}|${o.y_koordinat}`;
+                if (!sonAktifKoyler[key]) {
+                    sonAktifKoyler[key] = o;
+                }
+            });
 
-            // Sadece aktif/pasif süzgeci
+            let liste = Object.values(sonAktifKoyler);
+
+            // Durum Filtresi
             if (window.durumFiltresi !== 'Tümü') {
-                liste = liste.filter(o => (o.durum || 'Aktif') === window.durumFiltresi);
+                liste = liste.filter(o => o.durum === window.durumFiltresi);
             }
 
-            // Sıralama
+            // Sıralama Mantığı
+            const k = window.aktifSortKolon;
+            const y = window.aktifSortYon === 'asc' ? 1 : -1;
+
             liste.sort((a, b) => {
-                let valA = a[window.aktifSortKolon];
-                let valB = b[window.aktifSortKolon];
+                const dA = a.asker_verileri || {};
+                const dB = b.asker_verileri || {};
 
-                if (window.aktifSortKolon === 'koord') {
-                    valA = `${a.x_koordinat}|${a.y_koordinat}`;
-                    valB = `${b.x_koordinat}|${b.y_koordinat}`;
-                } else if (['koc', 'manco', 'reis', 'kp', 'birlik'].includes(window.aktifSortKolon)) {
-                    const dA = a.asker_verileri || {};
-                    const dB = b.asker_verileri || {};
-                    valA = dA[`_${window.aktifSortKolon}`] || 0;
-                    valB = dB[`_${window.aktifSortKolon}`] || 0;
-                }
-
-                if (valA < valB) return window.aktifSortYon === 'asc' ? -1 : 1;
-                if (valA > valB) return window.aktifSortYon === 'asc' ? 1 : -1;
+                if (k === 'koord') return (a.x_koordinat - b.x_koordinat || a.y_koordinat - b.y_koordinat) * y;
+                if (k === 'kullanici_adi') return (a.kullanici_adi || '').localeCompare(b.kullanici_adi || '') * y;
+                if (k === 'koy_adi') return (a.koy_adi || '').localeCompare(b.koy_adi || '') * y;
+                if (k === 'birlik') return ((dA._birlik || '-') .localeCompare(dB._birlik || '-')) * y;
+                if (k === 'irk') return (a.irk || '').localeCompare(b.irk || '') * y;
+                if (k === 'turnuva_yeri') return ((a.turnuva_yeri || 0) - (b.turnuva_yeri || 0)) * y;
+                if (k === 'guc_puani') return ((a.guc_puani || 0) - (b.guc_puani || 0)) * y;
+                if (k === 'koc') return ((dA._koc || 0) - (dB._koc || 0)) * y;
+                if (k === 'manco') return ((dA._manco || 0) - (dB._manco || 0)) * y;
+                if (k === 'reis') return ((dA._reis || 0) - (dB._reis || 0)) * y;
+                if (k === 'kp') return ((dA._kp || 'YOK').localeCompare(dB._kp || 'YOK')) * y;
+                if (k === 'son_guncelleme') return (new Date(a.son_guncelleme) - new Date(b.son_guncelleme)) * y;
                 return 0;
             });
 
             if (liste.length === 0) {
-                govde.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500">Kriterlere uygun ordu kaydı bulunamadı.</td></tr>`;
+                govde.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500">Kayıtlı ordu bulunamadı.</td></tr>`;
                 return;
             }
 
             let html = '';
             liste.forEach(o => {
                 const d = o.asker_verileri || {};
-                const durum = o.durum || 'Aktif';
-                const durumBadge = durum === 'Aktif' 
-                    ? `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Aktif</span>`
-                    : `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700">Pasif</span>`;
+                const tarihStr = new Date(o.son_guncelleme).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
                 html += `
-                    <tr onclick="detaySatiriGoster(${o.id})" class="hover:bg-slate-800/40 cursor-pointer transition">
-                        <td class="p-3 font-mono text-emerald-400 font-bold">(${o.x_koordinat}|${o.y_koordinat})</td>
+                    <tr onclick="detaySatiriGoster(${o.id})" class="hover:bg-slate-800/50 cursor-pointer transition">
+                        <td class="p-3 font-mono font-bold text-emerald-400">(${o.x_koordinat}|${o.y_koordinat})</td>
                         <td class="p-3 font-bold text-white">${o.kullanici_adi}</td>
-                        <td class="p-3 text-slate-300">${o.koy_adi}</td>
+                        <td class="p-3 text-slate-200">${o.koy_adi}</td>
                         <td class="p-3 text-slate-400">${d._birlik || '-'}</td>
-                        <td class="p-3 text-slate-300">${o.irk || 'Galya'}</td>
-                        <td class="p-3 text-amber-400 font-bold font-mono">TY ${o.turnuva_yeri || 0}</td>
-                        <td class="p-3 font-extrabold text-emerald-400 font-mono">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
-                        <td class="p-3 text-center font-mono text-slate-200">${d._koc || 0}</td>
-                        <td class="p-3 text-center font-mono text-slate-200">${d._manco || 0}</td>
-                        <td class="p-3 text-center font-mono text-slate-200">${d._reis || 0}</td>
-                        <td class="p-3 text-center">${d._kp === 'VAR' ? '<span class="text-indigo-400 font-bold">VAR</span>' : '<span class="text-slate-600">YOK</span>'}</td>
-                        <td class="p-3 text-slate-500 text-[11px] font-mono">${o.son_guncelleme ? new Date(o.son_guncelleme).toLocaleString('tr-TR') : '-'}</td>
-                        <td class="p-3 text-center" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="durumDegistir(${o.id}, '${durum === 'Aktif' ? 'Pasif' : 'Aktif'}', event)" class="p-1 hover:opacity-80">${durumBadge}</button>
-                                <button onclick="orduDuzenleModalAc(${o.id}, event)" class="p-1 text-amber-400 hover:text-amber-300"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
-                                <button onclick="orduSil(${o.id}, event)" class="p-1 text-rose-400 hover:text-rose-300"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <td class="p-3">${o.irk || '-'}</td>
+                        <td class="p-3 text-amber-400 font-bold">TY ${o.turnuva_yeri || 0}</td>
+                        <td class="p-3 font-black text-emerald-400 font-mono">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._koc || 0}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._manco || 0}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._reis || 0}</td>
+                        <td class="p-3 text-center font-bold ${d._kp === 'VAR' ? 'text-indigo-400' : 'text-slate-500'}">${d._kp || 'YOK'}</td>
+                        <td class="p-3 text-slate-400 text-xs font-mono">${tarihStr}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-2" onclick="event.stopPropagation()">
+                                <button onclick="durumDegistir(${o.id}, '${o.durum === 'Aktif' ? 'Pasif' : 'Aktif'}', event)" class="px-2 py-1 text-[11px] font-bold rounded-lg border ${o.durum === 'Aktif' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-800 text-slate-500 border-slate-700'}">
+                                    ${o.durum}
+                                </button>
+                                <button onclick="orduDuzenleModalAc(${o.id}, event)" class="p-1 text-slate-400 hover:text-amber-400"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                <button onclick="orduSil(${o.id}, event)" class="p-1 text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </td>
                     </tr>
-                    <tr id="detay-satir-${o.id}" class="hidden bg-slate-950/90">
-                        <td colspan="13" class="p-4 border-l-2 border-emerald-500">
-                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Asker Kadrosu Detayı</div>
-                            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
-                                ${Object.entries(d).filter(([k]) => !k.startsWith('_')).map(([asker, adet]) => `
-                                    <div class="bg-slate-900 p-2 rounded border border-slate-800">
-                                        <span class="text-slate-400 text-[10px] block">${asker}</span>
-                                        <span class="text-sm font-bold text-emerald-400 font-mono">${(adet || 0).toLocaleString('tr-TR')}</span>
+                    <tr id="detay-satir-${o.id}" class="hidden bg-slate-950/80">
+                        <td colspan="13" class="p-4 border-y border-slate-800">
+                            <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+                                ${Object.entries(d).filter(([k]) => !k.startsWith('_')).map(([k, v]) => `
+                                    <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl">
+                                        <span class="block text-[10px] text-slate-400">${k}</span>
+                                        <span class="font-bold text-sm text-slate-200 font-mono">${(v || 0).toLocaleString('tr-TR')}</span>
                                     </div>
                                 `).join('')}
                             </div>
@@ -1771,13 +1784,14 @@
             lucide.createIcons();
         }
 
+        // 2. ARŞİV TABLOSU ÇİZİMİ & FİLTRELERİ
         function arsivTablosunuCiz() {
             const govde = document.getElementById('arsiv-tablo-govde');
             if (!govde) return;
 
             let liste = [...window.tumArsivKayitlari];
 
-            // Filtreler
+            // Filtreleme
             if (window.arsivFilterKoord) {
                 liste = liste.filter(o => `${o.x_koordinat}|${o.y_koordinat}`.includes(window.arsivFilterKoord));
             }
@@ -1785,24 +1799,25 @@
                 liste = liste.filter(o => o.kullanici_adi === window.arsivFilterOyuncu);
             }
             if (window.arsivFilterKoy) {
-                liste = liste.filter(o => o.koy_adi && o.koy_adi.toLowerCase().includes(window.arsivFilterKoy.toLowerCase()));
+                liste = liste.filter(o => (o.koy_adi || '').toLowerCase().includes(window.arsivFilterKoy.toLowerCase()));
             }
             if (window.arsivFilterBirlik !== 'Tümü') {
-                liste = liste.filter(o => (o.asker_verileri && o.asker_verileri._birlik) === window.arsivFilterBirlik);
+                liste = liste.filter(o => (o.asker_verileri?._birlik || '-') === window.arsivFilterBirlik);
             }
             if (window.arsivFilterIrk !== 'Tümü') {
                 liste = liste.filter(o => o.irk === window.arsivFilterIrk);
             }
             if (window.arsivFilterKP !== 'Tümü') {
-                liste = liste.filter(o => (o.asker_verileri && o.asker_verileri._kp) === window.arsivFilterKP);
+                liste = liste.filter(o => (o.asker_verileri?._kp || 'YOK') === window.arsivFilterKP);
             }
 
-            // Sayfalama
-            const toplamSayfa = Math.ceil(liste.length / window.sayfaBasiKayit) || 1;
+            // Sayfalama Hesaplaması
+            const toplamSayfa = Math.max(1, Math.ceil(liste.length / window.sayfaBasiKayit));
             if (window.arsivSayfa > toplamSayfa) window.arsivSayfa = toplamSayfa;
 
-            const sayfaBilgi = document.getElementById('arsiv-sayfa-bilgi');
-            if (sayfaBilgi) sayfaBilgi.innerText = `Sayfa ${window.arsivSayfa} / ${toplamSayfa}`;
+            document.getElementById('arsiv-sayfa-bilgi').innerText = `Sayfa ${window.arsivSayfa} / ${toplamSayfa}`;
+            document.getElementById('btn-arsiv-prev').disabled = window.arsivSayfa === 1;
+            document.getElementById('btn-arsiv-next').disabled = window.arsivSayfa === toplamSayfa;
 
             const baslangic = (window.arsivSayfa - 1) * window.sayfaBasiKayit;
             const sayfaListesi = liste.slice(baslangic, baslangic + window.sayfaBasiKayit);
@@ -1815,32 +1830,33 @@
             let html = '';
             sayfaListesi.forEach(o => {
                 const d = o.asker_verileri || {};
+                const tarihStr = new Date(o.son_guncelleme).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
                 html += `
-                    <tr onclick="arsivDetayGoster(${o.id})" class="hover:bg-slate-800/40 cursor-pointer transition">
-                        <td class="p-2.5 font-mono text-emerald-400 font-bold">(${o.x_koordinat}|${o.y_koordinat})</td>
-                        <td class="p-2.5 font-bold text-white">${o.kullanici_adi}</td>
-                        <td class="p-2.5 text-slate-300">${o.koy_adi}</td>
-                        <td class="p-2.5 text-slate-400">${d._birlik || '-'}</td>
-                        <td class="p-2.5 text-slate-300">${o.irk || 'Galya'}</td>
-                        <td class="p-2.5 text-amber-400 font-bold font-mono">TY ${o.turnuva_yeri || 0}</td>
-                        <td class="p-2.5 font-extrabold text-emerald-400 font-mono">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
-                        <td class="p-2.5 text-center font-mono text-slate-200">${d._koc || 0}</td>
-                        <td class="p-2.5 text-center font-mono text-slate-200">${d._manco || 0}</td>
-                        <td class="p-2.5 text-center font-mono text-slate-200">${d._reis || 0}</td>
-                        <td class="p-2.5 text-center">${d._kp === 'VAR' ? '<span class="text-indigo-400 font-bold">VAR</span>' : '<span class="text-slate-600">YOK</span>'}</td>
-                        <td class="p-2.5 text-slate-500 text-[11px] font-mono">${o.son_guncelleme ? new Date(o.son_guncelleme).toLocaleString('tr-TR') : '-'}</td>
-                        <td class="p-2.5 text-center" onclick="event.stopPropagation()">
-                            <button onclick="orduSil(${o.id}, event)" class="p-1 text-rose-400 hover:text-rose-300"><i data-lucide="trash-2" class="w-3 h-3"></i> Sil</button>
+                    <tr onclick="arsivDetayGoster(${o.id})" class="hover:bg-slate-800/50 cursor-pointer transition">
+                        <td class="p-3 font-mono text-emerald-400">(${o.x_koordinat}|${o.y_koordinat})</td>
+                        <td class="p-3 font-bold text-white">${o.kullanici_adi}</td>
+                        <td class="p-3 text-slate-200">${o.koy_adi}</td>
+                        <td class="p-3 text-slate-400">${d._birlik || '-'}</td>
+                        <td class="p-3">${o.irk || '-'}</td>
+                        <td class="p-3 text-amber-400 font-bold">TY ${o.turnuva_yeri || 0}</td>
+                        <td class="p-3 font-bold text-emerald-400 font-mono">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._koc || 0}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._manco || 0}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._reis || 0}</td>
+                        <td class="p-3 text-center font-bold ${d._kp === 'VAR' ? 'text-indigo-400' : 'text-slate-500'}">${d._kp || 'YOK'}</td>
+                        <td class="p-3 text-slate-400 text-xs font-mono">${tarihStr}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="orduSil(${o.id}, event)" class="p-1 text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </td>
                     </tr>
-                    <tr id="arsiv-detay-satir-${o.id}" class="hidden bg-slate-950/90">
-                        <td colspan="13" class="p-4 border-l-2 border-emerald-500">
-                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Gelişim Geçmişi & Kadro</div>
-                            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
-                                ${Object.entries(d).filter(([k]) => !k.startsWith('_')).map(([asker, adet]) => `
-                                    <div class="bg-slate-900 p-2 rounded border border-slate-800">
-                                        <span class="text-slate-400 text-[10px] block">${asker}</span>
-                                        <span class="text-sm font-bold text-emerald-400 font-mono">${(adet || 0).toLocaleString('tr-TR')}</span>
+                    <tr id="arsiv-detay-satir-${o.id}" class="hidden bg-slate-950/80">
+                        <td colspan="13" class="p-4 border-y border-slate-800">
+                            <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+                                ${Object.entries(d).filter(([k]) => !k.startsWith('_')).map(([k, v]) => `
+                                    <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl">
+                                        <span class="block text-[10px] text-slate-400">${k}</span>
+                                        <span class="font-bold text-sm text-slate-200 font-mono">${(v || 0).toLocaleString('tr-TR')}</span>
                                     </div>
                                 `).join('')}
                             </div>
@@ -1853,12 +1869,39 @@
             lucide.createIcons();
         }
 
+        function arsivFiltrele(tur, deger) {
+            if (tur === 'koord') window.arsivFilterKoord = deger;
+            if (tur === 'oyuncu') window.arsivFilterOyuncu = deger;
+            if (tur === 'koy') window.arsivFilterKoy = deger;
+            if (tur === 'birlik') window.arsivFilterBirlik = deger;
+            if (tur === 'irk') window.arsivFilterIrk = deger;
+            if (tur === 'kp') window.arsivFilterKP = deger;
+            window.arsivSayfa = 1;
+            arsivTablosunuCiz();
+        }
+
+        function arsivSayfaDegistir(yon) {
+            window.arsivSayfa += yon;
+            arsivTablosunuCiz();
+        }
+
+        function arsivKolonSirala(kolon) {
+            if (window.arsivSortKolon === kolon) {
+                window.arsivSortYon = window.arsivSortYon === 'asc' ? 'desc' : 'asc';
+            } else {
+                window.arsivSortKolon = kolon;
+                window.arsivSortYon = 'desc';
+            }
+            arsivTablosunuCiz();
+        }
+
+        // 3. RAKİPLER TABLOSU ÇİZİMİ
         function rakipTablosunuCiz() {
             const govde = document.getElementById('rakip-tablo-govde');
             if (!govde) return;
 
             if (window.tumRakipler.length === 0) {
-                govde.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">Kayıtlı rakip hedef bulunmuyor.</td></tr>`;
+                govde.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">Kayıtlı rakip hedef bulunamadı.</td></tr>`;
                 return;
             }
 
@@ -1866,20 +1909,20 @@
             window.tumRakipler.forEach(r => {
                 html += `
                     <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-3 text-center">
+                        <td class="p-3 sm:p-4 text-center">
                             <input type="checkbox" value="${r.id}" onchange="seciliRakipSayisiniGuncelle()" class="rakip-cb rounded bg-slate-950 border-slate-800 cursor-pointer">
                         </td>
-                        <td class="p-3 font-mono text-blue-400 font-bold">(${r.x_koordinat}|${r.y_koordinat})</td>
-                        <td class="p-3 font-bold text-white">${r.oyuncu_adi}</td>
-                        <td class="p-3 text-slate-300">${r.koy_adi}</td>
-                        <td class="p-3 text-slate-400">${r.birlik || '-'}</td>
-                        <td class="p-3 text-slate-300">${r.irk || 'Roma'}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-amber-400 font-bold border border-slate-700">${r.koy_turu || 'Merkez'}</span></td>
-                        <td class="p-3 text-slate-400 text-xs">${r.notlar || '-'}</td>
-                        <td class="p-3 text-center">
+                        <td class="p-3 sm:p-4 font-mono font-bold text-blue-400">(${r.x_koordinat}|${r.y_koordinat})</td>
+                        <td class="p-3 sm:p-4 font-bold text-white">${r.oyuncu_adi}</td>
+                        <td class="p-3 sm:p-4 text-slate-300">${r.koy_adi}</td>
+                        <td class="p-3 sm:p-4 text-slate-400">${r.birlik || '-'}</td>
+                        <td class="p-3 sm:p-4">${r.irk || '-'}</td>
+                        <td class="p-3 sm:p-4 font-bold text-amber-400">${r.koy_turu || 'Merkez'}</td>
+                        <td class="p-3 sm:p-4 text-slate-400 max-w-xs truncate" title="${r.notlar || ''}">${r.notlar || '-'}</td>
+                        <td class="p-3 sm:p-4 text-center">
                             <div class="flex items-center justify-center gap-2">
-                                <button onclick="rakipDuzenleModalAc(${r.id})" class="text-amber-400 hover:text-amber-300"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                <button onclick="rakipSil(${r.id})" class="text-rose-400 hover:text-rose-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button onclick="rakipDuzenleModalAc(${r.id})" class="p-1.5 text-slate-400 hover:text-blue-400"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                <button onclick="rakipSil(${r.id})" class="p-1.5 text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -1887,6 +1930,7 @@
             });
 
             govde.innerHTML = html;
+            seciliRakipSayisiniGuncelle();
             lucide.createIcons();
         }
 
@@ -1902,10 +1946,10 @@
             const not = document.getElementById('m-rakip-not').value.trim();
 
             const { error } = await db.from('rakipler').insert([{
-                oyuncu_adi: nick,
-                koy_adi: koy,
                 x_koordinat: x,
                 y_koordinat: y,
+                oyuncu_adi: nick,
+                koy_adi: koy,
                 birlik: birlik,
                 irk: irk,
                 koy_turu: tur,
@@ -1913,85 +1957,25 @@
             }]);
 
             if (error) {
-                alert("Kayıt Hatası: " + error.message);
+                alert("Hata: " + error.message);
             } else {
                 modalKapat('modal-rakip');
                 verileriYukle();
-                alert("Hedef rakip kaydedildi!");
+                alert("Rakip hedef kaydedildi!");
             }
-        }
-
-        function operasyonTablosunuCiz() {
-            const govde = document.getElementById('operasyon-tablo-govde');
-            const sayiEl = document.getElementById('kurgu-sayisi');
-            if (!govde) return;
-
-            let liste = [...window.tumOperasyonlar];
-
-            // Filtreler
-            if (window.opFilterSaldiran !== 'Tümü') liste = liste.filter(o => o.saldiran_nick === window.opFilterSaldiran);
-            if (window.opFilterHedef !== 'Tümü') liste = liste.filter(o => o.hedef_nick === window.opFilterHedef);
-            if (window.opFilterTur !== 'Tümü') liste = liste.filter(o => o.saldiri_turu === window.opFilterTur);
-
-            if (sayiEl) sayiEl.innerText = `${liste.length} Görev`;
-
-            if (liste.length === 0) {
-                govde.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-500">Planlanan operasyon bulunmuyor.</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            liste.forEach(op => {
-                const cikis = op.cikis_saati ? new Date(op.cikis_saati).toLocaleString('tr-TR') : '-';
-                const varis = op.varis_saati ? new Date(op.varis_saati).toLocaleString('tr-TR') : '-';
-
-                html += `
-                    <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-3 font-bold text-white">${op.saldiran_nick} <span class="text-xs text-slate-400 font-mono block">(${op.saldiran_x}|${op.saldiran_y})</span></td>
-                        <td class="p-3 font-bold text-rose-400">${op.hedef_nick} <span class="text-xs text-slate-400 font-mono block">(${op.hedef_x}|${op.hedef_y})</span></td>
-                        <td class="p-3 text-center">${getSaldiriTuruRozet(op.saldiri_turu)}</td>
-                        <td class="p-3 font-mono text-slate-300">Hız ${op.asker_hizi}</td>
-                        <td class="p-3 text-xs text-slate-400">TY${op.turnuva_yeri || 0} / Çizme: %${(op.pabuc_bonus || 0)*100} / Tılsım: ${op.tilsim_carpan || 1}x</td>
-                        <td class="p-3 font-mono text-slate-300">${formatSureSaniye(op.sure_saniye || 0)}</td>
-                        <td class="p-3 font-mono font-bold text-amber-400">${cikis}</td>
-                        <td class="p-3 font-mono font-bold text-emerald-400">${varis}</td>
-                        <td class="p-3 text-center font-bold text-white">${op.saldiri_adedi || 1}</td>
-                        <td class="p-3 text-xs text-slate-400">${op.notlar || '-'}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="operasyonSil(${op.id})" class="text-rose-400 hover:text-rose-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            govde.innerHTML = html;
-            lucide.createIcons();
-        }
-
-        async function operasyonSil(id) {
-            if (!confirm("Bu operasyon görevini silmek istiyor musunuz?")) return;
-            const { error } = await db.from('operasyonlar').delete().eq('id', id);
-            if (error) alert("Silinemedi: " + error.message);
-            else verileriYukle();
-        }
-
-        async function tumOperasyonlariTemizle() {
-            if (!confirm("Tüm planlanan operasyonları silmek istediğinize emin misiniz?")) return;
-            const { error } = await db.from('operasyonlar').delete().neq('id', 0);
-            if (error) alert("Temizlenemedi: " + error.message);
-            else verileriYukle();
         }
 
         // ==========================================
-        // OPERASYON SİHİRBAZI MANTIĞI
+        // 4. OPERASYON SİHİRBAZI MANTIĞI
         // ==========================================
         function wizBaslat() {
-            const select = document.getElementById('wiz-hedef-select');
-            if (!select) return;
+            const selectEl = document.getElementById('wiz-hedef-select');
+            if (!selectEl) return;
 
-            select.innerHTML = `<option value="">-- Hedef Köy Seçiniz --</option>` + window.tumRakipler.map(r => `
-                <option value="${r.id}">${r.oyuncu_adi} - ${r.koy_adi} (${r.x_koordinat}|${r.y_koordinat}) [${r.koy_turu || 'Merkez'}]</option>
-            `).join('');
+            selectEl.innerHTML = `<option value="">-- Hedef Köy Seçiniz --</option>` +
+                window.tumRakipler.map(r => `<option value="${r.id}">[${r.oyuncu_adi}] - ${r.koy_adi} (${r.x_koordinat}|${r.y_koordinat})</option>`).join('');
+
+            wizAdimGec(1);
         }
 
         function wizHedefDegisti() {
@@ -2001,76 +1985,97 @@
             if (!rakip) {
                 window.sihirbazSecilenHedef = null;
                 document.getElementById('wiz-hedef-not').value = '';
-                document.getElementById('wiz-profil-nick').innerText = 'Hedef Oyuncu Profili';
-                document.getElementById('wiz-profil-birlik').innerText = 'Birlik: -';
-                document.getElementById('wiz-profil-irk').innerText = '-';
-                document.getElementById('wiz-profil-koysayisi').innerText = '-';
-                document.getElementById('wiz-profil-nufus').innerText = '-';
+                document.getElementById('wiz-profil-nick').innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Hedef Oyuncu Profili`;
+                document.getElementById('wiz-profil-birlik').innerText = `Birlik: -`;
+                document.getElementById('wiz-profil-irk').innerText = `-`;
+                document.getElementById('wiz-profil-koysayisi').innerText = `-`;
+                document.getElementById('wiz-profil-nufus').innerText = `-`;
                 document.getElementById('wiz-profil-koyler-govde').innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500 font-sans">Henüz hedef seçilmedi.</td></tr>`;
                 return;
             }
 
             window.sihirbazSecilenHedef = rakip;
-            document.getElementById('wiz-hedef-not').value = rakip.notlar || 'İstihbarat notu bulunmuyor.';
-            document.getElementById('wiz-profil-nick').innerText = rakip.oyuncu_adi;
+            document.getElementById('wiz-hedef-not').value = rakip.notlar || 'Not bulunmuyor.';
+            document.getElementById('wiz-profil-nick').innerHTML = `<i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> ${rakip.oyuncu_adi}`;
             document.getElementById('wiz-profil-birlik').innerText = `Birlik: ${rakip.birlik || '-'}`;
-            document.getElementById('wiz-profil-irk').innerText = rakip.irk || 'Roma';
+            document.getElementById('wiz-profil-irk').innerText = rakip.irk || '-';
 
-            // Haritadan bu oyuncunun diğer köylerini çekme
-            const oyKoyleri = Object.entries(window.HARITA_BELLEGI).filter(([k, v]) => v[1] === rakip.oyuncu_adi);
-            document.getElementById('wiz-profil-koysayisi').innerText = oyKoyleri.length;
-            
-            let topNufus = 0;
-            let koylerHtml = '';
+            // Harita belleğinden oyuncunun tüm köylerini ara
+            const oyuncuKoyleri = [];
+            let toplamNufus = 0;
 
-            oyKoyleri.forEach(([k, v]) => {
-                const nufus = parseInt(v[4], 10) || 0;
-                topNufus += nufus;
-                koylerHtml += `
-                    <tr>
-                        <td class="p-2.5 font-bold text-white">${v[0]}</td>
-                        <td class="p-2.5 text-center text-emerald-400 font-bold">${nufus}</td>
-                        <td class="p-2.5 text-right font-mono text-amber-400">(${k.replace('|', ', ')})</td>
-                    </tr>
-                `;
+            Object.entries(window.HARITA_BELLEGI).forEach(([koord, kData]) => {
+                if (kData[1] && kData[1].toLowerCase() === rakip.oyuncu_adi.toLowerCase()) {
+                    oyuncuKoyleri.push({
+                        koy: kData[0],
+                        nufus: parseInt(kData[4], 10) || 0,
+                        koord: koord
+                    });
+                    toplamNufus += (parseInt(kData[4], 10) || 0);
+                }
             });
 
-            document.getElementById('wiz-profil-nufus').innerText = topNufus.toLocaleString('tr-TR');
-            document.getElementById('wiz-profil-koyler-govde').innerHTML = koylerHtml || `<tr><td colspan="3" class="p-4 text-center text-slate-500 font-sans">Harita verisi bulunamadı.</td></tr>`;
+            document.getElementById('wiz-profil-koysayisi').innerText = oyuncuKoyleri.length;
+            document.getElementById('wiz-profil-nufus').innerText = toplamNufus.toLocaleString('tr-TR');
+
+            if (oyuncuKoyleri.length === 0) {
+                document.getElementById('wiz-profil-koyler-govde').innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500 font-sans">Haritada ek köy bulunamadı.</td></tr>`;
+            } else {
+                document.getElementById('wiz-profil-koyler-govde').innerHTML = oyuncuKoyleri.map(k => `
+                    <tr class="hover:bg-slate-900/80">
+                        <td class="p-2.5 text-slate-200">${k.koy}</td>
+                        <td class="p-2.5 text-center font-bold text-emerald-400">${k.nufus}</td>
+                        <td class="p-2.5 text-right font-bold text-blue-400">(${k.koord.replace('|', '|')})</td>
+                    </tr>
+                `).join('');
+            }
+
+            lucide.createIcons();
         }
 
         function wizAdimGec(adim) {
             if (adim === 2 && !window.sihirbazSecilenHedef) {
-                alert("Lütfen önce bir hedef rakip seçin!");
+                alert("Lütfen önce bir hedef seçiniz!");
                 return;
             }
 
             [1, 2, 3].forEach(i => {
                 document.getElementById(`sihirbaz-adim-${i}`).classList.add('hidden');
                 const ind = document.getElementById(`step-ind-${i}`);
-                if (ind) ind.className = "flex items-center gap-2 text-slate-500 font-bold text-xs sm:text-sm";
+                if (ind) {
+                    ind.className = i === adim ?
+                        "flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm" :
+                        "flex items-center gap-2 text-slate-500 font-bold text-xs sm:text-sm";
+                }
             });
 
             document.getElementById(`sihirbaz-adim-${adim}`).classList.remove('hidden');
-            const aktifInd = document.getElementById(`step-ind-${adim}`);
-            if (aktifInd) aktifInd.className = "flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm";
 
-            if (adim === 2) wizStep2Hazirla();
-            if (adim === 3) wizStep3Hazirla();
+            if (adim === 2) wizAdim2Hazirla();
+            if (adim === 3) wizAdim3Hazirla();
+            lucide.createIcons();
         }
 
-        function wizStep2Hazirla() {
+        function wizAdim2Hazirla() {
             const h = window.sihirbazSecilenHedef;
             document.getElementById('wiz-step2-hedef-etiket').innerText = `${h.oyuncu_adi} - ${h.koy_adi} (${h.x_koordinat}|${h.y_koordinat})`;
 
-            let aktifOrdular = window.tumArsivKayitlari.filter(o => (o.durum || 'Aktif') === 'Aktif');
-            window.wizAktifOrdularListesi = aktifOrdular.map(o => {
-                const mesafe = Math.sqrt(Math.pow(h.x_koordinat - o.x_koordinat, 2) + Math.pow(h.y_koordinat - o.y_koordinat, 2));
-                const sureSaniye = hesaplaSeyahatSuresiSaniye(o.x_koordinat, o.y_koordinat, h.x_koordinat, h.y_koordinat, 3, o.turnuva_yeri || 0, 0, 1);
-                return { ...o, mesafe, sureSaniye };
+            // Sadece aktif olan ve son kaydı olan orduları listele
+            const sonAktif = {};
+            window.tumArsivKayitlari.forEach(o => {
+                if (o.durum === 'Aktif') {
+                    const k = `${o.x_koordinat}|${o.y_koordinat}`;
+                    if (!sonAktif[k]) sonAktif[k] = o;
+                }
             });
 
-            wizStep2TabloCiz();
+            window.wizAktifOrdularListesi = Object.values(sonAktif).map(o => {
+                const saniye = hesaplaSeyahatSuresiSaniye(o.x_koordinat, o.y_koordinat, h.x_koordinat, h.y_koordinat, 3, o.turnuva_yeri || 0, 0, 1);
+                const mesafe = Math.sqrt(Math.pow(h.x_koordinat - o.x_koordinat, 2) + Math.pow(h.y_koordinat - o.y_koordinat, 2));
+                return { ...o, mesafe, saniye };
+            });
+
+            wizOrdulariCiz();
         }
 
         function wizOrduSirala(kolon) {
@@ -2078,50 +2083,53 @@
                 window.wizSortYon = window.wizSortYon === 'asc' ? 'desc' : 'asc';
             } else {
                 window.wizSortKolon = kolon;
-                window.wizSortYon = 'asc';
+                window.wizSortYon = ['guc_puani', 'mesafe', 'sure'].includes(kolon) ? 'asc' : 'desc';
             }
-            wizStep2TabloCiz();
+            wizOrdulariCiz();
         }
 
-        function wizStep2TabloCiz() {
+        function wizOrdulariCiz() {
             const govde = document.getElementById('wiz-ordular-govde');
             if (!govde) return;
 
-            let liste = [...window.wizAktifOrdularListesi];
+            const k = window.wizSortKolon;
+            const y = window.wizSortYon === 'asc' ? 1 : -1;
 
-            liste.sort((a, b) => {
-                let valA = a[window.wizSortKolon];
-                let valB = b[window.wizSortKolon];
+            window.wizAktifOrdularListesi.sort((a, b) => {
+                const dA = a.asker_verileri || {};
+                const dB = b.asker_verileri || {};
 
-                if (['koc', 'manco', 'reis', 'kp'].includes(window.wizSortKolon)) {
-                    valA = (a.asker_verileri || {})[`_${window.wizSortKolon}`] || 0;
-                    valB = (b.asker_verileri || {})[`_${window.wizSortKolon}`] || 0;
-                }
-
-                if (valA < valB) return window.wizSortYon === 'asc' ? -1 : 1;
-                if (valA > valB) return window.wizSortYon === 'asc' ? 1 : -1;
+                if (k === 'kullanici_adi') return (a.kullanici_adi || '').localeCompare(b.kullanici_adi || '') * y;
+                if (k === 'koy_adi') return (a.koy_adi || '').localeCompare(b.koy_adi || '') * y;
+                if (k === 'guc_puani') return ((a.guc_puani || 0) - (b.guc_puani || 0)) * y;
+                if (k === 'koc') return ((dA._koc || 0) - (dB._koc || 0)) * y;
+                if (k === 'manco') return ((dA._manco || 0) - (dB._manco || 0)) * y;
+                if (k === 'reis') return ((dA._reis || 0) - (dB._reis || 0)) * y;
+                if (k === 'kp') return ((dA._kp || 'YOK').localeCompare(dB._kp || 'YOK')) * y;
+                if (k === 'mesafe') return (a.mesafe - b.mesafe) * y;
+                if (k === 'sure') return (a.saniye - b.saniye) * y;
                 return 0;
             });
 
             let html = '';
-            liste.forEach(o => {
+            window.wizAktifOrdularListesi.forEach(o => {
                 const d = o.asker_verileri || {};
-                const secili = window.wizSeciliOrduIdleri.has(o.id) ? 'checked' : '';
+                const isChecked = window.wizSeciliOrduIdleri.has(o.id) ? 'checked' : '';
 
                 html += `
-                    <tr class="hover:bg-slate-900 transition">
-                        <td class="p-3 text-center">
-                            <input type="checkbox" value="${o.id}" ${secili} onchange="wizOrduSecimDegisti(${o.id}, this.checked)" class="wiz-cb rounded bg-slate-950 border-slate-800 cursor-pointer">
+                    <tr class="hover:bg-slate-900/60 transition cursor-pointer" onclick="wizOrduSecimToggle(${o.id})">
+                        <td class="p-3 text-center" onclick="event.stopPropagation()">
+                            <input type="checkbox" value="${o.id}" ${isChecked} onchange="wizOrduSecimToggle(${o.id})" class="wiz-ordu-cb rounded bg-slate-950 border-slate-800 cursor-pointer">
                         </td>
                         <td class="p-3 font-bold text-white">${o.kullanici_adi}</td>
-                        <td class="p-3 text-slate-300">${o.koy_adi} <span class="text-xs text-slate-400 font-mono block">(${o.x_koordinat}|${o.y_koordinat})</span></td>
-                        <td class="p-3 font-extrabold text-emerald-400 font-mono">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
-                        <td class="p-3 text-center font-mono text-slate-200">${d._koc || 0}</td>
-                        <td class="p-3 text-center font-mono text-slate-200">${d._manco || 0}</td>
-                        <td class="p-3 text-center font-mono text-slate-200">${d._reis || 0}</td>
-                        <td class="p-3 text-center">${d._kp === 'VAR' ? '<span class="text-indigo-400 font-bold">VAR</span>' : '<span class="text-slate-600">YOK</span>'}</td>
-                        <td class="p-3 font-mono text-amber-400 font-bold">${o.mesafe.toFixed(1)} tır</td>
-                        <td class="p-3 font-mono text-emerald-400 font-bold">${formatSureSaniye(o.sureSaniye)}</td>
+                        <td class="p-3 text-slate-300">${o.koy_adi} <span class="text-xs text-emerald-400 font-mono">(${o.x_koordinat}|${o.y_koordinat})</span></td>
+                        <td class="p-3 font-bold text-emerald-400 font-mono">${(o.guc_puani || 0).toLocaleString('tr-TR')}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._koc || 0}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._manco || 0}</td>
+                        <td class="p-3 text-center font-bold text-slate-300">${d._reis || 0}</td>
+                        <td class="p-3 text-center font-bold ${d._kp === 'VAR' ? 'text-indigo-400' : 'text-slate-500'}">${d._kp || 'YOK'}</td>
+                        <td class="p-3 text-amber-400 font-mono font-bold">${o.mesafe.toFixed(1)} t.</td>
+                        <td class="p-3 text-emerald-400 font-mono font-bold">${formatSureSaniye(o.saniye)}</td>
                     </tr>
                 `;
             });
@@ -2129,110 +2137,145 @@
             govde.innerHTML = html;
         }
 
-        function wizOrduSecimDegisti(id, durum) {
-            if (durum) window.wizSeciliOrduIdleri.add(id);
-            else window.wizSeciliOrduIdleri.delete(id);
+        function wizOrduSecimToggle(id) {
+            if (window.wizSeciliOrduIdleri.has(id)) {
+                window.wizSeciliOrduIdleri.delete(id);
+            } else {
+                window.wizSeciliOrduIdleri.add(id);
+            }
+            wizOrdulariCiz();
         }
 
         function wizTumOrdulariSec(durum) {
-            window.wizAktifOrdularListesi.forEach(o => {
-                if (durum) window.wizSeciliOrduIdleri.add(o.id);
-                else window.wizSeciliOrduIdleri.delete(o.id);
-            });
-            wizStep2TabloCiz();
+            if (durum) {
+                window.wizAktifOrdularListesi.forEach(o => window.wizSeciliOrduIdleri.add(o.id));
+            } else {
+                window.wizSeciliOrduIdleri.clear();
+            }
+            wizOrdulariCiz();
         }
 
-        function wizStep3Hazirla() {
+        function wizAdim3Hazirla() {
             if (window.wizSeciliOrduIdleri.size === 0) {
-                alert("Lütfen en az 1 ordu seçin!");
+                alert("Lütfen en az bir ordu seçiniz!");
                 wizAdimGec(2);
                 return;
             }
 
             const simdi = new Date();
-            simdi.setHours(simdi.getHours() + 2); // Varsayılan olarak 2 saat sonrası
-            const isoString = simdi.toISOString().slice(0, 19);
-            document.getElementById('wiz-global-varis').value = isoString;
+            simdi.setHours(simdi.getHours() + 2); // Varsayılan 2 saat sonrası
+            const varsayilanVarisStr = simdi.toISOString().slice(0, 19);
+
+            const inputVaris = document.getElementById('wiz-global-varis');
+            if (inputVaris && !inputVaris.value) inputVaris.value = varsayilanVarisStr;
+
+            const tur = document.getElementById('wiz-saldiri-turu').value;
+            const h = window.sihirbazSecilenHedef;
 
             window.sihirbazEslesmeler = Array.from(window.wizSeciliOrduIdleri).map(id => {
-                const o = window.tumArsivKayitlari.find(item => item.id === id);
+                const o = window.wizAktifOrdularListesi.find(item => item.id === id);
                 return {
-                    ordu: o,
-                    tur: document.getElementById('wiz-saldiri-turu').value || 'Saldırı',
-                    hiz: 3,
+                    orduId: o.id,
+                    saldiranNick: o.kullanici_adi,
+                    saldiranKoy: o.koy_adi,
+                    sX: o.x_koordinat,
+                    sY: o.y_koordinat,
+                    guc: o.guc_puani,
+                    hedefNick: h.oyuncu_adi,
+                    hedefKoy: h.koy_adi,
+                    hX: h.x_koordinat,
+                    hY: h.y_koordinat,
+                    tur: tur,
+                    hiz: 3, // Mancınık
                     ty: o.turnuva_yeri || 0,
                     pabuc: 0,
                     tilsim: 1,
-                    varisTime: isoString,
+                    varisTime: inputVaris.value,
                     adet: 1,
                     not: ''
                 };
             });
 
-            wizStep3TabloCiz();
+            wizEslesmeleriCiz();
         }
 
-        function wizStep3TabloCiz() {
+        function wizGlobalVarisGuncelle() {
+            const val = document.getElementById('wiz-global-varis').value;
+            window.sihirbazEslesmeler.forEach(e => e.varisTime = val);
+            wizEslesmeleriCiz();
+        }
+
+        function wizEslesmeleriCiz() {
             const govde = document.getElementById('wiz-eslesmeler-govde');
             if (!govde) return;
 
-            const h = window.sihirbazSecilenHedef;
-
             let html = '';
-            window.sihirbazEslesmeler.forEach((item, idx) => {
-                const o = item.ordu;
-                const sureSaniye = hesaplaSeyahatSuresiSaniye(o.x_koordinat, o.y_koordinat, h.x_koordinat, h.y_koordinat, item.hiz, item.ty, item.pabuc, item.tilsim);
-                
-                const varisDate = new Date(item.varisTime);
-                const cikisDate = new Date(varisDate.getTime() - (sureSaniye * 1000));
+            window.sihirbazEslesmeler.forEach((e, idx) => {
+                const saniye = hesaplaSeyahatSuresiSaniye(e.sX, e.sY, e.hX, e.hY, e.hiz, e.ty, e.pabuc, e.tilsim);
+                const sureStr = formatSureSaniye(saniye);
+
+                let cikisStr = '-';
+                if (e.varisTime) {
+                    const varisDate = new Date(e.varisTime);
+                    const cikisDate = new Date(varisDate.getTime() - (saniye * 1000));
+                    cikisStr = cikisDate.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
 
                 html += `
                     <tr>
-                        <td class="p-3 font-bold text-white">${o.kullanici_adi} <span class="text-xs text-slate-400 font-mono block">(${o.x_koordinat}|${o.y_koordinat}) [${(o.guc_puani||0).toLocaleString('tr-TR')} Güç]</span></td>
-                        <td class="p-3 font-bold text-rose-400">${h.oyuncu_adi} <span class="text-xs text-slate-400 font-mono block">(${h.x_koordinat}|${h.y_koordinat})</span></td>
                         <td class="p-3">
-                            <select onchange="wizEslesmeGuncelle(${idx}, 'tur', this.value)" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
-                                <option value="Saldırı" ${item.tur === 'Saldırı' ? 'selected' : ''}>Saldırı</option>
-                                <option value="Sahte" ${item.tur === 'Sahte' ? 'selected' : ''}>Sahte</option>
-                                <option value="Reisleme" ${item.tur === 'Reisleme' ? 'selected' : ''}>Reisleme</option>
-                                <option value="Yağma" ${item.tur === 'Yağma' ? 'selected' : ''}>Yağma</option>
-                                <option value="Casuslama" ${item.tur === 'Casuslama' ? 'selected' : ''}>Casuslama</option>
+                            <span class="font-bold text-white block">${e.saldiranNick}</span>
+                            <span class="text-slate-400 font-mono text-[11px]">${e.saldiranKoy} (${e.sX}|${e.sY})</span>
+                        </td>
+                        <td class="p-3">
+                            <span class="font-bold text-rose-400 block">${e.hedefNick}</span>
+                            <span class="text-slate-400 font-mono text-[11px]">${e.hedefKoy} (${e.hX}|${e.hY})</span>
+                        </td>
+                        <td class="p-3">
+                            <select onchange="wizEslesmeGuncelle(${idx}, 'tur', this.value)" class="bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+                                <option value="Saldırı" ${e.tur === 'Saldırı' ? 'selected' : ''}>Saldırı</option>
+                                <option value="Sahte" ${e.tur === 'Sahte' ? 'selected' : ''}>Sahte</option>
+                                <option value="Reisleme" ${e.tur === 'Reisleme' ? 'selected' : ''}>Reisleme</option>
+                                <option value="Yağma" ${e.tur === 'Yağma' ? 'selected' : ''}>Yağma</option>
+                                <option value="Casuslama" ${e.tur === 'Casuslama' ? 'selected' : ''}>Casuslama</option>
                             </select>
                         </td>
                         <td class="p-3">
-                            <select onchange="wizEslesmeGuncelle(${idx}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
-                                <option value="3" ${item.hiz == 3 ? 'selected' : ''}>3 (Mancınık)</option>
-                                <option value="4" ${item.hiz == 4 ? 'selected' : ''}>4 (Koç/Reis)</option>
-                                <option value="5" ${item.hiz == 5 ? 'selected' : ''}>5 (Pretoryan)</option>
-                                <option value="6" ${item.hiz == 6 ? 'selected' : ''}>6 (Kılıç/Balta)</option>
-                                <option value="7" ${item.hiz == 7 ? 'selected' : ''}>7 (Emperyan/Tokmak)</option>
-                                <option value="9" ${item.hiz == 9 ? 'selected' : ''}>9 (Toyton/Casus)</option>
-                                <option value="19" ${item.hiz == 19 ? 'selected' : ''}>19 (Şimşek)</option>
+                            <select onchange="wizEslesmeGuncelle(${idx}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+                                <option value="3" ${e.hiz == 3 ? 'selected' : ''}>3 (Mancınık)</option>
+                                <option value="4" ${e.hiz == 4 ? 'selected' : ''}>4 (Koç/Reis)</option>
+                                <option value="5" ${e.hiz == 5 ? 'selected' : ''}>5 (Pretoryan)</option>
+                                <option value="6" ${e.hiz == 6 ? 'selected' : ''}>6 (Lejyoner/Balta)</option>
+                                <option value="7" ${e.hiz == 7 ? 'selected' : ''}>7 (Emperyan/Tokmak)</option>
+                                <option value="9" ${e.hiz == 9 ? 'selected' : ''}>9 (Toyton/Casus)</option>
+                                <option value="19" ${e.hiz == 19 ? 'selected' : ''}>19 (Toytat Şimşeği)</option>
                             </select>
                         </td>
                         <td class="p-3">
                             <div class="flex gap-1">
-                                <select onchange="wizEslesmeGuncelle(${idx}, 'pabuc', this.value)" class="bg-slate-900 border border-slate-700 rounded px-1 py-1 text-[10px] text-indigo-400 font-bold">
-                                    <option value="0" ${item.pabuc == 0 ? 'selected' : ''}>%0</option>
-                                    <option value="0.25" ${item.pabuc == 0.25 ? 'selected' : ''}>%25</option>
-                                    <option value="0.50" ${item.pabuc == 0.50 ? 'selected' : ''}>%50</option>
-                                    <option value="0.75" ${item.pabuc == 0.75 ? 'selected' : ''}>%75</option>
+                                <select onchange="wizEslesmeGuncelle(${idx}, 'pabuc', this.value)" class="bg-slate-900 border border-slate-700 rounded p-1 text-[10px] text-indigo-400 font-bold">
+                                    <option value="0" ${e.pabuc == 0 ? 'selected' : ''}>%0</option>
+                                    <option value="0.25" ${e.pabuc == 0.25 ? 'selected' : ''}>%25</option>
+                                    <option value="0.50" ${e.pabuc == 0.50 ? 'selected' : ''}>%50</option>
+                                    <option value="0.75" ${e.pabuc == 0.75 ? 'selected' : ''}>%75</option>
                                 </select>
-                                <select onchange="wizEslesmeGuncelle(${idx}, 'tilsim', this.value)" class="bg-slate-900 border border-slate-700 rounded px-1 py-1 text-[10px] text-amber-400 font-bold">
-                                    <option value="1" ${item.tilsim == 1 ? 'selected' : ''}>1x</option>
-                                    <option value="1.5" ${item.tilsim == 1.5 ? 'selected' : ''}>1.5x</option>
-                                    <option value="2" ${item.tilsim == 2 ? 'selected' : ''}>2x</option>
+                                <select onchange="wizEslesmeGuncelle(${idx}, 'tilsim', this.value)" class="bg-slate-900 border border-slate-700 rounded p-1 text-[10px] text-amber-400 font-bold">
+                                    <option value="1" ${e.tilsim == 1 ? 'selected' : ''}>1x</option>
+                                    <option value="1.5" ${e.tilsim == 1.5 ? 'selected' : ''}>1.5x</option>
+                                    <option value="2" ${e.tilsim == 2 ? 'selected' : ''}>2x</option>
                                 </select>
                             </div>
                         </td>
-                        <td class="p-3 font-mono text-slate-300">${formatSureSaniye(sureSaniye)}</td>
-                        <td class="p-3 font-mono font-bold text-amber-400">${cikisDate.toLocaleString('tr-TR')}</td>
-                        <td class="p-3 font-mono font-bold text-emerald-400">${varisDate.toLocaleString('tr-TR')}</td>
+                        <td class="p-3 font-mono text-slate-300">${sureStr}</td>
+                        <td class="p-3 font-mono font-bold text-amber-400">${cikisStr}</td>
+                        <td class="p-3">
+                            <input type="datetime-local" step="1" value="${e.varisTime}" onchange="wizEslesmeGuncelle(${idx}, 'varisTime', this.value)" class="bg-slate-900 border border-slate-700 rounded p-1 text-xs text-emerald-400 font-mono">
+                        </td>
                         <td class="p-3 text-center">
-                            <input type="number" min="1" max="50" value="${item.adet}" onchange="wizEslesmeGuncelle(${idx}, 'adet', this.value)" class="w-12 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold p-1">
+                            <input type="number" min="1" max="50" value="${e.adet}" onchange="wizEslesmeGuncelle(${idx}, 'adet', this.value)" class="w-12 bg-slate-900 border border-slate-700 rounded p-1 text-xs text-center text-white">
                         </td>
                         <td class="p-3">
-                            <input type="text" value="${item.not}" placeholder="Not..." onchange="wizEslesmeGuncelle(${idx}, 'not', this.value)" class="bg-slate-900 border border-slate-700 rounded p-1 text-xs text-slate-300 w-full">
+                            <input type="text" value="${e.not}" placeholder="Not..." onchange="wizEslesmeGuncelle(${idx}, 'not', this.value)" class="bg-slate-900 border border-slate-700 rounded p-1 text-xs text-slate-300 w-full">
                         </td>
                     </tr>
                 `;
@@ -2241,54 +2284,48 @@
             govde.innerHTML = html;
         }
 
-        function wizEslesmeGuncelle(idx, alan, deger) {
-            window.sihirbazEslesmeler[idx][alan] = deger;
-            wizStep3TabloCiz();
-        }
-
-        function wizGlobalVarisGuncelle() {
-            const v = document.getElementById('wiz-global-varis').value;
-            window.sihirbazEslesmeler.forEach(item => item.varisTime = v);
-            wizStep3TabloCiz();
+        function wizEslesmeGuncelle(index, alan, deger) {
+            window.sihirbazEslesmeler[index][alan] = deger;
+            wizEslesmeleriCiz();
         }
 
         async function wizOperasyonlariKaydet() {
-            const h = window.sihirbazSecilenHedef;
-            if (!h) return;
+            if (window.sihirbazEslesmeler.length === 0) return;
 
-            const kayitlar = window.sihirbazEslesmeler.map(item => {
-                const o = item.ordu;
-                const sureSaniye = hesaplaSeyahatSuresiSaniye(o.x_koordinat, o.y_koordinat, h.x_koordinat, h.y_koordinat, item.hiz, item.ty, item.pabuc, item.tilsim);
-                const varisDate = new Date(item.varisTime);
-                const cikisDate = new Date(varisDate.getTime() - (sureSaniye * 1000));
+            const kayitlar = window.sihirbazEslesmeler.map(e => {
+                const saniye = hesaplaSeyahatSuresiSaniye(e.sX, e.sY, e.hX, e.hY, e.hiz, e.ty, e.pabuc, e.tilsim);
+                const varisDate = new Date(e.varisTime);
+                const cikisDate = new Date(varisDate.getTime() - (saniye * 1000));
 
                 return {
-                    saldiran_nick: o.kullanici_adi,
-                    saldiran_koy: o.koy_adi,
-                    saldiran_x: o.x_koordinat,
-                    saldiran_y: o.y_koordinat,
-                    hedef_nick: h.oyuncu_adi,
-                    hedef_koy: h.koy_adi,
-                    hedef_x: h.x_koordinat,
-                    hedef_y: h.y_koordinat,
-                    saldiri_turu: item.tur,
-                    asker_hizi: parseFloat(item.hiz),
-                    turnuva_yeri: parseInt(item.ty, 10),
-                    pabuc_bonus: parseFloat(item.pabuc),
-                    tilsim_carpan: parseFloat(item.tilsim),
-                    sure_saniye: sureSaniye,
+                    saldiran_oyuncu: e.saldiranNick,
+                    saldiran_koy: e.saldiranKoy,
+                    saldiran_x: e.sX,
+                    saldiran_y: e.sY,
+                    hedef_oyuncu: e.hedefNick,
+                    hedef_koy: e.hedefKoy,
+                    hedef_x: e.hX,
+                    hedef_y: e.hY,
+                    saldiri_turu: e.tur,
+                    asker_hizi: parseInt(e.hiz, 10),
+                    turnuva_yeri: parseInt(e.ty, 10),
+                    pabuc_bonusu: parseFloat(e.pabuc),
+                    tilsim_carpani: parseFloat(e.tilsim),
+                    seyahat_saniyesi: saniye,
                     cikis_saati: cikisDate.toISOString(),
                     varis_saati: varisDate.toISOString(),
-                    saldiri_adedi: parseInt(item.adet, 10) || 1,
-                    notlar: item.not
+                    saldiri_adedi: parseInt(e.adet, 10),
+                    notlar: e.not
                 };
             });
 
             const { error } = await db.from('operasyonlar').insert(kayitlar);
+
             if (error) {
-                alert("Kayıt Hatası: " + error.message);
+                alert("Operasyon kaydedilemedi: " + error.message);
             } else {
-                alert("Operasyon kurgusu başarıyla kaydedildi!");
+                alert("Tüm kurgular operasyon listesine eklendi!");
+                window.sihirbazSecilenOrdular = [];
                 window.wizSeciliOrduIdleri.clear();
                 verileriYukle();
                 tabDegistir('operasyon');
@@ -2296,47 +2333,224 @@
         }
 
         // ==========================================
-        // WHATSAPP DAĞITIM MERKEZİ
+        // 5. OPERASYON TABLOSU VE İŞLEMLERİ
+        // ==========================================
+        function operasyonTablosunuCiz() {
+            const govde = document.getElementById('operasyon-tablo-govde');
+            const kurguSayisiEl = document.getElementById('kurgu-sayisi');
+            const filterSaldiranEl = document.getElementById('op-filter-saldiran');
+            const filterHedefEl = document.getElementById('op-filter-hedef');
+
+            if (!govde) return;
+
+            // Filtre Seçeneklerini Dinamik Doldur
+            if (filterSaldiranEl && filterHedefEl) {
+                const saldiranlar = [...new Set(window.tumOperasyonlar.map(o => o.saldiran_oyuncu))];
+                const hedefler = [...new Set(window.tumOperasyonlar.map(o => o.hedef_oyuncu))];
+
+                filterSaldiranEl.innerHTML = `<option value="Tümü">Tümü (Saldıran)</option>` + saldiranlar.map(s => `<option value="${s}" ${window.opFilterSaldiran === s ? 'selected' : ''}>${s}</option>`).join('');
+                filterHedefEl.innerHTML = `<option value="Tümü">Tümü (Hedef)</option>` + hedefler.map(h => `<option value="${h}" ${window.opFilterHedef === h ? 'selected' : ''}>${h}</option>`).join('');
+            }
+
+            let liste = [...window.tumOperasyonlar];
+
+            if (window.opFilterSaldiran !== 'Tümü') liste = liste.filter(o => o.saldiran_oyuncu === window.opFilterSaldiran);
+            if (window.opFilterHedef !== 'Tümü') liste = liste.filter(o => o.hedef_oyuncu === window.opFilterHedef);
+            if (window.opFilterTur !== 'Tümü') liste = liste.filter(o => o.saldiri_turu === window.opFilterTur);
+
+            if (kurguSayisiEl) kurguSayisiEl.innerText = `${liste.length} Görev`;
+
+            // Sıralama
+            const k = window.opSortKolon;
+            const y = window.opSortYon === 'asc' ? 1 : -1;
+
+            liste.sort((a, b) => {
+                if (k === 'sure') return (a.seyahat_saniyesi - b.seyahat_saniyesi) * y;
+                if (k === 'cikis_saati') return (new Date(a.cikis_saati) - new Date(b.cikis_saati)) * y;
+                if (k === 'varis_saati') return (new Date(a.varis_saati) - new Date(b.varis_saati)) * y;
+                return 0;
+            });
+
+            if (liste.length === 0) {
+                govde.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-500">Henüz planlanmış operasyon bulunmuyor.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            liste.forEach(o => {
+                const cikisStr = new Date(o.cikis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const varisStr = new Date(o.varis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                html += `
+                    <tr class="hover:bg-slate-900/50 transition">
+                        <td class="p-3">
+                            <span class="font-bold text-white block">${o.saldiran_oyuncu}</span>
+                            <span class="text-slate-400 text-xs font-mono">${o.saldiran_koy} (${o.saldiran_x}|${o.saldiran_y})</span>
+                        </td>
+                        <td class="p-3">
+                            <span class="font-bold text-rose-400 block">${o.hedef_oyuncu}</span>
+                            <span class="text-slate-400 text-xs font-mono">${o.hedef_koy} (${o.hedef_x}|${o.hedef_y})</span>
+                        </td>
+                        <td class="p-3 text-center">${getSaldiriTuruRozet(o.saldiri_turu)}</td>
+                        <td class="p-3 font-bold text-slate-200">${o.asker_hizi} Alan/saat</td>
+                        <td class="p-3 text-xs">
+                            <span class="text-amber-400 font-bold block">TY ${o.turnuva_yeri || 0}</span>
+                            <span class="text-indigo-400 font-bold block">%${(o.pabuc_bonusu || 0) * 100} Çizme | ${o.tilsim_carpani || 1}x Tılsım</span>
+                        </td>
+                        <td class="p-3 font-mono text-slate-300 font-bold">${formatSureSaniye(o.seyahat_saniyesi)}</td>
+                        <td class="p-3 font-mono font-bold text-amber-400 text-xs">${cikisStr}</td>
+                        <td class="p-3 font-mono font-bold text-emerald-400 text-xs">${varisStr}</td>
+                        <td class="p-3 text-center font-bold text-white">${o.saldiri_adedi || 1} Adet</td>
+                        <td class="p-3 text-slate-400 text-xs truncate max-w-xs">${o.notlar || '-'}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="operasyonDuzenleModalAc(${o.id})" class="p-1 text-slate-400 hover:text-amber-400"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                <button onclick="operasyonSil(${o.id})" class="p-1 text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            govde.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function opFiltrele(tur, deger) {
+            if (tur === 'saldiran') window.opFilterSaldiran = deger;
+            if (tur === 'hedef') window.opFilterHedef = deger;
+            if (tur === 'tur') window.opFilterTur = deger;
+            operasyonTablosunuCiz();
+        }
+
+        function opKolonSirala(kolon) {
+            if (window.opSortKolon === kolon) {
+                window.opSortYon = window.opSortYon === 'asc' ? 'desc' : 'asc';
+            } else {
+                window.opSortKolon = kolon;
+                window.opSortYon = 'asc';
+            }
+            operasyonTablosunuCiz();
+        }
+
+        async function operasyonSil(id) {
+            if (!confirm("Bu operasyon görevini silmek istediğinize emin misiniz?")) return;
+            const { error } = await db.from('operasyonlar').delete().eq('id', id);
+            if (error) alert("Silinemedi: " + error.message);
+            else verileriYukle();
+        }
+
+        async function tumOperasyonlariTemizle() {
+            if (!confirm("TÜM planlanan operasyon listesini temizlemek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
+            const { error } = await db.from('operasyonlar').delete().neq('id', 0);
+            if (error) alert("Temizlenemedi: " + error.message);
+            else verileriYukle();
+        }
+
+        function operasyonDuzenleModalAc(id) {
+            const op = window.tumOperasyonlar.find(o => o.id === id);
+            if (!op) return;
+
+            document.getElementById('edit-op-id').value = op.id;
+            document.getElementById('edit-op-sX').value = op.saldiran_x;
+            document.getElementById('edit-op-sY').value = op.saldiran_y;
+            document.getElementById('edit-op-hX').value = op.hedef_x;
+            document.getElementById('edit-op-hY').value = op.hedef_y;
+
+            document.getElementById('edit-op-saldiran-gosterge').innerText = `${op.saldiran_oyuncu} - ${op.saldiran_koy} (${op.saldiran_x}|${op.saldiran_y})`;
+            document.getElementById('edit-op-hedef-gosterge').innerText = `${op.hedef_oyuncu} - ${op.hedef_koy} (${op.hedef_x}|${op.hedef_y})`;
+
+            document.getElementById('edit-op-tur').value = op.saldiri_turu;
+            document.getElementById('edit-op-hiz').value = op.asker_hizi;
+            document.getElementById('edit-op-ty').value = op.turnuva_yeri || 0;
+            document.getElementById('edit-op-pabuc').value = op.pabuc_bonusu || 0;
+            document.getElementById('edit-op-tilsim').value = op.tilsim_carpani || 1;
+            document.getElementById('edit-op-varis').value = new Date(op.varis_saati).toISOString().slice(0, 19);
+            document.getElementById('edit-op-adet').value = op.saldiri_adedi || 1;
+            document.getElementById('edit-op-not').value = op.notlar || '';
+
+            modalAc('modal-operasyon-duzenle');
+        }
+
+        async function operasyonGuncelle(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-op-id').value, 10);
+            const sX = parseInt(document.getElementById('edit-op-sX').value, 10);
+            const sY = parseInt(document.getElementById('edit-op-sY').value, 10);
+            const hX = parseInt(document.getElementById('edit-op-hX').value, 10);
+            const hY = parseInt(document.getElementById('edit-op-hY').value, 10);
+
+            const tur = document.getElementById('edit-op-tur').value;
+            const hiz = parseInt(document.getElementById('edit-op-hiz').value, 10);
+            const ty = parseInt(document.getElementById('edit-op-ty').value, 10);
+            const pabuc = parseFloat(document.getElementById('edit-op-pabuc').value);
+            const tilsim = parseFloat(document.getElementById('edit-op-tilsim').value);
+            const varisStr = document.getElementById('edit-op-varis').value;
+            const adet = parseInt(document.getElementById('edit-op-adet').value, 10);
+            const not = document.getElementById('edit-op-not').value;
+
+            const saniye = hesaplaSeyahatSuresiSaniye(sX, sY, hX, hY, hiz, ty, pabuc, tilsim);
+            const varisDate = new Date(varisStr);
+            const cikisDate = new Date(varisDate.getTime() - (saniye * 1000));
+
+            const { error } = await db.from('operasyonlar').update({
+                saldiri_turu: tur,
+                asker_hizi: hiz,
+                turnuva_yeri: ty,
+                pabuc_bonusu: pabuc,
+                tilsim_carpani: tilsim,
+                seyahat_saniyesi: saniye,
+                cikis_saati: cikisDate.toISOString(),
+                varis_saati: varisDate.toISOString(),
+                saldiri_adedi: adet,
+                notlar: not
+            }).eq('id', id);
+
+            if (error) {
+                alert("Güncelleme hatası: " + error.message);
+            } else {
+                modalKapat('modal-operasyon-duzenle');
+                verileriYukle();
+                alert("Operasyon görevi güncellendi!");
+            }
+        }
+
+        // ==========================================
+        // 6. WHATSAPP GÖREV DAĞITIM MERKEZİ & GÖRSEL ÜRETME
         // ==========================================
         function whatsappDagitimModalAc() {
             const govde = document.getElementById('whatsapp-oyuncu-listesi');
             if (!govde) return;
 
-            const oyuncular = [...new Set(window.tumOperasyonlar.map(o => o.saldiran_nick))];
-
-            if (oyuncular.length === 0) {
-                govde.innerHTML = `<p class="text-center text-slate-500 py-6">Dağıtılacak görev bulunmuyor.</p>`;
+            if (window.tumOperasyonlar.length === 0) {
+                govde.innerHTML = `<p class="text-center text-slate-500 py-6">Dağıtılacak hiçbir operasyon görevi bulunmuyor.</p>`;
                 modalAc('modal-whatsapp-dagitim');
                 return;
             }
 
+            // Oyunculara göre grupla
+            const gruplar = {};
+            window.tumOperasyonlar.forEach(op => {
+                if (!gruplar[op.saldiran_oyuncu]) gruplar[op.saldiran_oyuncu] = [];
+                gruplar[op.saldiran_oyuncu].push(op);
+            });
+
             let html = '';
-            oyuncular.forEach(nick => {
-                const gorevler = window.tumOperasyonlar.filter(o => o.saldiran_nick === nick);
-
-                let metin = `⚔️ *AHIRTOOLS OPERASYON GÖREVİ* ⚔️\n👤 *Oyuncu:* ${nick}\n\n`;
-                gorevler.forEach((g, idx) => {
-                    const cikis = new Date(g.cikis_saati).toLocaleString('tr-TR');
-                    const varis = new Date(g.varis_saati).toLocaleString('tr-TR');
-                    metin += `*#${idx + 1} - ${g.saldiri_turu.toUpperCase()}*\n`;
-                    metin += `📍 *Köy:* ${g.saldiran_koy} (${g.saldiran_x}|${g.saldiran_y})\n`;
-                    metin += `🎯 *Hedef:* ${g.hedef_nick} - ${g.hedef_koy} (${g.hedef_x}|${g.hedef_y})\n`;
-                    metin += `🚀 *Çıkış:* ${cikis}\n`;
-                    metin += `🏁 *Varış:* ${varis}\n`;
-                    if (g.saldiri_adedi > 1) metin += `🔢 *Adet:* ${g.saldiri_adedi}\n`;
-                    if (g.notlar) metin += `📝 *Not:* ${g.notlar}\n`;
-                    metin += `-------------------------\n`;
-                });
-
+            Object.entries(gruplar).forEach(([nick, opListesi]) => {
                 html += `
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-emerald-400 text-sm">${nick} (${gorevler.length} Görev)</span>
-                            <button onclick="panoyaKopyala(\`${metin.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`)" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
-                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Kopyala
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                            <span class="text-base font-bold text-white block">${nick}</span>
+                            <span class="text-xs text-emerald-400 font-semibold">${opListesi.length} Adet Görev Atandı</span>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <button onclick="whatsappMetniKopyala('${nick}')" class="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Metni Kopyala
+                            </button>
+                            <button onclick="brifingKartiGorselIndir('${nick}')" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-950">
+                                <i data-lucide="image" class="w-3.5 h-3.5"></i> Görsel İndir
                             </button>
                         </div>
-                        <pre class="text-[11px] font-mono text-slate-300 bg-slate-900 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap">${metin}</pre>
                     </div>
                 `;
             });
@@ -2346,16 +2560,122 @@
             lucide.createIcons();
         }
 
-        function panoyaKopyala(metin) {
+        function whatsappMetniKopyala(nick) {
+            const opListesi = window.tumOperasyonlar.filter(o => o.saldiran_oyuncu === nick);
+            if (opListesi.length === 0) return;
+
+            let metin = `⚔️ *AHIRTOOLS - OPERASYON GÖREV KARTI* ⚔️\n`;
+            metin += `👤 *Oyuncu:* ${nick}\n`;
+            metin += `------------------------------------\n\n`;
+
+            opListesi.forEach((op, i) => {
+                const cikisStr = new Date(op.cikis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const varisStr = new Date(op.varis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                metin += `📌 *GÖREV #${i + 1}* [${op.saldiri_turu.toUpperCase()}]\n`;
+                metin += `🏰 *Saldıran Köy:* ${op.saldiran_koy} (${op.saldiran_x}|${op.saldiran_y})\n`;
+                metin += `🎯 *Hedef:* ${op.hedef_oyuncu} - ${op.hedef_koy} (${op.hedef_x}|${op.hedef_y})\n`;
+                metin += `⏱️ *Süre:* ${formatSureSaniye(op.seyahat_saniyesi)}\n`;
+                metin += `🚀 *ÇIKIŞ SAATİ:* *${cikisStr}*\n`;
+                metin += `🎯 *VARIŞ SAATİ:* ${varisStr}\n`;
+                if (op.saldiri_adedi > 1) metin += `🔢 *Saldırı Adedi:* ${op.saldiri_adedi}\n`;
+                if (op.notlar) metin += `📝 *Not:* ${op.notlar}\n`;
+                metin += `------------------------------------\n`;
+            });
+
+            metin += `\n⚠️ *Lütfen çıkış saatlerine saniyesi saniyesine uyunuz! Bol şanslar.*`;
+
             navigator.clipboard.writeText(metin).then(() => {
-                alert("Görev metni başarıyla panoya kopyalandı!");
+                alert(`${nick} kullanıcısının görev metni panoya kopyalandı! WhatsApp'a yapıştırabilirsiniz.`);
             }).catch(err => {
-                alert("Kopyalama başarısız oldu: " + err);
+                alert("Kopyalama hatası: " + err);
             });
         }
 
-        // Başlangıç Otorizasyon Kontrolü
-        oturumKontrol();
+        async function brifingKartiGorselIndir(nick) {
+            const opListesi = window.tumOperasyonlar.filter(o => o.saldiran_oyuncu === nick);
+            if (opListesi.length === 0) return;
+
+            const kartAlani = document.getElementById('brifing-kart-alani');
+            if (!kartAlani) return;
+
+            let html = `
+                <div style="padding: 30px; font-family: sans-serif; color: #f8fafc; background: #090d16; border: 2px solid #1e293b; border-radius: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 20px; margin-bottom: 25px;">
+                        <div>
+                            <h1 style="font-size: 28px; font-weight: 900; margin: 0; color: #ffffff; tracking-wide: 1px;">AHIR<span style="color: #10b981;">TOOLS</span> OPERASYON BRİFİNGİ</h1>
+                            <p style="font-size: 14px; color: #94a3b8; margin-top: 4px;">Görev Sahibi: <strong style="color: #34d399; font-size: 16px;">${nick}</strong></p>
+                        </div>
+                        <div style="text-align: right; background: #131b2e; padding: 10px 18px; border-radius: 12px; border: 1px solid #1e293b;">
+                            <span style="font-size: 12px; color: #94a3b8; display: block;">Toplam Görev</span>
+                            <strong style="font-size: 18px; color: #f59e0b;">${opListesi.length} Adet Saldırı</strong>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #0f172a; color: #94a3b8; text-transform: uppercase; font-size: 11px;">
+                                <th style="padding: 12px; border-radius: 8px 0 0 8px;">#</th>
+                                <th style="padding: 12px;">Saldıran Köy</th>
+                                <th style="padding: 12px;">Hedef</th>
+                                <th style="padding: 12px;">Tür</th>
+                                <th style="padding: 12px;">Süre</th>
+                                <th style="padding: 12px; color: #f59e0b;">Çıkış Saati</th>
+                                <th style="padding: 12px; color: #34d399;">Varış Saati</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            opListesi.forEach((op, idx) => {
+                const cikisStr = new Date(op.cikis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const varisStr = new Date(op.varis_saati).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                html += `
+                    <tr style="border-bottom: 1px solid #1e293b; background: ${idx % 2 === 0 ? '#131b2e' : '#090d16'};">
+                        <td style="padding: 14px 12px; font-weight: bold; color: #10b981;">${idx + 1}</td>
+                        <td style="padding: 14px 12px;">
+                            <strong style="color: #ffffff; display: block;">${op.saldiran_koy}</strong>
+                            <span style="color: #34d399; font-family: monospace;">(${op.saldiran_x}|${op.saldiran_y})</span>
+                        </td>
+                        <td style="padding: 14px 12px;">
+                            <strong style="color: #f43f5e; display: block;">${op.hedef_oyuncu} - ${op.hedef_koy}</strong>
+                            <span style="color: #94a3b8; font-family: monospace;">(${op.hedef_x}|${op.hedef_y})</span>
+                        </td>
+                        <td style="padding: 14px 12px; font-weight: bold; color: #f59e0b;">${op.saldiri_turu}</td>
+                        <td style="padding: 14px 12px; font-family: monospace; color: #cbd5e1;">${formatSureSaniye(op.seyahat_saniyesi)}</td>
+                        <td style="padding: 14px 12px; font-family: monospace; font-weight: bold; color: #f59e0b; font-size: 14px;">${cikisStr}</td>
+                        <td style="padding: 14px 12px; font-family: monospace; font-weight: bold; color: #34d399; font-size: 14px;">${varisStr}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #1e293b; text-align: center; font-size: 12px; color: #64748b;">
+                        AHIRTOOLS © Operasyon Kurgu Portalı — Gizli & Birlike Özel Brifing Kartı
+                    </div>
+                </div>
+            `;
+
+            kartAlani.innerHTML = html;
+
+            try {
+                const canvas = await html2canvas(kartAlani, { backgroundColor: '#090d16', scale: 2 });
+                const link = document.createElement('a');
+                link.download = `Op_Brifing_${nick}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                alert("Görsel oluşturma hatası: " + err);
+            }
+        }
+
+        // Başlangıç Çalıştırması
+        window.addEventListener('DOMContentLoaded', () => {
+            oturumKontrol();
+        });
     </script>
 </body>
 </html>
