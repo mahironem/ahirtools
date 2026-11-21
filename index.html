@@ -770,14 +770,9 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">En Yavaş Asker Hızı</label>
+                        <div id="edit-op-irk-bilgi" class="text-[10px] text-emerald-400 mb-1"></div>
                         <select id="edit-op-hiz" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                            <option value="3">3 (Mancınık)</option>
-                            <option value="4">4 (Koçbaşı / Reis)</option>
-                            <option value="5">5 (Pretoryan)</option>
-                            <option value="6">6 (Lejyoner / Balta / Kılıç)</option>
-                            <option value="7">7 (Emperyan / Tokmak)</option>
-                            <option value="9">9 (Toyton / Casus)</option>
-                            <option value="19">19 (Toytat Şimşeği)</option>
+                            <!-- Seçenekler operasyonun saldıran kabilesine göre doldurulur. -->
                         </select>
                     </div>
                 </div>
@@ -2507,6 +2502,47 @@
             wizAdim2TablosunuCiz();
         }
 
+        // Kabileye özel asker hızları (alan/saat).
+        const KABILE_HIZLARI = {
+            Cermen: [[3,'Mancınık'],[4,'Koçbaşı / Reis'],[6,'Balta Sallayan'],[7,'Tokmak / Mızrakçı'],[9,'Casus / Toyton'],[10,'Paladin']],
+            Roma: [[3,'Ateş Mancınığı'],[4,'Koçbaşı / Senatör'],[5,'Pretoryan'],[6,'Lejyoner'],[7,'Emperyan'],[10,'Equites Caesaris'],[14,'Equites İmperatoris'],[16,'Equites Legati']],
+            Galya: [[3,'Mancınık'],[4,'Koçbaşı'],[5,'Kabile Reisi'],[6,'Kılıçlı'],[7,'Phalanx'],[13,'Heduan'],[16,'Druyid'],[17,'Casus'],[19,'Toytatın Şimşeği']]
+        };
+        const GENEL_HIZLAR = [[3,'Mancınık'],[4,'Koçbaşı / Reis'],[5,'Pretoryan / Kabile Reisi'],[6,'Lejyoner / Balta / Kılıçlı'],[7,'Emperyan / Tokmak'],[9,'Toyton / Casus'],[19,'Toytatın Şimşeği']];
+        function kabileyiNormalizeEt(irk) {
+            const ad = String(irk || '').trim().toLocaleLowerCase('tr-TR');
+            if (ad === 'cermen' || ad === 'teuton') return 'Cermen';
+            if (ad === 'roma' || ad === 'roman') return 'Roma';
+            if (ad === 'galya' || ad === 'gaul') return 'Galya';
+            return '';
+        }
+        function saldiranKabilesiniBul(kayit) {
+            const direkt = kabileyiNormalizeEt(kayit.saldiranIrk || kayit.irk);
+            if (direkt) return direkt;
+            const x = Number(kayit.saldiranX), y = Number(kayit.saldiranY);
+            const nick = String(kayit.saldiranNick || kayit.saldiran_oyuncu || '').trim().toLocaleLowerCase('tr-TR');
+            const ordular = window.tumArsivKayitlari || [];
+            const ordu = ordular.find(o => Number(o.x_koordinat) === x && Number(o.y_koordinat) === y &&
+                String(o.kullanici_adi || '').trim().toLocaleLowerCase('tr-TR') === nick);
+            if (ordu && kabileyiNormalizeEt(ordu.irk)) return kabileyiNormalizeEt(ordu.irk);
+            const koy = (window.HARITA_BELLEGI || {})[x + '|' + y];
+            if (koy && String(koy[1] || '').trim().toLocaleLowerCase('tr-TR') === nick) return kabileyiNormalizeEt(koy[2]);
+            const oyuncu = ordular.find(o => String(o.kullanici_adi || '').trim().toLocaleLowerCase('tr-TR') === nick && kabileyiNormalizeEt(o.irk));
+            return oyuncu ? kabileyiNormalizeEt(oyuncu.irk) : '';
+        }
+        function kabileyeGoreHizSecenekleri(irk, seciliHiz) {
+            const liste = KABILE_HIZLARI[irk] || GENEL_HIZLAR;
+            const hiz = Number(seciliHiz);
+            let html = liste.map(([h,ad]) => '<option value="' + h + '"' + (h === hiz ? ' selected' : '') + '>' + h + ' - ' + ad + '</option>').join('');
+            if (Number.isFinite(hiz) && !liste.some(([h]) => h === hiz)) html += '<option selected value="' + hiz + '">' + hiz + ' - Kayıtlı hız (kabile dışında)</option>';
+            return html;
+        }
+        function onerilenAskerHizi(irk, tur) {
+            if (tur === 'Reisleme') return irk === 'Galya' ? 5 : 4;
+            if (tur === 'Casuslama') return irk === 'Roma' ? 16 : irk === 'Galya' ? 17 : 9;
+            return 3;
+        }
+
         function wizAdim3Hazirla() {
             const saldiriTuru = document.getElementById('wiz-saldiri-turu').value;
             let globalVarisStr = document.getElementById('wiz-global-varis').value || getYarinSaatYirmiZamani();
@@ -2522,6 +2558,7 @@
                     return {
                         saldiranNick: o.kullanici_adi,
                         saldiranKoy: o.koy_adi,
+                        saldiranIrk: saldiranKabilesiniBul({ ...o, saldiranNick: o.kullanici_adi, saldiranX: o.x_koordinat, saldiranY: o.y_koordinat }),
                         saldiranX: o.x_koordinat,
                         saldiranY: o.y_koordinat,
                         turnuvaYeri: o.turnuva_yeri || 0,
@@ -2531,7 +2568,7 @@
                         hedefX: h.x_koordinat,
                         hedefY: h.y_koordinat,
                         saldiriTuru: saldiriTuru,
-                        hiz: 3,
+                        hiz: onerilenAskerHizi(kabileyiNormalizeEt(o.irk), saldiriTuru),
                         pabuc: kp === 'VAR' ? 0.50 : 0,
                         tilsim: 1,
                         varisZamani: globalVarisStr,
@@ -2550,6 +2587,7 @@
                     return {
                         saldiranNick: o.kullanici_adi,
                         saldiranKoy: o.koy_adi,
+                        saldiranIrk: saldiranKabilesiniBul({ ...o, saldiranNick: o.kullanici_adi, saldiranX: o.x_koordinat, saldiranY: o.y_koordinat }),
                         saldiranX: o.x_koordinat,
                         saldiranY: o.y_koordinat,
                         turnuvaYeri: o.turnuva_yeri || 0,
@@ -2559,7 +2597,7 @@
                         hedefX: r.x_koordinat,
                         hedefY: r.y_koordinat,
                         saldiriTuru: saldiriTuru,
-                        hiz: 3,
+                        hiz: onerilenAskerHizi(kabileyiNormalizeEt(o.irk), saldiriTuru),
                         pabuc: kp === 'VAR' ? 0.50 : 0,
                         tilsim: 1,
                         varisZamani: globalVarisStr,
@@ -2584,7 +2622,9 @@
 
         function wizEslesmeGuncelle(index, alan, deger) {
             if (!window.sihirbazEslesmeler[index]) return;
-            window.sihirbazEslesmeler[index][alan] = deger;
+            const item = window.sihirbazEslesmeler[index];
+            item[alan] = deger;
+            if (alan === 'saldiriTuru') item.hiz = onerilenAskerHizi(item.saldiranIrk, deger);
             wizAdim3TabloyuCiz();
         }
 
@@ -2624,14 +2664,9 @@
                             </select>
                         </td>
                         <td class="p-2.5">
+                            <div class="text-[10px] mb-1 ${item.saldiranIrk ? 'text-emerald-400' : 'text-amber-400'}">${item.saldiranIrk || 'Kabile bilinmiyor — genel liste'}</div>
                             <select onchange="wizEslesmeGuncelle(${index}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
-                                <option value="3" ${item.hiz == 3 ? 'selected' : ''}>3 (Mancınık)</option>
-                                <option value="4" ${item.hiz == 4 ? 'selected' : ''}>4 (Koçbaşı / Reis)</option>
-                                <option value="5" ${item.hiz == 5 ? 'selected' : ''}>5 (Pretoryan)</option>
-                                <option value="6" ${item.hiz == 6 ? 'selected' : ''}>6 (Lejyoner / Balta / Kılıç)</option>
-                                <option value="7" ${item.hiz == 7 ? 'selected' : ''}>7 (Emperyan / Tokmak)</option>
-                                <option value="9" ${item.hiz == 9 ? 'selected' : ''}>9 (Toyton / Casus)</option>
-                                <option value="19" ${item.hiz == 19 ? 'selected' : ''}>19 (Toytat Şimşeği)</option>
+                                ${kabileyeGoreHizSecenekleri(item.saldiranIrk, item.hiz)}
                             </select>
                         </td>
                         <td class="p-2.5">
@@ -2897,8 +2932,12 @@
 
             document.getElementById('edit-op-tur').value = op.saldiri_turu || 'Saldırı';
 
-            const hizMatch = (op.asker_hizi || '').match(/(\d+)/);
-            document.getElementById('edit-op-hiz').value = hizMatch ? hizMatch[1] : '3';
+            const hizMatch = (op.asker_hizi || '').match(/(\d+(?:\.\d+)?)/);
+            const editIrk = saldiranKabilesiniBul({
+                saldiranNick: op.saldiran_oyuncu, saldiranX: sX, saldiranY: sY
+            });
+            document.getElementById('edit-op-irk-bilgi').textContent = editIrk || 'Kabile bilinmiyor — genel liste';
+            document.getElementById('edit-op-hiz').innerHTML = kabileyeGoreHizSecenekleri(editIrk, hizMatch ? hizMatch[1] : 3);
 
             document.getElementById('edit-op-ty').value = op.turnuva_yeri !== undefined ? op.turnuva_yeri : 0;
 
