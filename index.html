@@ -2807,8 +2807,10 @@
                                     <span class="font-bold text-white">${op.saldiran_oyuncu}</span>
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30">TY: ${tySeviye}</span>
                                 </div>
-                                <span class="text-[10px] text-emerald-400 font-mono block mt-0.5">${op.saldiran_koordinat}</span>
-                                ${guvenliKoyAdi ? `<span class="text-[11px] text-sky-300 block mt-1">🏠 ${guvenliKoyAdi}</span>` : ''}
+                                <div class="flex items-center gap-1.5 flex-wrap mt-1 text-[11px]">
+                                    <span class="text-emerald-400 font-mono">${op.saldiran_koordinat}</span>
+                                    ${guvenliKoyAdi ? `<span class="text-sky-300">🏠 ${guvenliKoyAdi}</span>` : ''}
+                                </div>
                             </td>
                             <td class="p-3 text-slate-300">
                                 <span class="block font-medium text-slate-200">${op.hedef_oyuncu}</span>
