@@ -2800,12 +2800,11 @@
                     return `
                         <tr class="hover:bg-slate-800/40 transition">
                             <td class="p-3 font-medium text-white">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <button onclick="oyuncuGorevResmiKopyala('${op.saldiran_oyuncu}')" title="${op.saldiran_oyuncu} Görev Kartını Kopyala" class="p-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 transition">
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="oyuncuGorevResmiKopyala('${op.saldiran_oyuncu}')" title="${op.saldiran_oyuncu} Görev Kartını Kopyala" class="p-1 shrink-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 transition">
                                         <i data-lucide="camera" class="w-3.5 h-3.5"></i>
                                     </button>
-                                    <span class="font-bold text-white">${op.saldiran_oyuncu}</span>
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30">TY: ${tySeviye}</span>
+                                    <span class="font-bold text-white whitespace-nowrap">${op.saldiran_oyuncu} <span class="text-[10px] font-bold font-mono text-amber-400">(TY: ${tySeviye})</span></span>
                                 </div>
                                 <div class="flex items-center gap-1.5 flex-wrap mt-1 text-[11px]">
                                     <span class="text-emerald-400 font-mono">${op.saldiran_koordinat}</span>
