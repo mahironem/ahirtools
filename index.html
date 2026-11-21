@@ -769,8 +769,10 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">En Yavaş Asker Hızı</label>
-                        <div id="edit-op-irk-bilgi" class="text-[10px] text-emerald-400 mb-1"></div>
+                        <label class="flex items-center justify-between gap-2 text-xs font-semibold text-slate-400 mb-1">
+                            <span>En Yavaş Asker Hızı</span>
+                            <span id="edit-op-irk-bilgi" class="text-[10px] text-emerald-400 font-semibold whitespace-nowrap"></span>
+                        </label>
                         <select id="edit-op-hiz" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
                             <!-- Seçenekler operasyonun saldıran kabilesine göre doldurulur. -->
                         </select>
@@ -2538,8 +2540,8 @@
             return html;
         }
         function onerilenAskerHizi(irk, tur) {
-            if (tur === 'Reisleme') return irk === 'Galya' ? 5 : 4;
-            if (tur === 'Casuslama') return irk === 'Roma' ? 16 : irk === 'Galya' ? 17 : 9;
+            // Her saldırı türü en yavaş birim olan mancınık hızından başlar.
+            // Kullanıcı gerekirse asker hızını kabile listesinden değiştirir.
             return 3;
         }
 
@@ -2664,10 +2666,12 @@
                             </select>
                         </td>
                         <td class="p-2.5">
-                            <div class="text-[10px] mb-1 ${item.saldiranIrk ? 'text-emerald-400' : 'text-amber-400'}">${item.saldiranIrk || 'Kabile bilinmiyor — genel liste'}</div>
-                            <select onchange="wizEslesmeGuncelle(${index}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
-                                ${kabileyeGoreHizSecenekleri(item.saldiranIrk, item.hiz)}
-                            </select>
+                            <div class="flex items-center gap-2">
+                                <select onchange="wizEslesmeGuncelle(${index}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white min-w-0">
+                                    ${kabileyeGoreHizSecenekleri(item.saldiranIrk, item.hiz)}
+                                </select>
+                                <span class="text-[10px] whitespace-nowrap font-semibold ${item.saldiranIrk ? 'text-emerald-400' : 'text-amber-400'}" title="${item.saldiranIrk ? item.saldiranIrk + ' asker hızları' : 'Kabile belirlenemedi, genel hızlar'}">${item.saldiranIrk || 'Genel'}</span>
+                            </div>
                         </td>
                         <td class="p-2.5">
                             <div class="flex flex-col gap-1">
@@ -2936,7 +2940,9 @@
             const editIrk = saldiranKabilesiniBul({
                 saldiranNick: op.saldiran_oyuncu, saldiranX: sX, saldiranY: sY
             });
-            document.getElementById('edit-op-irk-bilgi').textContent = editIrk || 'Kabile bilinmiyor — genel liste';
+            const kabileBilgiEl = document.getElementById('edit-op-irk-bilgi');
+            kabileBilgiEl.textContent = editIrk || 'Genel';
+            kabileBilgiEl.title = editIrk ? editIrk + ' asker hızları' : 'Kabile belirlenemedi, genel hızlar';
             document.getElementById('edit-op-hiz').innerHTML = kabileyeGoreHizSecenekleri(editIrk, hizMatch ? hizMatch[1] : 3);
 
             document.getElementById('edit-op-ty').value = op.turnuva_yeri !== undefined ? op.turnuva_yeri : 0;
