@@ -511,8 +511,7 @@
                                         <th class="p-3">Saldırı Türü</th>
                                         <th class="p-3">Asker Hızı</th>
                                         <th class="p-3">Pabuç / Tılsım</th>
-                                        <th class="p-3">Süre</th>
-                                        <th class="p-3 text-amber-400">Çıkış Saati</th>
+                                        <th class="p-3">Süre / <span class="text-amber-400">Çıkış Saati</span></th>
                                         <th class="p-3 text-emerald-400">Varış Saati (Saniyeli)</th>
                                         <th class="p-3 text-center">Adet</th>
                                         <th class="p-3">Not</th>
@@ -2666,11 +2665,11 @@
                             </select>
                         </td>
                         <td class="p-2.5">
-                            <div class="flex items-center gap-2">
-                                <select onchange="wizEslesmeGuncelle(${index}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white min-w-0">
+                            <div class="flex flex-col gap-1 items-start">
+                                <select onchange="wizEslesmeGuncelle(${index}, 'hiz', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white w-40 max-w-full">
                                     ${kabileyeGoreHizSecenekleri(item.saldiranIrk, item.hiz)}
                                 </select>
-                                <span class="text-[10px] whitespace-nowrap font-semibold ${item.saldiranIrk ? 'text-emerald-400' : 'text-amber-400'}" title="${item.saldiranIrk ? item.saldiranIrk + ' asker hızları' : 'Kabile belirlenemedi, genel hızlar'}">${item.saldiranIrk || 'Genel'}</span>
+                                <span class="text-[10px] leading-tight font-semibold ${item.saldiranIrk ? 'text-emerald-400' : 'text-amber-400'}" title="${item.saldiranIrk ? item.saldiranIrk + ' asker hızları' : 'Kabile belirlenemedi, genel hızlar'}">${item.saldiranIrk || 'Genel'}</span>
                             </div>
                         </td>
                         <td class="p-2.5">
@@ -2688,8 +2687,12 @@
                                 </select>
                             </div>
                         </td>
-                        <td class="p-2.5 font-mono text-xs font-bold text-slate-300">${sureMetni}</td>
-                        <td class="p-2.5 font-mono text-xs font-bold text-amber-400 whitespace-nowrap">${cikisMetni}</td>
+                        <td class="p-2.5">
+                            <div class="flex flex-col gap-1 font-mono text-xs font-bold whitespace-nowrap">
+                                <span class="text-slate-200">${sureMetni}</span>
+                                <span class="text-amber-400">${cikisMetni}</span>
+                            </div>
+                        </td>
                         <td class="p-2.5">
                             <input type="datetime-local" step="1" value="${item.varisZamani}" onchange="wizEslesmeGuncelle(${index}, 'varisZamani', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-emerald-400 font-mono outline-none">
                         </td>
