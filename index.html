@@ -2845,7 +2845,7 @@
                     let hedefOyuncuAdi = hedefAyirici >= 0 ? hedefTamAdi.slice(0, hedefAyirici) : hedefTamAdi;
                     let hedefKoyAdi = hedefAyirici >= 0 ? hedefTamAdi.slice(hedefAyirici + 3) : '';
                     if (!hedefKoyAdi) {
-                        const hedefKoord = String(op.hedef_koordinat || '').match(/\\(\\s*(-?\\d+)\\s*\\|\\s*(-?\\d+)\\s*\\)/);
+                        const hedefKoord = String(op.hedef_koordinat || '').match(/\(\s*(-?\d+)\s*\|\s*(-?\d+)\s*\)/);
                         if (hedefKoord) {
                             const rakip = (window.tumRakipler || []).find(r =>
                                 Number(r.x_koordinat) === Number(hedefKoord[1]) &&
