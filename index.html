@@ -2290,6 +2290,24 @@
             lucide.createIcons();
         }
 
+        // Kayıtlı asker dökümündeki yalnızca gerçek birlik adetlerini topla.
+        // _birlik, _kp, _koc vb. yardımcı alanlar toplamın dışında kalır.
+        function orduToplamAskerSayisi(askerVerileri) {
+            const d = askerVerileri || {};
+            return Object.entries(d).reduce((toplam, [tur, adet]) => {
+                if (tur.startsWith('_')) return toplam;
+                const sayi = Number(adet);
+                return Number.isFinite(sayi) && sayi > 0 ? toplam + sayi : toplam;
+            }, 0);
+        }
+
+        // Rakip notları kullanıcı girdisidir; HTML olarak yorumlanmadan gösterilir.
+        function guvenliMetin(metin) {
+            return String(metin || '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[ch]);
+        }
+
         function wizAdim2Hazirla() {
             const etiketBaslik = document.getElementById('wiz-step2-etiket-baslik');
             const etiket = document.getElementById('wiz-step2-secilen-etiket');
@@ -2361,6 +2379,11 @@
 
                 etiketBaslik.innerText = "Seçilen Ordu:";
                 etiket.innerText = `${o.kullanici_adi} - ${o.koy_adi} (${o.x_koordinat}|${o.y_koordinat})`;
+                const askerToplam = orduToplamAskerSayisi(d);
+                const askerEtiket = document.createElement('span');
+                askerEtiket.className = "inline-block ml-3 text-amber-400 font-semibold whitespace-nowrap";
+                askerEtiket.textContent = `Asker: ${askerToplam.toLocaleString('tr-TR')}`;
+                etiket.appendChild(askerEtiket);
 
                 thead.innerHTML = `
                     <tr>
@@ -2372,6 +2395,7 @@
                         <th onclick="wizAdim2KolonSirala('birlik')" class="p-3 cursor-pointer hover:text-white transition">BİRLİK</th>
                         <th onclick="wizAdim2KolonSirala('irk')" class="p-3 cursor-pointer hover:text-white transition">IRK</th>
                         <th onclick="wizAdim2KolonSirala('koy_turu')" class="p-3 cursor-pointer hover:text-white transition">TÜR</th>
+                        <th onclick="wizAdim2KolonSirala('notlar')" class="p-3 cursor-pointer hover:text-white transition min-w-[170px]">İSTİHBARAT NOTU</th>
                         <th onclick="wizAdim2KolonSirala('mesafe')" class="p-3 text-amber-400 font-mono cursor-pointer hover:text-amber-300 transition">MESAFE</th>
                         <th onclick="wizAdim2KolonSirala('sure')" class="p-3 text-emerald-400 font-mono cursor-pointer hover:text-emerald-300 transition">MANCINIK SÜRESİ</th>
                     </tr>
@@ -2474,6 +2498,7 @@
                         <td class="p-3 text-slate-400">${r.birlik || '-'}</td>
                         <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700">${r.irk || '-'}</span></td>
                         <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-bold text-amber-400 bg-amber-500/10">${r.koy_turu || 'Standart'}</span></td>
+                        <td class="p-3 text-xs text-slate-300 max-w-[280px] whitespace-pre-wrap break-words" title="${guvenliMetin(r.notlar || 'İstihbarat notu yok')}">${r.notlar ? guvenliMetin(r.notlar) : '<span class="text-slate-500">—</span>'}</td>
                         <td class="p-3 font-mono text-amber-400">${r._mesafe.toFixed(2)} Kr</td>
                         <td class="p-3 font-mono text-emerald-400 font-bold">${r._sureMetni}</td>
                     </tr>
