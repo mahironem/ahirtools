@@ -2290,15 +2290,33 @@
             lucide.createIcons();
         }
 
-        // Kayıtlı asker dökümündeki yalnızca gerçek birlik adetlerini topla.
-        // _birlik, _kp, _koc vb. yardımcı alanlar toplamın dışında kalır.
-        function orduToplamAskerSayisi(askerVerileri) {
-            const d = askerVerileri || {};
-            return Object.entries(d).reduce((toplam, [tur, adet]) => {
-                if (tur.startsWith('_')) return toplam;
+        // Seçilen köyün kayıtlı birliklerini toplam yerine tür ve adet olarak göster.
+        // _birlik, _kp, _koc vb. yardımcı veriler birlik listesine dahil edilmez.
+        function orduAskerDetaylariniGoster(hedef, askerVerileri) {
+            const birlikler = Object.entries(askerVerileri || {}).filter(([tur, adet]) => {
                 const sayi = Number(adet);
-                return Number.isFinite(sayi) && sayi > 0 ? toplam + sayi : toplam;
-            }, 0);
+                return !tur.startsWith('_') && Number.isFinite(sayi) && sayi > 0;
+            });
+            const detay = document.createElement('span');
+            detay.className = 'inline-flex flex-wrap items-center gap-x-2 gap-y-1 ml-3 align-middle';
+            if (!birlikler.length) {
+                detay.className += ' text-xs text-slate-500';
+                detay.textContent = 'Kayıtlı asker bulunmuyor';
+            } else {
+                birlikler.forEach(([tur, adet]) => {
+                    const etiket = document.createElement('span');
+                    etiket.className = 'inline-flex items-center gap-1 rounded-md border border-slate-700/60 bg-slate-900/80 px-2 py-0.5 text-[11px] whitespace-nowrap';
+                    const sayi = document.createElement('strong');
+                    sayi.className = 'font-mono font-bold text-amber-400';
+                    sayi.textContent = Number(adet).toLocaleString('tr-TR');
+                    const ad = document.createElement('span');
+                    ad.className = 'font-medium text-slate-200';
+                    ad.textContent = tur;
+                    etiket.append(sayi, ad);
+                    detay.appendChild(etiket);
+                });
+            }
+            hedef.appendChild(detay);
         }
 
         // Rakip notları kullanıcı girdisidir; HTML olarak yorumlanmadan gösterilir.
@@ -2379,11 +2397,7 @@
 
                 etiketBaslik.innerText = "Seçilen Ordu:";
                 etiket.innerText = `${o.kullanici_adi} - ${o.koy_adi} (${o.x_koordinat}|${o.y_koordinat})`;
-                const askerToplam = orduToplamAskerSayisi(d);
-                const askerEtiket = document.createElement('span');
-                askerEtiket.className = "inline-block ml-3 text-amber-400 font-semibold whitespace-nowrap";
-                askerEtiket.textContent = `Asker: ${askerToplam.toLocaleString('tr-TR')}`;
-                etiket.appendChild(askerEtiket);
+                orduAskerDetaylariniGoster(etiket, d);
 
                 thead.innerHTML = `
                     <tr>
