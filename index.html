@@ -2838,6 +2838,29 @@
                     const tySeviye = op.turnuva_yeri !== undefined ? op.turnuva_yeri : 0;
                     const koyAdi = operasyonSaldiranKoyAdiBul(op);
                     const guvenliKoyAdi = koyAdi.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+                    // Hedef bilgisi mevcut kayıtlarda "Oyuncu - Köy" olarak saklanıyor.
+                    // Köy adında tire varsa, yalnızca ilk ayırıcıda böl.
+                    const hedefTamAdi = String(op.hedef_oyuncu || '');
+                    const hedefAyirici = hedefTamAdi.indexOf(' - ');
+                    let hedefOyuncuAdi = hedefAyirici >= 0 ? hedefTamAdi.slice(0, hedefAyirici) : hedefTamAdi;
+                    let hedefKoyAdi = hedefAyirici >= 0 ? hedefTamAdi.slice(hedefAyirici + 3) : '';
+                    if (!hedefKoyAdi) {
+                        const hedefKoord = String(op.hedef_koordinat || '').match(/\\(\\s*(-?\\d+)\\s*\\|\\s*(-?\\d+)\\s*\\)/);
+                        if (hedefKoord) {
+                            const rakip = (window.tumRakipler || []).find(r =>
+                                Number(r.x_koordinat) === Number(hedefKoord[1]) &&
+                                Number(r.y_koordinat) === Number(hedefKoord[2])
+                            );
+                            if (rakip) {
+                                hedefKoyAdi = rakip.koy_adi || '';
+                                if (!hedefOyuncuAdi) hedefOyuncuAdi = rakip.oyuncu_adi || '';
+                            }
+                        }
+                    }
+                    const guvenliHedefMetni = deger => String(deger || '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+                    const guvenliHedefOyuncu = guvenliHedefMetni(hedefOyuncuAdi);
+                    const guvenliHedefKoy = guvenliHedefMetni(hedefKoyAdi);
+                    const guvenliHedefKoord = guvenliHedefMetni(op.hedef_koordinat);
 
                     return `
                         <tr class="hover:bg-slate-800/40 transition">
@@ -2854,8 +2877,11 @@
                                 </div>
                             </td>
                             <td class="p-3 text-slate-300">
-                                <span class="block font-medium text-slate-200">${op.hedef_oyuncu}</span>
-                                <span class="text-[10px] text-rose-400 font-mono block mt-0.5">${op.hedef_koordinat}</span>
+                                <span class="block font-bold text-white">${guvenliHedefOyuncu}</span>
+                                <div class="flex items-center gap-1.5 flex-wrap mt-1 text-[11px]">
+                                    <span class="text-rose-400 font-mono">${guvenliHedefKoord}</span>
+                                    ${guvenliHedefKoy ? `<span class="text-sky-300">🏠 ${guvenliHedefKoy}</span>` : ''}
+                                </div>
                             </td>
                             <td class="p-3 text-center">
                                 ${getSaldiriTuruRozet(op.saldiri_turu)}
