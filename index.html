@@ -2671,14 +2671,21 @@
 
                 return `
                     <tr class="hover:bg-slate-900 transition">
-                        <td class="p-2.5">
-                            <span class="font-bold text-white block">${item.saldiranNick} <span class="text-[10px] text-amber-400 font-mono">[TY: ${item.turnuvaYeri}]</span></span>
-                            <span class="text-[11px] text-slate-400 font-mono">${item.saldiranKoy} (${item.saldiranX}|${item.saldiranY})</span>
-                            <span class="text-[10px] text-emerald-400 font-bold block">${item.gucPuani.toLocaleString('tr-TR')} Güç</span>
+                        <td class="p-2.5 align-middle">
+                            <div class="flex flex-col gap-0.5 leading-tight">
+                                <span class="font-bold text-white text-xs">${item.saldiranNick}</span>
+                                <span class="text-[10px] text-amber-400 font-mono font-semibold">(TY: ${item.turnuvaYeri})</span>
+                                <span class="text-[11px] text-sky-300">🏠 ${item.saldiranKoy}</span>
+                                <span class="text-[10px] text-emerald-400 font-mono">(${item.saldiranX}|${item.saldiranY})</span>
+                                <span class="text-[10px] text-emerald-400 font-bold">${item.gucPuani.toLocaleString('tr-TR')} Güç</span>
+                            </div>
                         </td>
-                        <td class="p-2.5">
-                            <span class="font-bold text-white block">${item.hedefOyuncu}</span>
-                            <span class="text-[11px] text-rose-400 font-mono">${item.hedefKoy} (${item.hedefX}|${item.hedefY})</span>
+                        <td class="p-2.5 align-middle">
+                            <div class="flex flex-col gap-0.5 leading-tight">
+                                <span class="font-bold text-white text-xs">${item.hedefOyuncu}</span>
+                                <span class="text-[11px] text-sky-300">🏠 ${item.hedefKoy}</span>
+                                <span class="text-[10px] text-rose-400 font-mono">(${item.hedefX}|${item.hedefY})</span>
+                            </div>
                         </td>
                         <td class="p-2.5">
                             <select onchange="wizEslesmeGuncelle(${index}, 'saldiriTuru', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white">
