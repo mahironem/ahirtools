@@ -572,11 +572,11 @@
                                             </select>
                                         </div>
                                     </th>
-                                    <th class="p-3 align-top min-w-[110px] text-center">
+                                    <th class="p-3 align-top min-w-[135px]">
                                         <div class="space-y-1.5">
-                                            <span class="font-bold text-slate-200 block">TÜR</span>
+                                            <span class="font-bold text-slate-200 block">ASKER HIZI / TÜR</span>
                                             <select onchange="opFiltrele('tur', this.value)" id="op-filter-tur" class="w-full bg-slate-900 border border-slate-700 text-amber-400 text-[11px] font-bold rounded-lg px-2 py-1 outline-none cursor-pointer focus:border-amber-500">
-                                                <option value="Tümü">Tümü</option>
+                                                <option value="Tümü">Tümü (Tür)</option>
                                                 <option value="Saldırı">Saldırı</option>
                                                 <option value="Sahte">Sahte</option>
                                                 <option value="Reisleme">Reisleme</option>
@@ -585,10 +585,13 @@
                                             </select>
                                         </div>
                                     </th>
-                                    <th class="p-3 align-top"><span class="font-bold text-slate-200 block pt-1">ASKER HIZI</span></th>
                                     <th class="p-3 align-top"><span class="font-bold text-slate-200 block pt-1">BONUSLAR / ETKİLER</span></th>
-                                    <th onclick="opKolonSirala('sure')" class="p-3 align-top cursor-pointer hover:text-white transition font-mono"><span class="font-bold text-slate-200 block pt-1">SÜRE <span id="op-sort-icon-sure"></span></span></th>
-                                    <th onclick="opKolonSirala('cikis_saati')" class="p-3 align-top cursor-pointer hover:text-amber-300 transition font-mono"><span class="font-bold text-amber-400 block pt-1">ÇIKIŞ SAATİ <span id="op-sort-icon-cikis_saati"></span></span></th>
+                                    <th class="p-3 align-top font-mono">
+                                        <div class="flex flex-col gap-1">
+                                            <span onclick="opKolonSirala('sure')" class="font-bold text-slate-200 cursor-pointer hover:text-white whitespace-nowrap">SÜRE <span id="op-sort-icon-sure"></span></span>
+                                            <span onclick="opKolonSirala('cikis_saati')" class="font-bold text-amber-400 cursor-pointer hover:text-amber-300 whitespace-nowrap">ÇIKIŞ SAATİ <span id="op-sort-icon-cikis_saati"></span></span>
+                                        </div>
+                                    </th>
                                     <th onclick="opKolonSirala('varis_saati')" class="p-3 align-top cursor-pointer hover:text-emerald-300 transition font-mono"><span class="font-bold text-emerald-400 block pt-1">VARIŞ SAATİ <span id="op-sort-icon-varis_saati"></span></span></th>
                                     <th class="p-3 align-top text-center"><span class="font-bold text-slate-200 block pt-1">SALDIRI</span></th>
                                     <th class="p-3 align-top"><span class="font-bold text-slate-200 block pt-1">NOT</span></th>
@@ -596,7 +599,7 @@
                                 </tr>
                             </thead>
                             <tbody id="operasyon-tablo-govde" class="divide-y divide-slate-800/60">
-                                <tr><td colspan="11" class="p-8 text-center text-slate-500">Henüz planlanmış operasyon bulunmuyor.</td></tr>
+                                <tr><td colspan="9" class="p-8 text-center text-slate-500">Henüz planlanmış operasyon bulunmuyor.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -2538,6 +2541,28 @@
             if (Number.isFinite(hiz) && !liste.some(([h]) => h === hiz)) html += '<option selected value="' + hiz + '">' + hiz + ' - Kayıtlı hız (kabile dışında)</option>';
             return html;
         }
+        // Yeni operasyonlarda asker adı saklanır; eski sayısal kayıtlar kabileye göre yorumlanır.
+        function hizEtiketiBul(irk, hiz) {
+            const num = Number(hiz);
+            const liste = KABILE_HIZLARI[irk] || GENEL_HIZLAR;
+            const asker = liste.find(([h]) => h === num);
+            return asker ? num + ' - ' + asker[1] : num + ' Alan/Saat';
+        }
+
+        function operasyonHizEtiketi(op) {
+            const kayitli = String(op.asker_hizi || '').trim();
+            if (/^\d+(?:\.\d+)?\s+-\s+/.test(kayitli)) return kayitli;
+            const hiz = Number.parseFloat(kayitli);
+            if (!Number.isFinite(hiz)) return kayitli || '-';
+            const koord = String(op.saldiran_koordinat || '').match(/\(\s*(-?\d+)\s*\|\s*(-?\d+)\s*\)/);
+            const irk = saldiranKabilesiniBul({
+                saldiranNick: op.saldiran_oyuncu,
+                saldiranX: koord ? Number(koord[1]) : NaN,
+                saldiranY: koord ? Number(koord[2]) : NaN
+            });
+            return hizEtiketiBul(irk, hiz);
+        }
+
         function onerilenAskerHizi(irk, tur) {
             // Her saldırı türü en yavaş birim olan mancınık hızından başlar.
             // Kullanıcı gerekirse asker hızını kabile listesinden değiştirir.
@@ -2723,7 +2748,7 @@
                 hedef_oyuncu: `${item.hedefOyuncu} - ${item.hedefKoy}`,
                 hedef_koordinat: `(${item.hedefX}|${item.hedefY})`,
                 saldiri_turu: item.saldiriTuru,
-                asker_hizi: `${item.hiz} Alan/Saat`,
+                asker_hizi: hizEtiketiBul(item.saldiranIrk, item.hiz),
                 papuc: item.pabuc > 0 ? `%${item.pabuc * 100} Çizme` : 'Yok (%0)',
                 tilsim: `${item.tilsim}x Hızlı`,
                 sure: item.hesaplananSure,
@@ -2861,6 +2886,7 @@
                     const guvenliHedefOyuncu = guvenliHedefMetni(hedefOyuncuAdi);
                     const guvenliHedefKoy = guvenliHedefMetni(hedefKoyAdi);
                     const guvenliHedefKoord = guvenliHedefMetni(op.hedef_koordinat);
+                    const guvenliHizEtiketi = guvenliHedefMetni(operasyonHizEtiketi(op));
 
                     return `
                         <tr class="hover:bg-slate-800/40 transition">
@@ -2883,18 +2909,24 @@
                                     ${guvenliHedefKoy ? `<span class="text-sky-300">🏠 ${guvenliHedefKoy}</span>` : ''}
                                 </div>
                             </td>
-                            <td class="p-3 text-center">
-                                ${getSaldiriTuruRozet(op.saldiri_turu)}
+                            <td class="p-3">
+                                <div class="flex flex-col items-start gap-1.5">
+                                    <span class="font-semibold text-white text-xs whitespace-nowrap">${guvenliHizEtiketi}</span>
+                                    ${getSaldiriTuruRozet(op.saldiri_turu)}
+                                </div>
                             </td>
-                            <td class="p-3 font-mono text-xs text-slate-300">${op.asker_hizi}</td>
                             <td class="p-3 text-xs">
                                 <div class="flex flex-col gap-1">
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/25 inline-block w-max">👟 ${op.papuc || 'Yok (%0)'}</span>
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/25 inline-block w-max">⚡ ${op.tilsim || '1x Hızlı'}</span>
                                 </div>
                             </td>
-                            <td class="p-3 font-mono text-xs text-slate-300">${op.sure}</td>
-                            <td class="p-3 font-mono font-bold text-amber-400 text-xs whitespace-nowrap">${cikis}</td>
+                            <td class="p-3">
+                                <div class="flex flex-col gap-1.5 font-mono text-xs font-bold whitespace-nowrap">
+                                    <span class="text-slate-200">${op.sure}</span>
+                                    <span class="text-amber-400">${cikis}</span>
+                                </div>
+                            </td>
                             <td class="p-3 font-mono font-bold text-emerald-400 text-xs whitespace-nowrap">${varis}</td>
                             <td class="p-3 font-mono font-bold text-center text-slate-200">${op.saldiri_sayisi || 1}</td>
                             <td class="p-3 text-slate-400 text-xs">${op.oyuncu_notu || '-'}</td>
@@ -2912,7 +2944,7 @@
                     `;
                 }).join('');
             } else {
-                opGovde.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-500">Filtreye uygun operasyon görevi bulunamadı.</td></tr>`;
+                opGovde.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">Filtreye uygun operasyon görevi bulunamadı.</td></tr>`;
             }
             lucide.createIcons();
         }
@@ -3022,7 +3054,7 @@
 
             const { error } = await db.from('operasyonlar').update({
                 saldiri_turu: tur,
-                asker_hizi: `${hiz} Alan/Saat`,
+                asker_hizi: hizEtiketiBul(saldiranKabilesiniBul({ saldiranNick: window.tumOperasyonlar.find(o => o.id === id)?.saldiran_oyuncu, saldiranX: sX, saldiranY: sY }), hiz),
                 turnuva_yeri: ty,
                 papuc: pabuc > 0 ? `%${pabuc * 100} Çizme` : 'Yok (%0)',
                 tilsim: `${tilsim}x Hızlı`,
