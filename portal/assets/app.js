@@ -9,8 +9,8 @@
   const esc = val => String(val == null ? "" : val).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const ico = (name, className) => '<i data-lucide="' + esc(name || 'circle') + '" class="' + (className || '') + '"></i>';
   const pageUrl = p => esc(p.path);
-  const status = p => p.status === "existing" ? '<span class="status-tag existing">Çalışan araç</span>' : '<span class="status-tag planned">Geliştiriliyor</span>';
-  const metaLink = (p, className) => '<a class="' + (className || "nav-leaf") + (p.id === page.id ? ' active' : '') + '" href="' + pageUrl(p) + '">' + ico(p.icon) + '<span>' + esc(p.title) + '</span>' + (p.status === "existing" ? '<span class="status-dot" title="Mevcut panelde çalışıyor"></span>' : '') + '</a>';
+  const status = p => p.status === "available" ? '<span class="status-tag existing">Kullanıma açık</span>' : p.status === "existing" ? '<span class="status-tag existing">Çalışan araç</span>' : '<span class="status-tag planned">Geliştiriliyor</span>';
+  const metaLink = (p, className) => '<a class="' + (className || "nav-leaf") + (p.id === page.id ? ' active' : '') + '" href="' + pageUrl(p) + '">' + ico(p.icon) + '<span>' + esc(p.title) + '</span>' + (["existing","available"].includes(p.status) ? '<span class="status-dot" title="Mevcut panelde çalışıyor"></span>' : '') + '</a>';
   function menu() {
     const html = data.sections.map(s => {
       const selected = page.path.startsWith(s.path);

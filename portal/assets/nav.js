@@ -438,7 +438,7 @@ window.AHIR_PORTAL = {
           "path": "/portal/tablolar/binalar/",
           "title": "Binalar",
           "icon": "building",
-          "status": "planned"
+          "status": "available"
         },
         {
           "id": "p-tablolar-askerler",
@@ -1172,7 +1172,7 @@ window.AHIR_PORTAL = {
       "description": "Seviye, maliyet, şart ve getiriler.",
       "icon": "building",
       "kind": "page",
-      "status": "planned",
+      "status": "available",
       "section": "Tablolar"
     },
     {

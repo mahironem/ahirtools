@@ -41,16 +41,21 @@ function setup(){
  }
  $("b-ad").addEventListener("change",e=>{state.ad=e.target.checked;render();});
  $("b-search").addEventListener("input",e=>{state.q=e.target.value;drawList();});
- $("b-from").addEventListener("change",e=>{state.from=+e.target.value;state.to=Math.max(state.to,state.from+1);render();});
- $("b-to").addEventListener("change",e=>{state.to=+e.target.value;if(state.to<=state.from)state.from=state.to-1;render();});
+ $("b-from").addEventListener("change",e=>{state._rowStartChosen=false;state.from=+e.target.value;state.to=Math.max(state.to,state.from+1);render();});
+ $("b-to").addEventListener("change",e=>{state._rowStartChosen=false;state.to=+e.target.value;if(state.to<=state.from)state.from=state.to-1;render();});
  $("b-rows").addEventListener("click",e=>{
     const row=e.target.closest("tr[data-level]");if(!row)return;
     const lvl=+row.dataset.level;
-    if(state.from===0&&state.to===1){state.from=Math.max(0,lvl-1);state.to=lvl;}
-    else if(lvl===state.to){state.from=Math.max(0,lvl-1);}
-    else if(lvl>state.to){state.to=lvl;}
-    else if(lvl<=state.from){state.from=Math.max(0,lvl-1);}
-    else {state.from=lvl-1;state.to=lvl;}
+    // İlk tık mevcut seviye, ikinci tık hedef seviye (5 ardından 12 = 5 → 12).
+    if(!state._rowStartChosen){
+      state.from=Math.min(lvl,b.max-1);
+      state.to=Math.min(b.max,state.from+1);
+      state._rowStartChosen=true;
+    }else{
+      if(lvl<=state.from){state.from=Math.max(0,lvl-1);state.to=lvl;}
+      else state.to=lvl;
+      state._rowStartChosen=false;
+    }
     render();
  });
  $("b-share").addEventListener("click",async()=>{
@@ -112,7 +117,7 @@ function drawList(skipGroups){
  const filtered=buildings.filter(b=>(state.group==="Tümü"||b.group===state.group)&&(!q||b.name.toLocaleLowerCase("tr-TR").includes(q)));
  $("b-count").textContent=filtered.length+" bina";
  $("b-list").innerHTML=filtered.length?filtered.map(b=>'<button class="build-list-item '+(b.id===state.building?'active':'')+'" data-building="'+b.id+'"><span class="build-list-icon">'+(b.group==="Hammadde"?"🌾":b.group==="Askeri"?"⚔️":"🏛️")+'</span><span>'+esc(b.name)+'</span><span class="build-list-max">'+b.max+'</span></button>').join(""):'<div class="build-empty">Aramana uygun bina bulunamadı.</div>';
- $("b-list").querySelectorAll("[data-building]").forEach(el=>el.onclick=()=>{state.building=el.dataset.building;state.from=0;state.to=Math.min(5,byId(state.building).max);render();});
+ $("b-list").querySelectorAll("[data-building]").forEach(el=>el.onclick=()=>{state.building=el.dataset.building;state._rowStartChosen=false;state.from=0;state.to=Math.min(5,byId(state.building).max);render();});
 }
 setup();
 })();
