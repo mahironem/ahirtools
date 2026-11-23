@@ -77,6 +77,7 @@
       '<div class="tools-grid">'+items.map(it=>smallCard(byPath(it.path) || it)).join('')+'</div>';
   }
   function pageContent(){
+    if(page.id === "p-tablolar-binalar") return '<div id="build-calculator"></div>';
     if(page.kind === "home") return homeContent();
     if(page.kind === "section"){
       const s=data.sections.find(x=>x.path===page.path);

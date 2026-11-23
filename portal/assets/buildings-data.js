@@ -1,0 +1,52 @@
+/* AhirTools bina verileri: temel kaynak/katsayılar Kirilloid'in açık kaynak T4 tablolarındaki
+   sayısal oyun parametrelerinden derlenmiştir. Bunlar 2026 sunucularında doğrulanmış kesin
+   değerler değildir; sürüm, etkinlik ve dünya kurallarına göre değişebilir. */
+window.AHIR_BUILDINGS = [
+  // id, ad, grup, ilk 4 kaynak, büyüme, nüfus tabanı, KP tabanı, tA, üst seviye, şart, açıklama, tK, tB
+  ["woodjack","Orman","Hammadde",[40,100,50,60],1.67,2,1,593.333,20,"","Odun üretimini artırır.",1.6,333.333],
+  ["claypit","Tuğla Ocağı","Hammadde",[80,40,80,50],1.67,2,1,553.333,20,"","Tuğla üretimini artırır.",1.6,333.333],
+  ["ironmine","Demir Madeni","Hammadde",[100,80,30,60],1.67,3,1,783.333,20,"","Demir üretimini artırır.",1.6,333.333],
+  ["cropland","Tarla","Hammadde",[70,90,70,20],1.67,0,1,483.333,20,"","Tahıl üretimini artırır.",1.6,333.333],
+  ["sawmill","Marangozhane","Hammadde",[520,380,290,90],1.80,4,1,5400,5,"Tuğla Ocağı 10; Merkez Binası 5","Odun üretim bonusu sağlar.",1.5,2400],
+  ["brickyard","Tuğla Fırını","Hammadde",[440,480,320,50],1.80,3,1,5240,5,"Orman 10; Merkez Binası 5","Tuğla üretim bonusu sağlar.",1.5,2400],
+  ["ironfoundry","Demir Dökümhanesi","Hammadde",[200,450,510,120],1.80,6,1,6480,5,"Demir Madeni 10; Merkez Binası 5","Demir üretim bonusu sağlar.",1.5,2400],
+  ["grainmill","Değirmen","Hammadde",[500,440,380,1240],1.80,3,1,4240,5,"Tarla 5; Merkez Binası 5","Tahıl üretim bonusu sağlar.",1.5,2400],
+  ["bakery","Ekmek Fırını","Hammadde",[1200,1480,870,1600],1.80,4,1,6080,5,"Tarla 10; Değirmen 5; Merkez Binası 5","Tahıl üretim bonusu sağlar.",1.5,2400],
+  ["warehouse","Hammadde Deposu","Hammadde",[130,160,90,40],1.28,1,1,3875,20,"Merkez Binası 1","Odun, tuğla ve demir depolama kapasitesini artırır."],
+  ["granary","Tahıl Ambarı","Hammadde",[80,100,70,20],1.28,1,1,3475,20,"Merkez Binası 1","Tahıl depolama kapasitesini artırır."],
+  ["greatwarehouse","Büyük Hammadde Deposu","Hammadde",[650,800,450,200],1.28,1,1,10875,20,"Merkez Binası 10; özel dünya koşulları","Çok yüksek hammadde depolama kapasitesi."],
+  ["greatgranary","Büyük Tahıl Ambarı","Hammadde",[400,500,350,100],1.28,1,1,8875,20,"Merkez Binası 10; özel dünya koşulları","Çok yüksek tahıl depolama kapasitesi."],
+  ["waterworks","Su İşleri","Hammadde",[650,670,650,240],1.28,1,1,3875,20,"Mısır kabilesi; Kahraman Kışlası 10","Vaha bonuslarını güçlendirmeye yarar."],
+  ["rallypoint","Askeri Üs","Askeri",[110,160,90,70],1.28,1,1,3875,20,"","Birlik hareketlerini ve hedef emirlerini yönetir."],
+  ["barracks","Kışla","Askeri",[210,140,260,120],1.28,4,1,3875,20,"Merkez Binası 3; Askeri Üs 1","Piyade birliklerinin eğitimi."],
+  ["stable","Ahır","Askeri",[260,140,220,100],1.28,5,2,4075,20,"Akademi 5; ilgili diğer koşullar","Süvari birliklerinin eğitimi."],
+  ["workshop","Tamirhane","Askeri",[460,510,600,320],1.28,3,3,4875,20,"Merkez Binası 5; Akademi 10","Koçbaşı ve mancınık üretim binası."],
+  ["academy","Akademi","Askeri",[220,160,90,40],1.28,4,4,3875,20,"Merkez Binası 3; Kışla 3","Yeni birlik türlerinin araştırılması."],
+  ["smithy","Zırh Dökümhanesi","Askeri",[180,250,500,160],1.28,4,2,3875,20,"Merkez Binası 3; Akademi 3","Birlik geliştirmelerine yönelik bina."],
+  ["arena","Turnuva Yeri","Askeri",[1750,2250,1530,240],1.28,1,1,5375,20,"Askeri Üs 15","Uzun mesafe birlik hareketlerini hızlandırır."],
+  ["greatbarracks","Büyük Kışla","Askeri",[630,420,780,360],1.28,4,1,3875,20,"Kışla 20; başkent dışı","Yüksek maliyetli ek piyade eğitimi."],
+  ["greatstables","Büyük Ahır","Askeri",[780,420,660,300],1.28,5,2,4075,20,"Ahır 20; başkent dışı","Yüksek maliyetli ek süvari eğitimi."],
+  ["heromansion","Kahraman Kışlası","Askeri",[80,120,70,90],1.33,2,1,2300,20,"Merkez Binası 3; Askeri Üs 1","Kahraman ve vaha yönetimi.",0,1875],
+  ["trapper","Tuzakçı","Askeri",[100,100,100,100],1.28,4,1,2000,20,"Galya; Askeri Üs 1","Tuzak kapasitesi sunar.",0,1875],
+  ["wall","Sur","Askeri",[70,90,170,70],1.28,0,1,3875,20,"Roma","Köy savunma bonusu sağlar."],
+  ["earthwall","Toprak Siper","Askeri",[120,200,0,80],1.28,0,1,3875,20,"Cermen","Köy savunma bonusu sağlar."],
+  ["palisade","Çit","Askeri",[160,100,80,60],1.28,0,1,3875,20,"Galya","Köy savunma bonusu sağlar."],
+  ["stonewall","Taş Sur","Askeri",[110,160,70,60],1.28,0,1,3875,20,"Mısır","Köy savunma bonusu sağlar."],
+  ["makeshiftwall","Eğreti Sur","Askeri",[50,80,40,30],1.28,0,1,3875,20,"Hun","Köy savunma bonusu sağlar."],
+  ["mainbuilding","Merkez Binası","Altyapı",[70,40,60,20],1.28,2,2,3875,20,"","Diğer binaların inşaat sürelerini azaltır."],
+  ["marketplace","Pazar","Altyapı",[80,70,120,70],1.28,4,3,3675,20,"Merkez Binası 3; Depo 1; Ambar 1","Kaynak ticareti ve taşımacılığı."],
+  ["embassy","Elçilik","Altyapı",[180,130,150,80],1.28,3,4,3875,20,"Merkez Binası 1","Birliğe katılma ve birlik yönetimi."],
+  ["cranny","Sığınak","Altyapı",[40,50,30,10],1.28,0,1,2175,10,"","Yağmada kaynak koruma kapasitesi."],
+  ["townhall","Belediye","Altyapı",[1250,1110,1260,600],1.28,4,5,14375,20,"Merkez Binası 10; Akademi 10","Kültür puanı kutlamaları."],
+  ["residence","Köşk","Altyapı",[580,460,350,180],1.28,1,2,3875,20,"Merkez Binası 5; Saray bulunmamalı","Yeni köy kurma ve sadakat."],
+  ["palace","Saray","Altyapı",[550,800,750,250],1.28,1,5,6875,20,"Merkez Binası 5; Elçilik 1; Köşk bulunmamalı","Başkent ve yeni köy yönetimi."],
+  ["commandcenter","Komuta Merkezi","Altyapı",[1600,1250,1050,200],1.22,1,2,3875,20,"Mısır; Merkez Binası 5","Köşk/Saray alternatifi."],
+  ["treasury","Hazine","Altyapı",[2880,2740,2580,990],1.26,4,6,9875,20,"Merkez Binası 10","Tılsım saklama ve yönetimi."],
+  ["tradeoffice","Ticari Merkez","Altyapı",[1400,1330,1200,400],1.28,3,3,4875,20,"Pazar 20; Ahır 10","Tüccar taşıma kapasitesini artırır."],
+  ["stonemason","Taşçı","Altyapı",[155,130,125,70],1.28,2,1,5950,20,"Başkent; Merkez Binası 5; Saray 5","Bina dayanıklılığı bonusu.",2,1875],
+  ["brewery","İçecek Fabrikası","Altyapı",[1460,930,1250,1740],1.40,6,4,11750,10,"Cermen; Askeri Üs 10","Cermen saldırı bonusları.",2,1875],
+  ["horsepool","Yalak","Altyapı",[780,420,660,540],1.28,5,3,5950,20,"Roma; Ahır 20; Askeri Üs 10","Roma süvari tahıl tüketimi bonusu.",2,1875],
+  ["worldwonder","Dünya Harikası","Altyapı",[66700,69050,72200,13200],1.0275,1,0,60857,100,"Dünya Harikası köyü; özel yapı planı","Dünya Harikası geliştirmesi.",1.014,42857]
+].map(([id,name,group,base,k,pop,cp,a,max,req,desc,tk,tb])=>({
+ id,name,group,base,k,pop,cp,a,max,req,desc,tk:tk==null?1.16:tk,tb:tb==null?1875:tb
+}));
