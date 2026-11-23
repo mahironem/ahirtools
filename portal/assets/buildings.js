@@ -21,6 +21,73 @@ const state={
  ad:q.get("ad")==="1",search:"",rowStage:0
 };
 const groups=["Hammadde","Askeri","Altyapı"];
+
+const buildingIcons=window.AHIR_BUILDING_ICONS||{};
+const buildingEffects=window.AHIR_BUILDING_EFFECTS||{};
+function buildingIcon(b){
+ const url=buildingIcons[b.id];
+ return url?'<img src="'+esc(url)+'" width="24" height="24" loading="lazy" alt="" aria-hidden="true">':'<span aria-hidden="true">🏗️</span>';
+}
+function requirementList(b){
+ const names=buildings.map(x=>x.name).sort((a,z)=>z.length-a.length);
+ return String(b.req||"").split(";").map(s=>s.trim()).filter(Boolean).map(part=>{
+   const name=names.find(n=>part.toLocaleLowerCase("tr-TR").startsWith(n.toLocaleLowerCase("tr-TR")+" ") || part.toLocaleLowerCase("tr-TR")===n.toLocaleLowerCase("tr-TR"));
+   const linked=name?buildings.find(x=>x.name===name):null;
+   const blocked=/bulunmamalı|olmamalı/i.test(part);
+   return{label:part,id:linked?.id||"",blocked};
+ });
+}
+function requirementHtml(b){
+ const reqs=requirementList(b);
+ return '<span class="bc-req-title">Ön koşullar:</span> '+
+   (reqs.length?reqs.map(x=>'<span class="bc-req-badge '+(x.blocked?'blocked':'')+'">'+esc(x.label)+'</span>').join(" "):
+    '<span class="bc-req-none">Yok</span>');
+}
+function effectAt(b,lvl){
+ const [kind,label]=buildingEffects[b.id]||["level","Bina seviyesi"];
+ const production=[2,5,9,15,22,33,50,70,100,145,200,280,375,495,635,800,1000,1300,1600,2000,2450,3050];
+ let value;
+ switch(kind){
+ case "prod": value=int(Math.round(production[lvl]*1.4))+"/sa";break;
+ case "percent5": value="+"+(5*lvl)+"%";break;
+ case "percent10":value="+"+(10*lvl)+"%";break;
+ case "percent1":value="+"+lvl+"%";break;
+ case "negative1":value="-"+lvl+"%";break;
+ case "capacity":value=int(Math.round((2120*Math.pow(1.2,lvl)-1320)/100)*100);break;
+ case "greatcapacity":value=int(3*Math.round((2120*Math.pow(1.2,lvl)-1320)/100)*100);break;
+ case "cranny":value=int(Math.round(Math.pow(129.17,lvl-1)/10)*10);break;
+ case "train":value=Math.round(100*Math.pow(.9,lvl-1))+"%";break;
+ case "mbtime":value=Math.round(100*Math.pow(.964,lvl-1))+"%";break;
+ case "buildspeed":value=Math.round(100/Math.pow(.964,lvl-1))+"%";break;
+ case "slots2":value=String(Number(lvl>=10)+Number(lvl>=20));break;
+ case "slots3":value=String(Number(lvl>=10)+Number(lvl>=15)+Number(lvl>=20));break;
+ case "traps":value=int(lvl>10?(lvl*lvl+19*lvl+20)/2:(lvl*lvl+21*lvl-2)/2);break;
+ case "wallRoman":value="+"+((Math.pow(1.03,lvl)-1)*100).toFixed(1)+"%";break;
+ case "wallGerman":value="+"+((Math.pow(1.02,lvl)-1)*100).toFixed(1)+"%";break;
+ case "wallGaul":case "wallEgypt":value="+"+((Math.pow(1.025,lvl)-1)*100).toFixed(1)+"%";break;
+ case "wallHun":value="+"+((Math.pow(1.015,lvl)-1)*100).toFixed(1)+"%";break;
+ case "tribe":value="Kabileye göre";break;
+ case "ww":case "level":value=String(lvl);break;
+ default:value="—";
+ }
+ return{label,value};
+}
+function previewRequirements(id){
+ const b=byId(id),preview=$("bc-prereq-preview");if(!preview)return;
+ $("bc-columns").querySelectorAll(".bc-building").forEach(btn=>{
+   btn.classList.remove("bc-needs","bc-excludes","bc-hovered");
+ });
+ if(!b){preview.innerHTML='Binaların üzerine gelerek gereken yapıları vurgulayabilirsin.';return;}
+ const parts=requirementList(b);
+ const ids=new Map(parts.filter(x=>x.id).map(x=>[x.id,x.blocked]));
+ $("bc-columns").querySelectorAll(".bc-building").forEach(btn=>{
+   if(btn.dataset.building===id)btn.classList.add("bc-hovered");
+   if(ids.has(btn.dataset.building))btn.classList.add(ids.get(btn.dataset.building)?"bc-excludes":"bc-needs");
+ });
+ preview.innerHTML='<strong>'+esc(b.name)+'</strong> — '+requirementHtml(b)+
+   '<span class="bc-prereq-hint"> Renkler şartı belirtir; köyündeki seviyeleri kontrol etmez.</span>';
+}
+
 const symbols={
  woodjack:"🌲",claypit:"🧱",ironmine:"⛏️",cropland:"🌾",sawmill:"🪚",brickyard:"🏭",
  ironfoundry:"🔥",grainmill:"🌾",bakery:"🥖",warehouse:"📦",granary:"🌽",greatwarehouse:"🏬",
@@ -46,24 +113,27 @@ function setup(){
  toolbar("bc")+'</section>'+
  '<section class="bc-catalog"><div class="bc-catalog-head"><div><h2>Binalar</h2><span id="bc-count"></span></div>'+
  '<label class="bc-search"><span aria-hidden="true">⌕</span><input id="bc-search" type="search" placeholder="Bina ara..." aria-label="Bina ara" autocomplete="off"></label></div>'+
+ '<div id="bc-prereq-preview" class="bc-prereq-preview">Binaların üzerine gelerek gereken yapıları vurgulayabilirsin.</div>'+
  '<div id="bc-columns" class="bc-columns"></div></section>'+
- '<div class="bc-data-note">ⓘ Kaynak ve KP değerleri tarihi T4 oyun modeline dayanır. İnşa süreleri sunucu kurallarına göre değişebilir; oyundaki süreyi doğrula.</div>'+
+ '<div class="bc-data-note">ⓘ Kaynak, KP ve bina etkileri tarihî T4 oyun modeline dayanır. Sunucunun güncel oyun sürümüyle karşılaştır. İkonlar: <a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer">Game-icons.net (Lorc / Delapouite, CC BY 3.0)</a>.</div>'+
  '<div id="bc-overlay" class="bc-overlay" hidden>'+
  '<div id="bc-dialog" class="bc-dialog" role="dialog" aria-modal="true" aria-labelledby="bc-title" tabindex="-1">'+
  '<header class="bc-dialog-head"><div class="bc-head-text"><span class="bc-category" id="bc-category"></span>'+
- '<h2 id="bc-title"></h2><p id="bc-desc"></p></div>'+
+ '<div class="bc-head-title"><span id="bc-icon" class="bc-head-icon"></span><h2 id="bc-title"></h2></div><p id="bc-desc"></p>'+
+ '<div id="bc-requirements" class="bc-requirements"></div></div>'+
  '<div class="bc-head-actions"><button id="bc-share" type="button" class="bc-share" title="Bu bina ve ayarlarının bağlantısını kopyala">🔗 Bağlantıyı kopyala</button>'+
  '<button id="bc-close" type="button" class="bc-close" aria-label="Hesaplayıcıyı kapat">✕</button></div></header>'+
  '<div class="bc-dialog-inner"><div class="bc-dialog-controls">'+
  '<div class="bc-levels"><label>Mevcut <select id="bc-from"></select></label><span class="bc-arrow">→</span>'+
  '<label>Hedef <select id="bc-to"></select></label></div>'+
  toolbar("bm")+'</div>'+
- '<div class="bc-stage" id="bc-stage" aria-live="polite">Tablodan önce mevcut, sonra hedef seviyeye tıklayabilirsin.</div>'+
+ '<div class="bc-stage"><span id="bc-stage" aria-live="polite">Tablodan önce mevcut, sonra hedef seviyeye tıklayabilirsin.</span>'+
+ '<span class="bc-effect-heading" id="bc-effect-heading"></span></div>'+
  '<div class="bc-table-scroll" id="bc-scroll"><table class="bc-table"><thead><tr>'+
  '<th>Seviye</th><th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th>'+
- '<th>Toplam</th><th>👥 Nüfus</th><th>🏛 KP/gün</th><th>⏱ İnşa</th>'+
+ '<th>Toplam</th><th>👥 Nüfus</th><th>🏛 KP/gün</th><th title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>⏱ İnşa</th>'+
  '</tr></thead><tbody id="bc-rows"></tbody><tfoot id="bc-totals"></tfoot></table></div>'+
- '<div class="bc-results"><div class="bc-results-top"><span><strong id="bc-range"></strong> yükseltme toplamı</span><span id="bc-req"></span></div>'+
+ '<div class="bc-results"><div class="bc-results-top"><span><strong id="bc-range"></strong> yükseltme toplamı</span></div>'+
  '<div class="bc-mini-metrics" id="bc-summary"></div></div>'+
  '<div class="bc-dialog-footer"><span id="bc-message" role="status"></span>'+
  '<span>Hesap özeti: seçilen yükseltme seviyeleri dahil edilir; mevcut seviye dahil edilmez.</span></div>'+
@@ -150,14 +220,19 @@ function drawCatalog(){
    return '<div class="bc-group"><div class="bc-group-head"><h3>'+group+'</h3><span>'+list.length+' bina</span></div>'+
       '<div class="bc-group-list">'+(list.length?list.map(b=>
          '<button type="button" class="bc-building" data-building="'+esc(b.id)+'" title="'+esc(b.name)+' — Seviye tablosunu aç">'+
-         '<span class="bc-building-icon" aria-hidden="true">'+(symbols[b.id]||"🏗️")+'</span><span>'+esc(b.name)+'</span>'+
+         '<span class="bc-building-icon" aria-hidden="true">'+buildingIcon(b)+'</span><span>'+esc(b.name)+'</span>'+
          '<span class="bc-open-icon" aria-hidden="true">↗</span></button>'
        ).join(""):'<div class="bc-empty">Eşleşen bina yok.</div>')+'</div></div>';
  }).join("");
  $("bc-count").textContent=term?count+" sonuç":"44 bina • 3 kategori";
  $("bc-columns").innerHTML=html;
- $("bc-columns").querySelectorAll("[data-building]").forEach(btn=>
-   btn.addEventListener("click",()=>openBuilding(btn.dataset.building)));
+ previewRequirements(null);
+ $("bc-columns").querySelectorAll("[data-building]").forEach(btn=>{
+   btn.addEventListener("click",()=>openBuilding(btn.dataset.building));
+   btn.addEventListener("mouseenter",()=>previewRequirements(btn.dataset.building));
+   btn.addEventListener("focus",()=>previewRequirements(btn.dataset.building));
+ });
+ $("bc-columns").addEventListener("mouseleave",()=>previewRequirements(null));
 }
 function openBuilding(id,fromLink){
  const b=byId(id);if(!b)return;
@@ -170,6 +245,8 @@ function openBuilding(id,fromLink){
  $("bc-category").textContent=b.group;
  $("bc-title").textContent=b.name;
  $("bc-desc").textContent=b.desc;
+ $("bc-icon").innerHTML=buildingIcon(b);
+ $("bc-requirements").innerHTML=requirementHtml(b);
  $("bc-message").textContent="";
  render();
  $("bc-close").focus();
@@ -218,7 +295,7 @@ function render(){
  const startCp=state.from===0?0:rowData(b,state.from).cp;
  const cpDiff=rowData(b,state.to).cp-startCp;
  $("bc-range").textContent=state.from+" → "+state.to;
- $("bc-req").textContent=b.req?"Ön koşul: "+b.req:"Ön koşul: Yok";
+ $("bc-effect-heading").textContent="✨ Seviye etkisi: "+effectAt(b,Math.min(1,b.max)).label;
  const items=[
    ["🪵","Odun",int(sums[0])],["🧱","Tuğla",int(sums[1])],
    ["⛏","Demir",int(sums[2])],["🌾","Tahıl",int(sums[3])],
@@ -233,11 +310,12 @@ function render(){
    return '<tr data-level="'+r.level+'" tabindex="0" role="button" aria-label="Seviye '+r.level+' seç" class="'+classes+'">'+
      '<td><strong>'+r.level+'</strong></td>'+
      r.costs.map(n=>'<td>'+int(n)+'</td>').join("")+
-     '<td class="bc-row-total">'+int(r.total)+'</td><td>'+int(r.pop)+'</td><td>'+int(r.cp)+'</td><td>'+fmt(r.seconds)+'</td></tr>';
+     '<td class="bc-row-total">'+int(r.total)+'</td><td>'+int(r.pop)+'</td><td>'+int(r.cp)+'</td>'+
+ '<td class="bc-row-effect">'+esc(effectAt(b,r.level).value)+'</td><td>'+fmt(r.seconds)+'</td></tr>';
  }).join("");
  $("bc-totals").innerHTML='<tr><th>'+state.from+' → '+state.to+'</th>'+
    sums.map(n=>'<th>'+int(n)+'</th>').join("")+
-   '<th>'+int(total)+'</th><th>+'+int(pop)+'</th><th>+'+int(cpDiff)+'</th><th>'+fmt(seconds)+'</th></tr>';
+   '<th>'+int(total)+'</th><th>+'+int(pop)+'</th><th>+'+int(cpDiff)+'</th><th title="Bina etkileri seviyeye göre gösterilir">—</th><th>'+fmt(seconds)+'</th></tr>';
  syncUrl();
 }
 setup();
