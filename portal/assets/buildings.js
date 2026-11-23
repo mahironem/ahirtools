@@ -1,123 +1,244 @@
-/* AhirTools Binalar — bağımsız, paylaşılabilir hesaplayıcı. Veritabanına erişmez. */
+/* AhirTools Binalar: compact three-column directory + focused calculation dialog.
+   Numeric model deliberately unchanged; no Supabase reads/writes. */
 (function(){
 "use strict";
 const buildings=window.AHIR_BUILDINGS||[];
 const $=id=>document.getElementById(id);
-const names={wood:"🪵 Odun",clay:"🧱 Tuğla",iron:"⛏ Demir",crop:"🌾 Tahıl"};
+const byId=id=>buildings.find(b=>b.id===id);
 const int=n=>Math.round(Number(n)||0).toLocaleString("tr-TR");
 const fmt=s=>{s=Math.max(0,Math.round(s||0));const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),ss=s%60;return(d?d+"g ":"")+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")};
 const round5=n=>Math.round(n/5)*5;
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const byId=id=>buildings.find(b=>b.id===id);
-const defaults={building:"mainbuilding",speed:1,mb:1,from:0,to:5,ad:false,group:"Tümü",q:""};
-const url=new URL(window.location.href),search=url.searchParams;
-let state={...defaults,building:byId(search.get("b"))?search.get("b"):defaults.building,
- speed:[1,2,3,5,10].includes(+search.get("s"))?+search.get("s"):1,
- mb:Math.max(1,Math.min(20,+search.get("mb")||1)),
- from:Math.max(0,+search.get("from")||0),
- to:Math.max(1,+search.get("to")||5),
- ad:search.get("ad")==="1",group:"Tümü",q:""};
+const q=new URL(location.href).searchParams;
+const initialBuilding=byId(q.get("b"))?q.get("b"):null;
+const speedChoices=[1,2,3,5,10];
+const state={
+ building:initialBuilding||"mainbuilding",
+ opened:!!initialBuilding, speed:speedChoices.includes(Number(q.get("s")))?Number(q.get("s")):1,
+ mb:Math.max(1,Math.min(20,Number(q.get("mb"))||1)),
+ from:Math.max(0,Number(q.get("from"))||0),
+ to:Math.max(1,Number(q.get("to"))||5),
+ ad:q.get("ad")==="1",search:"",rowStage:0
+};
+const groups=["Hammadde","Askeri","Altyapı"];
+const symbols={
+ woodjack:"🌲",claypit:"🧱",ironmine:"⛏️",cropland:"🌾",sawmill:"🪚",brickyard:"🏭",
+ ironfoundry:"🔥",grainmill:"🌾",bakery:"🥖",warehouse:"📦",granary:"🌽",greatwarehouse:"🏬",
+ greatgranary:"🏬",waterworks:"💧",rallypoint:"⚔️",barracks:"🛡️",stable:"🐎",workshop:"🔧",
+ academy:"📖",smithy:"⚒️",arena:"🏟️",greatbarracks:"🏯",greatstables:"🐴",heromansion:"🏰",
+ trapper:"🪤",wall:"🧱",earthwall:"🪨",palisade:"🪵",stonewall:"🧱",makeshiftwall:"🪵",
+ mainbuilding:"🏛️",marketplace:"⚖️",embassy:"🤝",cranny:"🔐",townhall:"🏙️",residence:"🏡",
+ palace:"👑",commandcenter:"🏯",treasury:"💎",tradeoffice:"🚚",stonemason:"🔨",
+ brewery:"🍺",horsepool:"💧",worldwonder:"🏗️"
+};
+function options(items){return items.map(v=>'<option value="'+v+'">'+v+'</option>').join('');}
+function toolbar(prefix){
+ return '<div class="bc-options">'+
+ '<label>Sunucu hızı <select id="'+prefix+'-speed">'+options(speedChoices.map(v=>v+"x")).replace(/value="(\d+)x"/g,'value="$1"')+'</select></label>'+
+ '<label>Merkez Binası <select id="'+prefix+'-mb">'+options(Array.from({length:20},(_,i)=>i+1))+'</select></label>'+
+ '<label class="bc-check"><input id="'+prefix+'-ad" type="checkbox"><span>Reklam ile %25 daha kısa</span></label>'+
+ '</div>';
+}
 function setup(){
  const root=$("build-calculator");if(!root)return;
- root.innerHTML='<section class="build-hero"><div><div class="build-kicker">TRAVIAN BİNA REHBERİ</div><h2>Binalar ve geliştirme maliyetleri</h2><p>Binanı seç, seviyeleri karşılaştır; kaynak, nüfus, kültür puanı ve tahmini inşa süresini hesapla.</p></div><div class="build-hero-icon">🏰</div></section>'+
- '<div class="build-settings"><label>Sunucu hızı <select id="b-speed">'+[1,2,3,5,10].map(x=>'<option value="'+x+'">'+x+'x</option>').join('')+'</select></label>'+
- '<label>Merkez Binası seviyesi <select id="b-mb">'+Array.from({length:20},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join('')+'</select></label>'+
- '<label class="check-label"><input id="b-ad" type="checkbox"> Reklamla %25 inşa süresi indirimi</label>'+
- '<div class="build-disclaimer"><strong>Veri notu:</strong> Maliyet/KP değerleri tarihi T4 veri modeline dayalıdır; sunucuya, sürüme ve özel etkinliklere göre farklılık olabilir. İnşa süreleri tahminidir, oyundaki süreyi kontrol et.</div></div>'+
- '<div class="build-layout"><aside class="build-picker"><div class="build-picker-header"><strong>🏗 Bina seçimi</strong><span id="b-count"></span></div>'+
- '<input id="b-search" placeholder="Bina ara..." aria-label="Bina ara">'+
- '<div class="build-chips" id="b-groups"></div><div id="b-list" class="build-list"></div></aside>'+
- '<div class="build-detail"><div class="build-title"><div><span id="b-group" class="build-category"></span><h2 id="b-title"></h2><p id="b-desc"></p></div><div class="build-icon">🏛️</div></div>'+
- '<div class="build-level-controls"><label>Mevcut seviye <select id="b-from"></select></label><span class="build-arrow">→</span>'+
- '<label>Hedef seviye <select id="b-to"></select></label><span class="build-level-hint">Tablodaki seviyelere de tıklayabilirsin.</span></div>'+
- '<div class="build-summary" id="b-summary"></div><div id="b-req" class="build-req"></div>'+
- '<div class="build-table-scroll"><table class="build-table"><thead><tr><th>Seviye</th><th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th>'+
- '<th>Toplam</th><th>👥 Nüfus</th><th>🏛 KP/gün</th><th>⏱ İnşa süresi</th></tr></thead><tbody id="b-rows"></tbody><tfoot id="b-totals"></tfoot></table></div>'+
- '<div class="build-hints"><span class="dot-green"></span> Seçili yükseltmelerin toplamı hesaplanır. Mevcut seviyen 5 ise 6–12 arası yükseltmeler maliyete dahildir.</div>'+
- '<div class="build-actions"><button id="b-share" class="button primary">🔗 Hesap bağlantısını kopyala</button><span id="b-share-msg" role="status"></span></div></div></div>';
- $("b-speed").value=state.speed;$("b-mb").value=state.mb;$("b-ad").checked=state.ad;
- for(const [id,key,parser] of [["b-speed","speed",Number],["b-mb","mb",Number]]){
-   $(id).addEventListener("change",e=>{state[key]=parser(e.target.value);render();});
+ root.innerHTML=
+ '<section class="bc-bar"><div class="bc-intro"><strong>🏗️ Bina rehberi</strong><span>Bir binaya tıkla, tabloyu hemen aç. Seviye aralığını tablodan veya kutulardan seç.</span></div>'+
+ toolbar("bc")+'</section>'+
+ '<section class="bc-catalog"><div class="bc-catalog-head"><div><h2>Binalar</h2><span id="bc-count"></span></div>'+
+ '<label class="bc-search"><span aria-hidden="true">⌕</span><input id="bc-search" type="search" placeholder="Bina ara..." aria-label="Bina ara" autocomplete="off"></label></div>'+
+ '<div id="bc-columns" class="bc-columns"></div></section>'+
+ '<div class="bc-data-note">ⓘ Kaynak ve KP değerleri tarihi T4 oyun modeline dayanır. İnşa süreleri sunucu kurallarına göre değişebilir; oyundaki süreyi doğrula.</div>'+
+ '<div id="bc-overlay" class="bc-overlay" hidden>'+
+ '<div id="bc-dialog" class="bc-dialog" role="dialog" aria-modal="true" aria-labelledby="bc-title" tabindex="-1">'+
+ '<header class="bc-dialog-head"><div class="bc-head-text"><span class="bc-category" id="bc-category"></span>'+
+ '<h2 id="bc-title"></h2><p id="bc-desc"></p></div>'+
+ '<div class="bc-head-actions"><button id="bc-share" type="button" class="bc-share" title="Bu bina ve ayarlarının bağlantısını kopyala">🔗 Bağlantıyı kopyala</button>'+
+ '<button id="bc-close" type="button" class="bc-close" aria-label="Hesaplayıcıyı kapat">✕</button></div></header>'+
+ '<div class="bc-dialog-inner"><div class="bc-dialog-controls">'+
+ '<div class="bc-levels"><label>Mevcut <select id="bc-from"></select></label><span class="bc-arrow">→</span>'+
+ '<label>Hedef <select id="bc-to"></select></label></div>'+
+ toolbar("bm")+'</div>'+
+ '<div class="bc-stage" id="bc-stage" aria-live="polite">Tablodan önce mevcut, sonra hedef seviyeye tıklayabilirsin.</div>'+
+ '<div class="bc-table-scroll" id="bc-scroll"><table class="bc-table"><thead><tr>'+
+ '<th>Seviye</th><th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th>'+
+ '<th>Toplam</th><th>👥 Nüfus</th><th>🏛 KP/gün</th><th>⏱ İnşa</th>'+
+ '</tr></thead><tbody id="bc-rows"></tbody><tfoot id="bc-totals"></tfoot></table></div>'+
+ '<div class="bc-results"><div class="bc-results-top"><span><strong id="bc-range"></strong> yükseltme toplamı</span><span id="bc-req"></span></div>'+
+ '<div class="bc-mini-metrics" id="bc-summary"></div></div>'+
+ '<div class="bc-dialog-footer"><span id="bc-message" role="status"></span>'+
+ '<span>Hesap özeti: seçilen yükseltme seviyeleri dahil edilir; mevcut seviye dahil edilmez.</span></div>'+
+ '</div></div></div>';
+ bindToolbar("bc");bindToolbar("bm");
+ $("bc-search").addEventListener("input",e=>{state.search=e.target.value;drawCatalog();});
+ $("bc-close").addEventListener("click",close);
+ $("bc-overlay").addEventListener("click",e=>{if(e.target===$("bc-overlay"))close();});
+ document.addEventListener("keydown",e=>{
+   if(!state.opened)return;
+   if(e.key==="Escape"){close();return;}
+   if(e.key==="Tab"){
+     const focusable=Array.from($("bc-dialog").querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),[tabindex="0"]'))
+       .filter(el=>el.getClientRects().length);
+     if(!focusable.length)return;
+     const first=focusable[0],last=focusable[focusable.length-1];
+     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+   }
+ });
+ $("bc-from").addEventListener("change",e=>{
+   state.rowStage=0;state.from=Number(e.target.value);
+   if(state.from>=state.to)state.to=state.from+1;
+   render();
+ });
+ $("bc-to").addEventListener("change",e=>{
+   state.rowStage=0;state.to=Number(e.target.value);
+   if(state.to<=state.from)state.from=state.to-1;
+   render();
+ });
+ function rowSelect(e){
+   const row=e.target.closest("tr[data-level]");if(!row)return;
+   const level=Number(row.dataset.level);
+   const b=byId(state.building);
+   if(state.rowStage===0){
+     state.from=Math.min(level,b.max-1);
+     state.to=Math.min(b.max,state.from+1);
+     state.rowStage=1;
+   }else if(level>state.from){
+     state.to=level;state.rowStage=0;
+   }else{
+     state.from=Math.min(level,b.max-1);
+     state.to=Math.min(b.max,state.from+1);
+     state.rowStage=1;
+   }
+   render();
  }
- $("b-ad").addEventListener("change",e=>{state.ad=e.target.checked;render();});
- $("b-search").addEventListener("input",e=>{state.q=e.target.value;drawList();});
- $("b-from").addEventListener("change",e=>{state._rowStartChosen=false;state.from=+e.target.value;state.to=Math.max(state.to,state.from+1);render();});
- $("b-to").addEventListener("change",e=>{state._rowStartChosen=false;state.to=+e.target.value;if(state.to<=state.from)state.from=state.to-1;render();});
- $("b-rows").addEventListener("click",e=>{
-    const row=e.target.closest("tr[data-level]");if(!row)return;
-    const lvl=+row.dataset.level;
-    // İlk tık mevcut seviye, ikinci tık hedef seviye (5 ardından 12 = 5 → 12).
-    if(!state._rowStartChosen){
-      state.from=Math.min(lvl,b.max-1);
-      state.to=Math.min(b.max,state.from+1);
-      state._rowStartChosen=true;
-    }else{
-      if(lvl<=state.from){state.from=Math.max(0,lvl-1);state.to=lvl;}
-      else state.to=lvl;
-      state._rowStartChosen=false;
-    }
-    render();
+ $("bc-rows").addEventListener("click",rowSelect);
+ $("bc-rows").addEventListener("keydown",e=>{
+   if(e.key==="Enter"||e.key===" "){e.preventDefault();rowSelect(e);}
  });
- $("b-share").addEventListener("click",async()=>{
-    const href=location.href;const msg=$("b-share-msg");
-    try{await navigator.clipboard.writeText(href);msg.textContent="Bağlantı kopyalandı ✓";}
-    catch(e){msg.textContent="Adres çubuğundaki bağlantıyı kopyalayabilirsin.";}
+ $("bc-share").addEventListener("click",async()=>{
+   try{await navigator.clipboard.writeText(location.href);$("bc-message").textContent="Bağlantı kopyalandı ✓";}
+   catch(err){$("bc-message").textContent="Bağlantıyı adres çubuğundan kopyalayabilirsin.";}
  });
- render();
+ syncToolbar();drawCatalog();
+ if(state.opened)openBuilding(state.building,true);
 }
-function rowData(b,lvl){
- let costs=b.base.map(x=>Math.max(0,round5(x*Math.pow(b.k,lvl-1))));
- if(b.id==="worldwonder")costs=costs.map((x,i)=>lvl===100?(i===3?193630:1000000):Math.min(1000000,x));
- const pop=lvl===1?b.pop:Math.round((5*b.pop+lvl-1)/10);
- const cp=b.cp===0?0:Math.round(b.cp*Math.pow(1.2,lvl));
- let t=Math.max(0,b.a*Math.pow(b.tk,lvl-1)-b.tb);
- let mb=state.mb;
- if(b.id==="mainbuilding") mb=Math.max(state.mb,lvl-1);
- const mbFactor=Math.pow(.964,mb-1);
- t=t/state.speed*mbFactor*(state.ad?.75:1);
- return{lvl,costs,total:costs.reduce((a,v)=>a+v,0),pop,cp,seconds:t};
+function bindToolbar(prefix){
+ $(prefix+"-speed").addEventListener("change",e=>{
+   state.speed=Number(e.target.value);syncToolbar();if(state.opened)render();else syncUrl();
+ });
+ $(prefix+"-mb").addEventListener("change",e=>{
+   state.mb=Number(e.target.value);syncToolbar();if(state.opened)render();else syncUrl();
+ });
+ $(prefix+"-ad").addEventListener("change",e=>{
+   state.ad=e.target.checked;syncToolbar();if(state.opened)render();else syncUrl();
+ });
 }
-function render(){
- const b=byId(state.building)||buildings[0];
+function syncToolbar(){
+ for(const prefix of ["bc","bm"]){
+   $(prefix+"-speed").value=String(state.speed);
+   $(prefix+"-mb").value=String(state.mb);
+   $(prefix+"-ad").checked=state.ad;
+ }
+}
+function drawCatalog(){
+ const term=state.search.trim().toLocaleLowerCase("tr-TR");
+ let count=0;
+ const html=groups.map(group=>{
+   const list=buildings.filter(b=>b.group===group&&
+      (!term||b.name.toLocaleLowerCase("tr-TR").includes(term))).sort((a,b)=>a.name.localeCompare(b.name,"tr"));
+   count+=list.length;
+   return '<div class="bc-group"><div class="bc-group-head"><h3>'+group+'</h3><span>'+list.length+' bina</span></div>'+
+      '<div class="bc-group-list">'+(list.length?list.map(b=>
+         '<button type="button" class="bc-building" data-building="'+esc(b.id)+'" title="'+esc(b.name)+' — Seviye tablosunu aç">'+
+         '<span class="bc-building-icon" aria-hidden="true">'+(symbols[b.id]||"🏗️")+'</span><span>'+esc(b.name)+'</span>'+
+         '<span class="bc-open-icon" aria-hidden="true">↗</span></button>'
+       ).join(""):'<div class="bc-empty">Eşleşen bina yok.</div>')+'</div></div>';
+ }).join("");
+ $("bc-count").textContent=term?count+" sonuç":"44 bina • 3 kategori";
+ $("bc-columns").innerHTML=html;
+ $("bc-columns").querySelectorAll("[data-building]").forEach(btn=>
+   btn.addEventListener("click",()=>openBuilding(btn.dataset.building)));
+}
+function openBuilding(id,fromLink){
+ const b=byId(id);if(!b)return;
+ state.building=id;state.opened=true;state.rowStage=0;
+ if(!fromLink){state.from=0;state.to=Math.min(5,b.max);}
  state.from=Math.min(Math.max(0,Math.floor(state.from)),b.max-1);
  state.to=Math.min(Math.max(state.from+1,Math.floor(state.to)),b.max);
- $("b-group").textContent=b.group;$("b-title").textContent=b.name;$("b-desc").textContent=b.desc;
- $("b-req").innerHTML='<strong>Ön koşullar:</strong> '+esc(b.req||"Özel koşul bulunmuyor.")+
- '<span class="build-subtle"> · Seviye başına artan nüfus, toplam nüfus yükü olarak gösterilir. KP/gün sütunu seviyedeki toplam kültür puanıdır.</span>';
- $("b-from").innerHTML=Array.from({length:b.max},(_,i)=>'<option value="'+i+'">'+i+'</option>').join('');
- $("b-to").innerHTML=Array.from({length:b.max},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join('');
- $("b-from").value=state.from;$("b-to").value=state.to;
- const all=Array.from({length:b.max},(_,i)=>rowData(b,i+1));
- const selected=all.filter(r=>r.lvl>state.from&&r.lvl<=state.to);
- const sums=[0,0,0,0];let sec=0,pop=0;
- for(const r of selected){r.costs.forEach((v,i)=>sums[i]+=v);sec+=r.seconds;pop+=r.pop;}
- const total=sums.reduce((a,v)=>a+v,0);
- const baseCp=state.from===0?0:rowData(b,state.from).cp;
- const cpDiff=rowData(b,state.to).cp-baseCp;
- const summary=[
-  ["🪵","Odun",sums[0]],["🧱","Tuğla",sums[1]],["⛏","Demir",sums[2]],["🌾","Tahıl",sums[3]],
-  ["📦","Toplam kaynak",total],["⏱","İnşa süresi",fmt(sec)],["🏛","KP/gün artışı",cpDiff>=0?"+"+int(cpDiff):int(cpDiff)],["👥","Ek nüfus",pop>=0?"+"+int(pop):int(pop)]
- ];
- $("b-summary").innerHTML=summary.map(([ic,title,val],idx)=>'<div class="build-stat'+(idx===4?" primary-stat":"")+'"><span>'+ic+' '+title+'</span><strong>'+ (typeof val==="number"?int(val):esc(val))+'</strong></div>').join('');
- $("b-rows").innerHTML=all.map(r=>'<tr class="'+(r.lvl>state.from&&r.lvl<=state.to?"selected ":"")+
- (r.lvl===state.to?"target ":"")+'" data-level="'+r.lvl+'" title="Bu seviyeyi hesaplamak için tıkla"><td><strong>'+r.lvl+'</strong></td>'+
- r.costs.map(v=>'<td>'+int(v)+'</td>').join('')+'<td class="row-total">'+int(r.total)+'</td><td>'+int(r.pop)+'</td>'+
- '<td>'+int(r.cp)+'</td><td>'+fmt(r.seconds)+'</td></tr>').join('');
- $("b-totals").innerHTML='<tr><th>Seçim '+state.from+' → '+state.to+'</th>'+sums.map(v=>'<th>'+int(v)+'</th>').join('')+
- '<th>'+int(total)+'</th><th>+'+int(pop)+'</th><th>+'+int(cpDiff)+'</th><th>'+fmt(sec)+'</th></tr>';
- const qp=new URLSearchParams({b:state.building,s:String(state.speed),mb:String(state.mb),from:String(state.from),to:String(state.to),ad:state.ad?"1":"0"});
- history.replaceState(null,"",location.pathname+"?"+qp.toString());
- drawList(false);
+ $("bc-overlay").hidden=false;
+ document.body.classList.add("bc-locked");
+ $("bc-category").textContent=b.group;
+ $("bc-title").textContent=b.name;
+ $("bc-desc").textContent=b.desc;
+ $("bc-message").textContent="";
+ render();
+ $("bc-close").focus();
 }
-function drawList(skipGroups){
- const groups=["Tümü","Hammadde","Askeri","Altyapı"];
- if(!skipGroups)$("b-groups").innerHTML=groups.map(g=>'<button type="button" data-group="'+g+'" class="'+(state.group===g?'selected':'')+'">'+g+'</button>').join("");
- $("b-groups").querySelectorAll("button").forEach(el=>el.onclick=()=>{state.group=el.dataset.group;drawList();});
- const q=state.q.toLocaleLowerCase("tr-TR").trim();
- const filtered=buildings.filter(b=>(state.group==="Tümü"||b.group===state.group)&&(!q||b.name.toLocaleLowerCase("tr-TR").includes(q)));
- $("b-count").textContent=filtered.length+" bina";
- $("b-list").innerHTML=filtered.length?filtered.map(b=>'<button class="build-list-item '+(b.id===state.building?'active':'')+'" data-building="'+b.id+'"><span class="build-list-icon">'+(b.group==="Hammadde"?"🌾":b.group==="Askeri"?"⚔️":"🏛️")+'</span><span>'+esc(b.name)+'</span><span class="build-list-max">'+b.max+'</span></button>').join(""):'<div class="build-empty">Aramana uygun bina bulunamadı.</div>';
- $("b-list").querySelectorAll("[data-building]").forEach(el=>el.onclick=()=>{state.building=el.dataset.building;state._rowStartChosen=false;state.from=0;state.to=Math.min(5,byId(state.building).max);render();});
+function close(){
+ state.opened=false;state.rowStage=0;
+ $("bc-overlay").hidden=true;document.body.classList.remove("bc-locked");
+ syncUrl();
+ const prior=$("bc-columns").querySelector('[data-building="'+state.building+'"]');
+ if(prior)prior.focus();
+}
+function syncUrl(){
+ const p=new URLSearchParams();
+ if(state.opened){
+   p.set("b",state.building);
+   p.set("from",String(state.from));p.set("to",String(state.to));
+ }
+ p.set("s",String(state.speed));p.set("mb",String(state.mb));p.set("ad",state.ad?"1":"0");
+ history.replaceState(null,"",location.pathname+"?"+p.toString());
+}
+function rowData(b,level){
+ let costs=b.base.map(n=>Math.max(0,round5(n*Math.pow(b.k,level-1))));
+ if(b.id==="worldwonder")costs=costs.map((n,i)=>level===100?(i===3?193630:1000000):Math.min(1000000,n));
+ const pop=level===1?b.pop:Math.round((5*b.pop+level-1)/10);
+ const cp=b.cp===0?0:Math.round(b.cp*Math.pow(1.2,level));
+ const t=Math.max(0,b.a*Math.pow(b.tk,level-1)-b.tb);
+ const mb=b.id==="mainbuilding"?Math.max(state.mb,level-1):state.mb;
+ const seconds=t/state.speed*Math.pow(.964,mb-1)*(state.ad?.75:1);
+ return{level,costs,total:costs.reduce((a,v)=>a+v,0),pop,cp,seconds};
+}
+function render(){
+ const b=byId(state.building);if(!b)return;
+ state.from=Math.min(Math.max(0,Math.floor(state.from)),b.max-1);
+ state.to=Math.min(Math.max(state.from+1,Math.floor(state.to)),b.max);
+ $("bc-from").innerHTML=Array.from({length:b.max},(_,i)=>'<option value="'+i+'">'+i+'</option>').join("");
+ $("bc-to").innerHTML=Array.from({length:b.max},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join("");
+ $("bc-from").value=state.from;$("bc-to").value=state.to;
+ $("bc-stage").innerHTML=state.rowStage===1?
+   '<strong>Mevcut seviye '+state.from+' seçildi.</strong> Şimdi tablodan hedef seviyeye tıkla.' :
+   'Tablodan <strong>önce mevcut, sonra hedef seviyeye</strong> tıkla (örnek: <strong>5 → 12</strong>).';
+ const all=Array.from({length:b.max},(_,i)=>rowData(b,i+1));
+ const selected=all.filter(r=>r.level>state.from&&r.level<=state.to);
+ const sums=[0,0,0,0];let seconds=0,pop=0;
+ for(const r of selected){r.costs.forEach((v,i)=>{sums[i]+=v;});seconds+=r.seconds;pop+=r.pop;}
+ const total=sums.reduce((a,v)=>a+v,0);
+ const startCp=state.from===0?0:rowData(b,state.from).cp;
+ const cpDiff=rowData(b,state.to).cp-startCp;
+ $("bc-range").textContent=state.from+" → "+state.to;
+ $("bc-req").textContent=b.req?"Ön koşul: "+b.req:"Ön koşul: Yok";
+ const items=[
+   ["🪵","Odun",int(sums[0])],["🧱","Tuğla",int(sums[1])],
+   ["⛏","Demir",int(sums[2])],["🌾","Tahıl",int(sums[3])],
+   ["📦","Toplam",int(total)],["⏱","Süre",fmt(seconds)],
+   ["🏛","KP/gün artışı","+"+int(cpDiff)],["👥","Ek nüfus","+"+int(pop)]
+ ];
+ $("bc-summary").innerHTML=items.map(([ico,label,value],i)=>'<div class="bc-mini'+(i===4?" emphasized":"")+'">'+
+   '<span>'+ico+' '+label+'</span><strong>'+esc(value)+'</strong></div>').join("");
+ $("bc-rows").innerHTML=all.map(r=>{
+   const chosen=r.level>state.from&&r.level<=state.to;
+   const classes=[chosen?"selected":"",r.level===state.to?"target":""].join(" ");
+   return '<tr data-level="'+r.level+'" tabindex="0" role="button" aria-label="Seviye '+r.level+' seç" class="'+classes+'">'+
+     '<td><strong>'+r.level+'</strong></td>'+
+     r.costs.map(n=>'<td>'+int(n)+'</td>').join("")+
+     '<td class="bc-row-total">'+int(r.total)+'</td><td>'+int(r.pop)+'</td><td>'+int(r.cp)+'</td><td>'+fmt(r.seconds)+'</td></tr>';
+ }).join("");
+ $("bc-totals").innerHTML='<tr><th>'+state.from+' → '+state.to+'</th>'+
+   sums.map(n=>'<th>'+int(n)+'</th>').join("")+
+   '<th>'+int(total)+'</th><th>+'+int(pop)+'</th><th>+'+int(cpDiff)+'</th><th>'+fmt(seconds)+'</th></tr>';
+ syncUrl();
 }
 setup();
 })();
