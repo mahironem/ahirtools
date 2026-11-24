@@ -46,11 +46,16 @@ function smithyPoints(stat,upkeep,level){
  if(stat==null)return null;
  return Number(stat)+(Number(stat)+300*Number(upkeep)/7)*(Math.pow(1.007,level)-1);
 }
+function smithyEligible(unit){
+ return unit.trainable && unit.type!=="chief" && unit.type!=="settler";
+}
 function combat(unit,level=state.smithy){
- const multiplier=1+state.allianceMetal/100;
- return {a:smithyPoints(unit.a,unit.u,level)*multiplier,
-         di:smithyPoints(unit.di,unit.u,level)*multiplier,
-         dc:smithyPoints(unit.dc,unit.u,level)*multiplier};
+ const eligible=smithyEligible(unit);
+ const multiplier=eligible?1+state.allianceMetal/100:1;
+ const actualLevel=eligible?level:0;
+ return {a:smithyPoints(unit.a,unit.u,actualLevel)*multiplier,
+         di:smithyPoints(unit.di,unit.u,actualLevel)*multiplier,
+         dc:smithyPoints(unit.dc,unit.u,actualLevel)*multiplier};
 }
 function trainingTime(unit){
  if(!unit.trainable||!Number.isFinite(unit.t)||unit.t<=0)return null;
@@ -60,7 +65,8 @@ function trainingTime(unit){
  if(isP)time*=1-state.helmInf/100;
  if(isC)time*=1-state.helmCav/100;
  if(isP||isC||unit.building==="workshop"){
-   time/=1+state.allianceTrain/100;
+   // Recruitment bonus reduces duration: 10% => multiply by 0.90.
+   time*=1-state.allianceTrain/100;
    time*=state.trainer;
  }
  return time;
@@ -138,17 +144,16 @@ function drawDetail(){
  const u=chosen(),stat=combat(u),base=combat(u,0);
  $("tc-selected-title").textContent=u.name+" • "+tribe().name;
  $("tc-selected-note").textContent=trainingType(u)+" · "+(u.trainable?"Eğitim süresi: "+timeFormat(trainingTime(u)):"Doğa/Natar birimi; eğitim süresi uygulanmaz.")+
-   " · Baz hareket: "+u.v+" alan/saat";
+   " · Baz hareket: "+u.v+" alan/saat"+(smithyEligible(u)?"":" · Demirci geliştirilemez");
  const statBoxes=[["⚔","Saldırı",stat.a],["🛡","Piyadeye savunma",stat.di],["🛡","Süvariye savunma",stat.dc]];
  $("tc-selected-stats").innerHTML=statBoxes.map(([i,label,value])=>'<div><small>'+i+" "+label+'</small><strong>'+fixed(value)+'</strong></div>').join("");
  $("tc-smithy-rows").innerHTML=levels.map(l=>{
    const points=combat(u,l);
-   const pct=stat.a===0?0:(points.a/(u.a||1)-1)*100;
    const active=l===state.smithy;
    return '<tr data-smithy="'+l+'" class="'+(active?"active":"")+'" role="button" tabindex="0" aria-label="Demirci '+l+'. seviye">'+
      '<td><strong>'+l+'</strong>'+(l===0?" <small>Baz</small>":"")+'</td>'+
      '<td>'+fixed(points.a)+'</td><td>'+fixed(points.di)+'</td><td>'+fixed(points.dc)+'</td>'+
-     '<td>'+ (l===0?"Temel seviye":active?"✓ Seçili seviye":"Seviye "+l)+'</td></tr>';
+     '<td>'+ (!smithyEligible(u)?"Geliştirme uygulanmaz":l===0?"Temel seviye":active?"✓ Seçili seviye":"Seviye "+l)+'</td></tr>';
  }).join("");
  $("tc-data-scope").textContent=u.source==="npc"?"Eğitilemeyen NPC birimi":u.source==="official/community"||u.source==="mixed-official-community"?"Karma kaynak verisi; bazı değerler eksik olabilir":u.source==="travian-official"?"Travian resmî Viking verisi":"Kirilloid T4.6 modelinden";
 }
