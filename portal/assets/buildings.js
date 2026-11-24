@@ -287,7 +287,7 @@ function render(){
  $("bc-from").value=state.from;$("bc-to").value=state.to;
  $("bc-stage").innerHTML=state.rowStage===1?
    '<strong>Mevcut seviye '+state.from+' seçildi.</strong> Şimdi tablodan hedef seviyeye tıkla.' :
-   'Tablodan <strong>önce mevcut, sonra hedef seviyeye</strong> tıkla (örnek: <strong>5 → 12</strong>).';
+   'Tablodan <strong>önce mevcut, sonra hedef seviyeye</strong> tıkla (örnek: <strong>0 → 5</strong> veya <strong>5 → 12</strong>).';
  const all=Array.from({length:b.max},(_,i)=>rowData(b,i+1));
  const selected=all.filter(r=>r.level>state.from&&r.level<=state.to);
  const sums=[0,0,0,0];let seconds=0,pop=0;
@@ -305,7 +305,10 @@ function render(){
  ];
  $("bc-summary").innerHTML=items.map(([ico,label,value],i)=>'<div class="bc-mini'+(i===4?" emphasized":"")+'">'+
    '<span>'+ico+' '+label+'</span><strong>'+esc(value)+'</strong></div>').join("");
- $("bc-rows").innerHTML=all.map(r=>{
+ // 0. seviye, bina henüz kurulmamış anlamına gelir. Tablodan 0 → 5 seçilebilir.
+ const unbuiltRow='<tr data-level="0" tabindex="0" role="button" aria-label="Seviye 0, bina kurulmamış" class="bc-zero-row">'+
+   '<td><strong>0</strong></td><td colspan="9">Bina henüz kurulmamış — başlangıç seviyesi olarak seç</td></tr>';
+ $("bc-rows").innerHTML=unbuiltRow+all.map(r=>{
    const chosen=r.level>state.from&&r.level<=state.to;
    const classes=[chosen?"selected":"",r.level===state.to?"target":""].join(" ");
    return '<tr data-level="'+r.level+'" tabindex="0" role="button" aria-label="Seviye '+r.level+' seç" class="'+classes+'">'+
