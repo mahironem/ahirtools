@@ -21,6 +21,8 @@ const state={
  ad:q.get("ad")==="1",search:"",rowStage:0
 };
 const groups=["Hammadde","Askeri","Altyapı"];
+const BUILDING_ORDER = {"Hammadde":["woodjack","claypit","ironmine","cropland","sawmill","brickyard","ironfoundry","grainmill","bakery","warehouse","greatwarehouse","granary","greatgranary","waterworks"],"Askeri":["barracks","stable","workshop","hospital","greatbarracks","greatstables","rallypoint","arena","academy","smithy","stonemason","wall","earthwall","palisade","makeshiftwall","stonewall","trapper","heromansion"],"Altyapı":["mainbuilding","marketplace","tradeoffice","townhall","embassy","cranny","treasury","residence","palace","commandcenter","brewery","horsepool","worldwonder"]};
+
 
 const buildingIcons=window.AHIR_BUILDING_ICONS||{};
 const buildingEffects=window.AHIR_BUILDING_EFFECTS||{};
@@ -45,7 +47,7 @@ function requirementHtml(b){
 }
 function effectAt(b,lvl){
  const [kind,label]=buildingEffects[b.id]||["level","Bina seviyesi"];
- const production=[2,5,9,15,22,33,50,70,100,145,200,280,375,495,635,800,1000,1300,1600,2000,2450,3050];
+ const production=[2,5,9,15,22,33,50,70,100,145,200,280,375,495,635,800,1000,1300,1600,2000,2450,3050,3750];
  let value;
  switch(kind){
  case "prod": value=int(Math.round(production[lvl]*1.4))+"/sa";break;
@@ -216,7 +218,7 @@ function drawCatalog(){
  let count=0;
  const html=groups.map(group=>{
    const list=buildings.filter(b=>b.group===group&&
-      (!term||b.name.toLocaleLowerCase("tr-TR").includes(term))).sort((a,b)=>a.name.localeCompare(b.name,"tr"));
+      (!term||b.name.toLocaleLowerCase("tr-TR").includes(term))).sort((a,b)=>BUILDING_ORDER[group].indexOf(a.id)-BUILDING_ORDER[group].indexOf(b.id));
    count+=list.length;
    return '<div class="bc-group"><div class="bc-group-head"><h3>'+group+'</h3><span>'+list.length+' bina</span></div>'+
       '<div class="bc-group-list">'+(list.length?list.map(b=>
