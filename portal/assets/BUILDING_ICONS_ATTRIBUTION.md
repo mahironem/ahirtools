@@ -50,3 +50,5 @@ Kaynak: https://github.com/game-icons/icons
 - `worldwonder`: delapouite — https://github.com/game-icons/icons/blob/master/delapouite/siege-tower.svg
 
 Kirilloid'in orijinal bina sprite'larının veya Travian görsellerinin lisans durumu ayrıca doğrulanmadan bu depoya kopyalanmaz.
+
+- `hospital`: delapouite — https://github.com/game-icons/icons/blob/master/delapouite/healing-shield.svg
