@@ -142,3 +142,31 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 .bc-table tbody tr.bc-zero-row td:first-child{font-weight:800;color:var(--accent)}
 .bc-table tbody tr.bc-zero-row td[colspan]{text-align:left;font-size:11px;font-style:italic}
 .bc-table tbody tr.bc-zero-row:hover{background:var(--accentbg)}
+
+
+/* Accessibility pass: slightly larger text without enlarging the overall layout. */
+.bc-intro{font-size:13px}.bc-intro span,.bc-data-note{font-size:12px}
+.bc-building{font-size:14px;min-height:30px}
+.bc-group-head h3{font-size:16px}
+.bc-catalog-head h2{font-size:19px}
+.bc-catalog-head span,.bc-search input{font-size:13px}
+.bc-options label,.bc-levels label{font-size:13px}
+.bc-options select,.bc-levels select{font-size:13px}
+.bc-category,.bc-dialog-head p{font-size:12px}
+.bc-requirements,.bc-prereq-preview,.bc-stage,.bc-effect-heading{font-size:13px}
+.bc-req-badge{font-size:12px}
+.bc-table{font-size:13px;min-width:940px}
+.bc-table thead th{font-size:12px}
+.bc-table tbody tr.bc-zero-row td[colspan]{font-size:12px}
+.bc-results-top{font-size:13px}
+.bc-results-top span:last-child,.bc-dialog-footer{font-size:11px}
+.bc-mini>span{font-size:11px}
+.bc-mini strong{font-size:15px}
+.bc-share,.bc-close{font-size:13px}
+@media(max-width:700px){
+ .bc-options label,.bc-levels label,.bc-requirements{font-size:12px}
+ .bc-mini>span{font-size:10px}
+ .bc-mini strong{font-size:13px}
+ .bc-table{font-size:12px}
+ .bc-table thead th{font-size:11px}
+}
