@@ -238,7 +238,7 @@ function drawCatalog(){
 function openBuilding(id,fromLink){
  const b=byId(id);if(!b)return;
  state.building=id;state.opened=true;state.rowStage=0;
- if(!fromLink){state.from=0;state.to=Math.min(5,b.max);}
+ // Bina değiştiğinde önceki seviye aralığını koru; yalnızca yeni binanın azami seviyesine uyarla.
  state.from=Math.min(Math.max(0,Math.floor(state.from)),b.max-1);
  state.to=Math.min(Math.max(state.from+1,Math.floor(state.to)),b.max);
  $("bc-overlay").hidden=false;
