@@ -115,3 +115,33 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
  .tc-topline{padding-bottom:8px}
  .tc-table thead th{font-size:10px;padding-top:10px;padding-bottom:10px}
 }
+
+
+/* Accessibility pass: improve readability while retaining table-first compact layout. */
+.tc-version,.tc-speed-select{font-size:13px}
+.tc-speed-select select{font-size:13px}
+.tc-tribe{font-size:13px}
+.tc-table{font-size:13px;min-width:1180px}
+.tc-table thead th{font-size:12px}
+.tc-unit-cell strong{font-size:14px}
+.tc-unit-cell small{font-size:12px}
+.tc-control-title{font-size:14px}
+.tc-control{font-size:12px}
+.tc-control select{font-size:13px}
+.tc-detail-top h3{font-size:20px}
+.tc-detail-top p{font-size:13px}
+.tc-eyebrow{font-size:11px}
+.tc-selected-stats small{font-size:12px}
+.tc-selected-stats strong{font-size:18px}
+.tc-smithy-table{font-size:13px}
+.tc-smithy-table th{font-size:12px}
+.tc-source-note,.tc-disclaimer{font-size:12px}
+.tc-links,.tc-copy,#tc-copy-msg{font-size:12px}
+@media(max-width:700px){
+ .tc-table{font-size:12px}
+ .tc-table thead th{font-size:11px}
+ .tc-control{font-size:11px}
+ .tc-control select{font-size:12px}
+ .tc-selected-stats strong{font-size:15px}
+ .tc-selected-stats small{font-size:11px}
+}
