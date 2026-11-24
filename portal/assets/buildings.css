@@ -136,3 +136,9 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 .bc-table{min-width:860px}
 @media(max-width:700px){.bc-requirements{font-size:10px}.bc-prereq-preview{padding:7px}
  .bc-head-icon{width:31px;height:31px}.bc-head-icon img{width:25px;height:25px}}
+
+/* Unbuilt building state: selectable level zero row. */
+.bc-table tbody tr.bc-zero-row{background:var(--panel2);color:var(--muted)}
+.bc-table tbody tr.bc-zero-row td:first-child{font-weight:800;color:var(--accent)}
+.bc-table tbody tr.bc-zero-row td[colspan]{text-align:left;font-size:11px;font-style:italic}
+.bc-table tbody tr.bc-zero-row:hover{background:var(--accentbg)}
