@@ -78,13 +78,9 @@ function trainingType(unit){
  return {barracks:"Kışla",stable:"Ahır",workshop:"Tamirhane",residence:"Köşk / Saray"}[unit.building]||"—";
 }
 function buildShell(){
- root.innerHTML='<div class="tc-heading"><div><span class="tc-eyebrow">TRAVIAN T4.6 • ASKER REHBERİ</span>'+
- '<h2>Askerler ve savaş istatistikleri</h2><p>Birlikleri karşılaştır; sunucu hızı, eğitim indirimleri ve demirci geliştirmelerinin etkisini anında gör.</p></div>'+
- '<div class="tc-trust">⚔️ 9 kabile • 90 birlik</div></div>'+
- '<div class="tc-main-controls" id="tc-controls"></div>'+
+ root.innerHTML='<div class="tc-topline"><span class="tc-version">⚔ T4.6 Asker İstatistikleri</span>'+
+ '<label class="tc-speed-select"><span>Sunucu</span><select id="tc-speed" data-key="speed" aria-label="Sunucu hızı"></select></label></div>'+
  '<div class="tc-tribe-tabs" id="tc-tribes" role="group" aria-label="Kabile seçimi"></div>'+
- '<div class="tc-table-header"><div><strong id="tc-list-title"></strong><span id="tc-list-note"></span></div>'+
- '<span class="tc-legend"><b>⚔</b> Saldırı &nbsp; <b>🛡</b> Savunma &nbsp; <b>⏱</b> Eğitim</span></div>'+
  '<div class="tc-table-wrap"><table class="tc-table"><thead><tr>'+
  '<th>Birim / Tür</th><th title="Demirci ve metalürji bonuslu saldırı gücü">⚔ Saldırı</th>'+
  '<th title="Piyadeye karşı savunma">🛡 Piyade</th><th title="Süvariye karşı savunma">🛡 Süvari</th>'+
@@ -92,6 +88,11 @@ function buildShell(){
  '<th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th>'+
  '<th>📦 Toplam</th><th title="Saatlik tahıl tüketimi">🌾/sa</th><th title="Kayıtlı eğitim bonuslarına göre eğitim süresi">⏱ Eğitim</th>'+
  '</tr></thead><tbody id="tc-rows"></tbody></table></div>'+
+ '<section class="tc-control-sections" aria-label="Asker hesaplama ayarları">'+
+ '<div class="tc-control-group"><div class="tc-control-title">⏱ Asker Eğitim Hızı</div><div class="tc-control-items" id="tc-training-controls"></div></div>'+
+ '<div class="tc-control-group"><div class="tc-control-title">🛡 Demirci ve Zırh</div><div class="tc-control-items" id="tc-armor-controls"></div></div>'+
+ '<div class="tc-control-group"><div class="tc-control-title">⚡ Asker Tılsımı</div><div class="tc-control-items" id="tc-artifact-controls"></div></div>'+
+ '</section>'+
  '<section class="tc-detail"><div class="tc-detail-top"><div><span class="tc-eyebrow">DEMİRCİ GELİŞTİRMELERİ</span>'+
  '<h3 id="tc-selected-title"></h3><p id="tc-selected-note"></p></div>'+
  '<div class="tc-selected-stats" id="tc-selected-stats"></div></div>'+
@@ -109,23 +110,23 @@ function buildShell(){
 function drawControls(){
  const t=tribe();
  const opts=mkOptions([1,2,3,5,10],"x").map(([v,l])=>[v,"T4.6 "+l]);
- const helm=[["0","Yok"],["10","Paralı Asker / Atlı %10"],["15","Savaşçı / Süvari %15"],["20","Liderlik / Ağır Süvari %20"]];
- const helpTrain=[[0,"Yok"],[2,"%2"],[4,"%4"],[6,"%6"],[8,"%8"],[10,"%10"]];
+ const helmInf=[[0,"Yok"],[10,"Paralı Asker %10"],[15,"Savaşçı %15"],[20,"Liderlik %20"]];
+ const helmCav=[[0,"Yok"],[10,"Atlı %10"],[15,"Süvari %15"],[20,"Ağır Süvari %20"]];
+ const bonus=[[0,"Yok"],[2,"%2"],[4,"%4"],[6,"%6"],[8,"%8"],[10,"%10"]];
  const artifact=[[1,"Yok"],[.75,"3/4 • %75 süre"],[.5,"1/2 • %50 süre"]];
- $("tc-controls").innerHTML=
- selectCard("Sunucu hızı","speed",opts,"Hareket: "+speedFactor[state.speed]+"×, eğitim: ÷"+state.speed)+
- selectCard("Kabile","tribe",tribes.map(x=>[x.id,x.name]),"Kabileye özel birimler")+
- selectCard("Eğitim binası seviyesi","training",levels.slice(1).map(v=>[v,"Seviye "+v]),"Kışla / Ahır / Tamirhane")+
- selectCard("Piyade miğferi","helmInf",helm.map((a,i)=>[a[0],["Yok","Paralı Asker %10","Savaşçı %15","Liderlik %20"][i]]))+
- selectCard("Süvari miğferi","helmCav",helm.map((a,i)=>[a[0],["Yok","Atlı %10","Süvari %15","Ağır Süvari %20"][i]]))+
- selectCard("Eğitim — birlik bonusu","allianceTrain",helpTrain)+
- selectCard("Hızlı asker tılsımı","trainer",artifact)+
- selectCard("Demirci geliştirmesi","smithy",levels.map(v=>[v,"Seviye "+v]))+
- selectCard("Metalürji — birlik bonusu","allianceMetal",helpTrain);
+ $("tc-speed").innerHTML=selectOpts(opts,state.speed);
+ $("tc-training-controls").innerHTML=
+   selectCard("Eğitim binası","training",levels.slice(1).map(v=>[v,"Seviye "+v]))+
+   selectCard("Piyade miğferi","helmInf",helmInf)+
+   selectCard("Süvari miğferi","helmCav",helmCav)+
+   selectCard("Birlik eğitim bonusu","allianceTrain",bonus);
+ $("tc-armor-controls").innerHTML=
+   selectCard("Demirci seviyesi","smithy",levels.map(v=>[v,"Seviye "+v]))+
+   selectCard("Metalürji bonusu","allianceMetal",bonus);
+ $("tc-artifact-controls").innerHTML=
+   selectCard("Hızlı asker yetiştirme","trainer",artifact);
  const tabs=$("tc-tribes");
  tabs.innerHTML=tribes.map(x=>'<button type="button" class="tc-tribe'+(x.id===state.tribe?" active":"")+'" data-tribe="'+x.id+'">'+esc(x.name)+'</button>').join("");
- $("tc-list-title").textContent=t.name+" askerleri";
- $("tc-list-note").textContent=t.playable?"Seçmek için asker satırına tıkla.":"Bu birlikler oyuncu tarafından eğitilemez; maliyet ve eğitim bilgisi uygulanmaz.";
 }
 function drawUnits(){
  const t=tribe();
@@ -168,16 +169,15 @@ function render(){
 buildShell();
 root.addEventListener("change",e=>{
  const el=e.target.closest("select[data-key]");if(!el)return;
- const key=el.dataset.key,val=key==="tribe"?el.value:Number(el.value);
- state[key]=val;
- if(key==="tribe")state.selected=tribe().units[0].id;
+ const key=el.dataset.key;
+ state[key]=Number(el.value);
  render();
 });
 root.addEventListener("click",e=>{
  const tab=e.target.closest("[data-tribe]");
  if(tab){state.tribe=tab.dataset.tribe;state.selected=tribe().units[0].id;render();return;}
  const unit=e.target.closest("tr[data-unit]");
- if(unit){state.selected=unit.dataset.unit;render();$("tc-selected-title").scrollIntoView({behavior:"smooth",block:"nearest"});return;}
+ if(unit){state.selected=unit.dataset.unit;render();return;}
  const sm=e.target.closest("tr[data-smithy]");
  if(sm){state.smithy=Number(sm.dataset.smithy);render();return;}
 });
