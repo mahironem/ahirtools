@@ -3,10 +3,10 @@
    değerler değildir; sürüm, etkinlik ve dünya kurallarına göre değişebilir. */
 window.AHIR_BUILDINGS = [
   // id, ad, grup, ilk 4 kaynak, büyüme, nüfus tabanı, KP tabanı, tA, üst seviye, şart, açıklama, tK, tB
-  ["woodjack","Orman","Hammadde",[40,100,50,60],1.67,2,1,593.333,20,"","Odun üretimini artırır.",1.6,333.333],
-  ["claypit","Tuğla Ocağı","Hammadde",[80,40,80,50],1.67,2,1,553.333,20,"","Tuğla üretimini artırır.",1.6,333.333],
-  ["ironmine","Demir Madeni","Hammadde",[100,80,30,60],1.67,3,1,783.333,20,"","Demir üretimini artırır.",1.6,333.333],
-  ["cropland","Tarla","Hammadde",[70,90,70,20],1.67,0,1,483.333,20,"","Tahıl üretimini artırır.",1.6,333.333],
+  ["woodjack","Orman","Hammadde",[40,100,50,60],1.67,2,1,593.333,22,"","Odun üretimini artırır.",1.6,333.333],
+  ["claypit","Tuğla Ocağı","Hammadde",[80,40,80,50],1.67,2,1,553.333,22,"","Tuğla üretimini artırır.",1.6,333.333],
+  ["ironmine","Demir Madeni","Hammadde",[100,80,30,60],1.67,3,1,783.333,22,"","Demir üretimini artırır.",1.6,333.333],
+  ["cropland","Tarla","Hammadde",[70,90,70,20],1.67,0,1,483.333,22,"","Tahıl üretimini artırır.",1.6,333.333],
   ["sawmill","Marangozhane","Hammadde",[520,380,290,90],1.80,4,1,5400,5,"Orman 10; Merkez Binası 5","Odun üretim bonusu sağlar.",1.5,2400],
   ["brickyard","Tuğla Fırını","Hammadde",[440,480,320,50],1.80,3,1,5240,5,"Tuğla Ocağı 10; Merkez Binası 5","Tuğla üretim bonusu sağlar.",1.5,2400],
   ["ironfoundry","Demir Dökümhanesi","Hammadde",[200,450,510,120],1.80,6,1,6480,5,"Demir Madeni 10; Merkez Binası 5","Demir üretim bonusu sağlar.",1.5,2400],
