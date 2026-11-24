@@ -445,7 +445,7 @@ window.AHIR_PORTAL = {
           "path": "/portal/tablolar/askerler/",
           "title": "Askerler",
           "icon": "swords",
-          "status": "planned"
+          "status": "available"
         },
         {
           "id": "p-tablolar-demirci",
@@ -1182,7 +1182,7 @@ window.AHIR_PORTAL = {
       "description": "Kabilelere göre hız ve birlik özellikleri.",
       "icon": "swords",
       "kind": "page",
-      "status": "planned",
+      "status": "available",
       "section": "Tablolar"
     },
     {
