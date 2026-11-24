@@ -57,6 +57,7 @@ function effectAt(b,lvl){
  case "greatcapacity":value=int(3*Math.round((2120*Math.pow(1.2,lvl)-1320)/100)*100);break;
  case "cranny":value=int(Math.round(Math.pow(129.17,lvl-1)/10)*10);break;
  case "train":value=Math.round(100*Math.pow(.9,lvl-1))+"%";break;
+ case "hospital":value=(50*Math.pow(.9,lvl-1)).toFixed(1).replace(/\.0$/,"")+"%";break;
  case "mbtime":value=Math.round(100*Math.pow(.964,lvl-1))+"%";break;
  case "buildspeed":value=Math.round(100/Math.pow(.964,lvl-1))+"%";break;
  case "slots2":value=String(Number(lvl>=10)+Number(lvl>=20));break;
@@ -93,7 +94,7 @@ const symbols={
  ironfoundry:"🔥",grainmill:"🌾",bakery:"🥖",warehouse:"📦",granary:"🌽",greatwarehouse:"🏬",
  greatgranary:"🏬",waterworks:"💧",rallypoint:"⚔️",barracks:"🛡️",stable:"🐎",workshop:"🔧",
  academy:"📖",smithy:"⚒️",arena:"🏟️",greatbarracks:"🏯",greatstables:"🐴",heromansion:"🏰",
- trapper:"🪤",wall:"🧱",earthwall:"🪨",palisade:"🪵",stonewall:"🧱",makeshiftwall:"🪵",
+ hospital:"🏥",trapper:"🪤",wall:"🧱",earthwall:"🪨",palisade:"🪵",stonewall:"🧱",makeshiftwall:"🪵",
  mainbuilding:"🏛️",marketplace:"⚖️",embassy:"🤝",cranny:"🔐",townhall:"🏙️",residence:"🏡",
  palace:"👑",commandcenter:"🏯",treasury:"💎",tradeoffice:"🚚",stonemason:"🔨",
  brewery:"🍺",horsepool:"💧",worldwonder:"🏗️"
@@ -101,7 +102,7 @@ const symbols={
 function options(items){return items.map(v=>'<option value="'+v+'">'+v+'</option>').join('');}
 function toolbar(prefix){
  return '<div class="bc-options">'+
- '<label>Sunucu hızı <select id="'+prefix+'-speed">'+options(speedChoices.map(v=>v+"x")).replace(/value="(\d+)x"/g,'value="$1"')+'</select></label>'+
+ '<label>Sunucu <select id="'+prefix+'-speed">'+speedChoices.map(v=>'<option value="'+v+'">T4.6 '+v+'x</option>').join("")+'</select></label>'+
  '<label>Merkez Binası <select id="'+prefix+'-mb">'+options(Array.from({length:20},(_,i)=>i+1))+'</select></label>'+
  '<label class="bc-check"><input id="'+prefix+'-ad" type="checkbox"><span>Reklam ile %25 daha kısa</span></label>'+
  '</div>';
@@ -224,7 +225,7 @@ function drawCatalog(){
          '<span class="bc-open-icon" aria-hidden="true">↗</span></button>'
        ).join(""):'<div class="bc-empty">Eşleşen bina yok.</div>')+'</div></div>';
  }).join("");
- $("bc-count").textContent=term?count+" sonuç":"44 bina • 3 kategori";
+ $("bc-count").textContent=term?count+" sonuç":buildings.length+" bina • 3 kategori";
  $("bc-columns").innerHTML=html;
  previewRequirements(null);
  $("bc-columns").querySelectorAll("[data-building]").forEach(btn=>{

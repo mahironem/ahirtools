@@ -19,6 +19,7 @@ window.AHIR_BUILDING_ICONS={
   "barracks": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/barracks.svg",
   "stable": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/stable.svg",
   "workshop": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/blacksmith.svg",
+  "hospital": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/healing-shield.svg",
   "academy": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/bookshelf.svg",
   "smithy": "https://raw.githubusercontent.com/game-icons/icons/master/lorc/anvil.svg",
   "arena": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/checkered-flag.svg",
@@ -118,6 +119,10 @@ window.AHIR_BUILDING_EFFECTS={
   "workshop": [
     "train",
     "Üretim süresi"
+  ],
+  "hospital": [
+    "hospital",
+    "İyileştirme süresi"
   ],
   "academy": [
     "mbtime",

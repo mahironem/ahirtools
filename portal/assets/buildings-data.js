@@ -1,4 +1,4 @@
-/* AhirTools bina verileri: temel kaynak/katsayılar Kirilloid'in açık kaynak T4 tablolarındaki
+/* AhirTools bina verileri: tarihî T4/T4.6 veri modelleri ile Travian Legends kaynaklarındaki
    sayısal oyun parametrelerinden derlenmiştir. Bunlar 2026 sunucularında doğrulanmış kesin
    değerler değildir; sürüm, etkinlik ve dünya kurallarına göre değişebilir. */
 window.AHIR_BUILDINGS = [
@@ -21,6 +21,7 @@ window.AHIR_BUILDINGS = [
   ["barracks","Kışla","Askeri",[210,140,260,120],1.28,4,1,3875,20,"Merkez Binası 3; Askeri Üs 1","Piyade birliklerinin eğitimi."],
   ["stable","Ahır","Askeri",[260,140,220,100],1.28,5,2,4075,20,"Akademi 5; ilgili diğer koşullar","Süvari birliklerinin eğitimi."],
   ["workshop","Tamirhane","Askeri",[460,510,600,320],1.28,3,3,4875,20,"Merkez Binası 5; Akademi 10","Koçbaşı ve mancınık üretim binası."],
+  ["hospital","Hastane","Askeri",[320,280,420,360],1.28,3,4,4875,20,"Merkez Binası 10; Akademi 15","Savaşta kaybedilen askerlerin bir bölümünü iyileştirir. Yaralı birimler aynı hammaddelerle, normal eğitimin yarısı sürede tedavi edilir."],
   ["academy","Akademi","Askeri",[220,160,90,40],1.28,4,4,3875,20,"Merkez Binası 3; Kışla 3","Yeni birlik türlerinin araştırılması."],
   ["smithy","Zırh Dökümhanesi","Askeri",[180,250,500,160],1.28,4,2,3875,20,"Merkez Binası 3; Akademi 3","Birlik geliştirmelerine yönelik bina."],
   ["arena","Turnuva Yeri","Askeri",[1750,2250,1530,240],1.28,1,1,5375,20,"Askeri Üs 15","Uzun mesafe birlik hareketlerini hızlandırır."],
@@ -43,7 +44,7 @@ window.AHIR_BUILDINGS = [
   ["commandcenter","Komuta Merkezi","Altyapı",[1600,1250,1050,200],1.22,1,2,3875,20,"Mısır; Merkez Binası 5","Köşk/Saray alternatifi."],
   ["treasury","Hazine","Altyapı",[2880,2740,2580,990],1.26,4,6,9875,20,"Merkez Binası 10","Tılsım saklama ve yönetimi."],
   ["tradeoffice","Ticari Merkez","Altyapı",[1400,1330,1200,400],1.28,3,3,4875,20,"Pazar 20; Ahır 10","Tüccar taşıma kapasitesini artırır."],
-  ["stonemason","Taşçı","Altyapı",[155,130,125,70],1.28,2,1,5950,20,"Başkent; Merkez Binası 5; Saray 5","Bina dayanıklılığı bonusu.",2,1875],
+  ["stonemason","Taşçı","Askeri",[155,130,125,70],1.28,2,1,5950,20,"Başkent; Merkez Binası 5; Saray 5","Bina dayanıklılığı bonusu.",2,1875],
   ["brewery","İçecek Fabrikası","Altyapı",[1460,930,1250,1740],1.40,6,4,11750,10,"Cermen; Askeri Üs 10","Cermen saldırı bonusları.",2,1875],
   ["horsepool","Yalak","Altyapı",[780,420,660,540],1.28,5,3,5950,20,"Roma; Ahır 20; Askeri Üs 10","Roma süvari tahıl tüketimi bonusu.",2,1875],
   ["worldwonder","Dünya Harikası","Altyapı",[66700,69050,72200,13200],1.0275,1,0,60857,100,"Dünya Harikası köyü; özel yapı planı","Dünya Harikası geliştirmesi.",1.014,42857]
