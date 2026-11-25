@@ -27,6 +27,8 @@ const BUILDING_ORDER = {"Hammadde":["woodjack","claypit","ironmine","cropland","
 const buildingIcons=window.AHIR_BUILDING_ICONS||{};
 const buildingEffects=window.AHIR_BUILDING_EFFECTS||{};
 function buildingIcon(b){
+ const fieldResource={woodjack:0,claypit:1,ironmine:2,cropland:3}[b.id];
+ if(fieldResource!==undefined)return resourceIcon(fieldResource);
  const url=buildingIcons[b.id];
  return url?'<img src="'+esc(url)+'" width="24" height="24" loading="lazy" alt="" aria-hidden="true">':'<span aria-hidden="true">🏗️</span>';
 }
@@ -109,10 +111,10 @@ function toolbar(prefix){
  '<label class="bc-check"><input id="'+prefix+'-ad" type="checkbox"><span>Reklam ile %25 daha kısa</span></label>'+
  '</div>';
 }
+const resourceFiles=["wood","clay","iron","crop"];
 function resourceIcon(index){
- const names=["wood","clay","iron","crop"];
- const name=names[index];
- return name===undefined?"":'<span class="bc-resource-icon bc-resource-'+name+'" aria-hidden="true"></span>';
+ const name=resourceFiles[index];
+ return name===undefined?"":'<img class="bc-resource-icon" src="/portal/assets/resources/'+name+'-v2.webp" alt="" aria-hidden="true" width="30" height="30">';
 }
 function setup(){
  const root=$("build-calculator");if(!root)return;

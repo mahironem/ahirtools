@@ -171,17 +171,14 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
  .bc-table thead th{font-size:11px}
 }
 
-/* User-provided Travian-style resource artwork (wood, clay, iron, crop).
-   One optimized transparent WebP sprite, 4 tiles of 56px, displayed at 26px. */
+/* Direct per-resource images from the user-provided artwork.
+   Avoid sprite positioning and let the browser load one file per source. */
 .bc-resource-icon{
- display:inline-block;vertical-align:-6px;width:26px;height:26px;
- background-image:url('/portal/assets/resource-icons.webp');
- background-repeat:no-repeat;background-size:104px 26px;
+ display:inline-block;vertical-align:middle;
+ width:30px;height:30px;object-fit:contain;
  flex:none;pointer-events:none;
 }
-.bc-resource-wood{background-position:0 0}
-.bc-resource-clay{background-position:-26px 0}
-.bc-resource-iron{background-position:-52px 0}
-.bc-resource-crop{background-position:-78px 0}
-.bc-table thead th .bc-resource-icon{vertical-align:-7px;margin-right:1px}
-.bc-mini>span .bc-resource-icon{vertical-align:-7px;margin-right:2px}
+.bc-table thead th .bc-resource-icon{margin-right:2px}
+.bc-mini>span .bc-resource-icon{margin-right:3px}
+.bc-building-icon .bc-resource-icon{width:25px;height:25px}
+.bc-head-icon .bc-resource-icon{width:31px;height:31px}
