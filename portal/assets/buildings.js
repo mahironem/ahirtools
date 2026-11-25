@@ -109,6 +109,11 @@ function toolbar(prefix){
  '<label class="bc-check"><input id="'+prefix+'-ad" type="checkbox"><span>Reklam ile %25 daha kısa</span></label>'+
  '</div>';
 }
+function resourceIcon(index){
+ const names=["wood","clay","iron","crop"];
+ const name=names[index];
+ return name===undefined?"":'<span class="bc-resource-icon bc-resource-'+name+'" aria-hidden="true"></span>';
+}
 function setup(){
  const root=$("build-calculator");if(!root)return;
  root.innerHTML=
@@ -133,7 +138,7 @@ function setup(){
  '<div class="bc-stage"><span id="bc-stage" aria-live="polite">Tablodan önce mevcut, sonra hedef seviyeye tıklayabilirsin.</span>'+
  '<span class="bc-effect-heading" id="bc-effect-heading"></span></div>'+
  '<div class="bc-table-scroll" id="bc-scroll"><table class="bc-table"><thead><tr>'+
- '<th>Seviye</th><th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th>'+
+ '<th>Seviye</th><th>'+resourceIcon(0)+' Odun</th><th>'+resourceIcon(1)+' Tuğla</th><th>'+resourceIcon(2)+' Demir</th><th>'+resourceIcon(3)+' Tahıl</th>'+
  '<th>Toplam</th><th>👥 Nüfus</th><th>🏛 KP/gün</th><th title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>⏱ İnşa</th>'+
  '</tr></thead><tbody id="bc-rows"></tbody><tfoot id="bc-totals"></tfoot></table></div>'+
  '<div class="bc-results"><div class="bc-results-top"><span><strong id="bc-range"></strong> yükseltme toplamı</span></div>'+
@@ -300,8 +305,8 @@ function render(){
  $("bc-range").textContent=state.from+" → "+state.to;
  $("bc-effect-heading").textContent="✨ Seviye etkisi: "+effectAt(b,Math.min(1,b.max)).label;
  const items=[
-   ["🪵","Odun",int(sums[0])],["🧱","Tuğla",int(sums[1])],
-   ["⛏","Demir",int(sums[2])],["🌾","Tahıl",int(sums[3])],
+   [resourceIcon(0),"Odun",int(sums[0])],[resourceIcon(1),"Tuğla",int(sums[1])],
+   [resourceIcon(2),"Demir",int(sums[2])],[resourceIcon(3),"Tahıl",int(sums[3])],
    ["📦","Toplam",int(total)],["⏱","Süre",fmt(seconds)],
    ["🏛","KP/gün artışı","+"+int(cpDiff)],["👥","Ek nüfus","+"+int(pop)]
  ];
