@@ -26,9 +26,12 @@ const BUILDING_ORDER = {"Hammadde":["woodjack","claypit","ironmine","cropland","
 
 const buildingIcons=window.AHIR_BUILDING_ICONS||{};
 const buildingEffects=window.AHIR_BUILDING_EFFECTS||{};
+const customBuildingArts = {"sawmill":"/portal/assets/building-art-v1/sawmill.webp","brickyard":"/portal/assets/building-art-v1/brickyard.webp","ironfoundry":"/portal/assets/building-art-v1/ironfoundry.webp","bakery":"/portal/assets/building-art-v1/bakery.webp","trapper":"/portal/assets/building-art-v1/trapper.webp","palisade":"/portal/assets/building-art-v1/palisade.webp","barracks":"/portal/assets/building-art-v1/barracks.webp","heromansion":"/portal/assets/building-art-v1/heromansion.webp","academy":"/portal/assets/building-art-v1/academy.webp","smithy":"/portal/assets/building-art-v1/smithy.webp"};
 function buildingIcon(b){
  const fieldResource={woodjack:0,claypit:1,ironmine:2,cropland:3}[b.id];
  if(fieldResource!==undefined)return resourceIcon(fieldResource);
+ const asset=customBuildingArts[b.id];
+ if(asset)return '<img class="bc-art-img" src="'+asset+'" alt="" width="36" height="36" decoding="async" loading="lazy">';
  const url=buildingIcons[b.id];
  return url?'<img src="'+esc(url)+'" width="24" height="24" loading="lazy" alt="" aria-hidden="true">':'<span aria-hidden="true">🏗️</span>';
 }

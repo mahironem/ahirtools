@@ -182,3 +182,9 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 .bc-mini>span .bc-resource-icon{margin-right:3px}
 .bc-building-icon .bc-resource-icon{width:25px;height:25px}
 .bc-head-icon .bc-resource-icon{width:31px;height:31px}
+
+/* Ten individually generated building images based on user-provided reference screenshots. */
+.bc-building-icon:has(.bc-art-img){width:35px}
+.bc-building-icon img.bc-art-img{width:34px;height:34px;max-width:none;object-fit:contain;display:block;background:transparent;border:0;border-radius:0}
+.bc-head-icon:has(.bc-art-img){width:45px;height:45px;background:transparent}
+.bc-head-icon img.bc-art-img{width:43px;height:43px;object-fit:contain;border:0;background:transparent}
