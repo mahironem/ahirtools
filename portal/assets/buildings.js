@@ -27,9 +27,17 @@ const BUILDING_ORDER = {"Hammadde":["woodjack","claypit","ironmine","cropland","
 const buildingIcons=window.AHIR_BUILDING_ICONS||{};
 const buildingEffects=window.AHIR_BUILDING_EFFECTS||{};
 const customBuildingArts = {"sawmill":"/portal/assets/building-art-v1/sawmill.webp","brickyard":"/portal/assets/building-art-v1/brickyard.webp","ironfoundry":"/portal/assets/building-art-v1/ironfoundry.webp","bakery":"/portal/assets/building-art-v1/bakery.webp","trapper":"/portal/assets/building-art-v1/trapper.webp","palisade":"/portal/assets/building-art-v1/palisade.webp","barracks":"/portal/assets/building-art-v1/barracks.webp","heromansion":"/portal/assets/building-art-v1/heromansion.webp","academy":"/portal/assets/building-art-v1/academy.webp","smithy":"/portal/assets/building-art-v1/smithy.webp","stable":"/portal/assets/building-art-v2/stable.webp","workshop":"/portal/assets/building-art-v2/workshop.webp","hospital":"/portal/assets/building-art-v2/hospital.webp","arena":"/portal/assets/building-art-v2/arena.webp","greatbarracks":"/portal/assets/building-art-v2/greatbarracks.webp","greatstables":"/portal/assets/building-art-v2/greatstables.webp","cranny":"/portal/assets/building-art-v2/cranny.webp","embassy":"/portal/assets/building-art-v2/embassy.webp","residence":"/portal/assets/building-art-v2/residence.webp","treasury":"/portal/assets/building-art-v2/treasury.webp"};
+// New third-batch building artwork; one 10-tile optimized transparent WebP atlas.
+const customAtlasIds=["townhall","tradeoffice","greatgranary","grainmill","mainbuilding","greatwarehouse","warehouse","marketplace","granary","rallypoint"];
+function iconFromAtlas(id){
+ const index=customAtlasIds.indexOf(id);
+ return index<0?"":'<span class="bc-art-img bc-art-atlas" style="background-position-x:'+(index*100/9).toFixed(5)+'%" aria-hidden="true"></span>';
+}
 function buildingIcon(b){
  const fieldResource={woodjack:0,claypit:1,ironmine:2,cropland:3}[b.id];
  if(fieldResource!==undefined)return resourceIcon(fieldResource);
+ const newerArt=iconFromAtlas(b.id);
+ if(newerArt)return newerArt;
  const asset=customBuildingArts[b.id];
  if(asset)return '<img class="bc-art-img" src="'+asset+'" alt="" width="36" height="36" decoding="async" loading="lazy">';
  const url=buildingIcons[b.id];

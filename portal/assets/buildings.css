@@ -188,3 +188,14 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 .bc-building-icon img.bc-art-img{width:34px;height:34px;max-width:none;object-fit:contain;display:block;background:transparent;border:0;border-radius:0}
 .bc-head-icon:has(.bc-art-img){width:45px;height:45px;background:transparent}
 .bc-head-icon img.bc-art-img{width:43px;height:43px;object-fit:contain;border:0;background:transparent}
+
+/* Third batch: 10 correctly mapped artwork tiles, left-to-right at 44px in atlas. */
+.bc-art-atlas{
+ display:inline-block!important;flex:none;width:34px;height:34px;
+ background-image:url('/portal/assets/building-art-v3/atlas.webp');
+ background-size:1000% 100%;background-repeat:no-repeat;
+ background-position-y:50%;background-color:transparent;
+ border:0;border-radius:0;vertical-align:middle;
+}
+.bc-building-icon .bc-art-atlas{width:34px;height:34px}
+.bc-head-icon .bc-art-atlas{width:43px;height:43px}
