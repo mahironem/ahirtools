@@ -334,3 +334,7 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
 .tc-smithy-table thead th:has(> .tc-resource-icon){
  vertical-align:middle;
 }
+
+/* Recognizable artifact illustrations alongside their selection labels. */
+#tc-artifact-controls .tc-control > span{display:flex;align-items:center;gap:5px;min-height:24px}
+.tc-artifact-icon{display:block;width:24px;height:24px;flex:0 0 24px;object-fit:contain}
