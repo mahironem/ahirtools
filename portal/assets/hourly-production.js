@@ -1,67 +1,96 @@
-/* AhirTools • Hourly resource production reference.
-   Uses the existing Buildings T4.6 reference curve (historical values × 1.4).
-   A game world may use different values; no live account data is accessed. */
+/* T4.6 reference: Kirilloid src/model/base/buildings.ts and src/model/t4/buildings.ts.
+ * Production bonuses: official Travian Help Center articles 129, 48, 214, 149.
+ * The calculator estimates gross field production; no hero, consumption or special-world effects. */
 (function(){
 "use strict";
-const root=document.getElementById("hourly-production");
-if(!root)return;
-const historical=[2,5,9,15,22,33,50,70,100,145,200,280,375,495,635,800,1000,1300,1600,2000,2450,3050,3750];
-const production=historical.map(v=>Math.round(v*1.4));
+const root=document.getElementById("hourly-production");if(!root)return;
 const resources=[["wood","Odun"],["clay","Tuğla"],["iron","Demir"],["crop","Tahıl"]];
-const speeds=[1,2,3,5,10];
-const layouts=[[4,4,4,6],[3,4,5,6],[3,5,4,6],[4,3,5,6],[4,5,3,6],[5,3,4,6],[5,4,3,6],[3,4,4,7],[4,3,4,7],[4,4,3,7],[3,3,3,9],[1,1,1,15],[0,0,0,18]];
-const levels=production.map((_,i)=>i);
-const nf=new Intl.NumberFormat("tr-TR");
-const fmt=n=>nf.format(n);
-const sum=xs=>xs.reduce((a,b)=>a+b,0);
-const icon=i=>'<img class="hp-icon" src="/portal/assets/resources/'+resources[i][0]+'-v2.webp" width="24" height="24" alt="" aria-hidden="true">';
-const opts=(xs,label)=>xs.map(x=>'<option value="'+x+'">'+label(x)+'</option>').join("");
+const historical=[2,5,9,15,22,33,50,70,100,145,200,280,375,495,635,800,1000,1300,1600,2000,2450,3050];
+const production=historical.map(v=>Math.round(v*1.4));
+const seq=n=>Array.from({length:n+1},(_,i)=>i);
+const speeds=[1,2,3,5,10], crops=[6,7,9,15];
+const layouts={
+ 6:[[4,4,4,6],[5,4,3,6],[5,3,4,6],[4,5,3,6],[3,5,4,6],[4,3,5,6],[3,4,5,6]],
+ 7:[[3,4,4,7],[4,3,4,7],[4,4,3,7]],
+ 9:[[3,3,3,9]],15:[[1,1,1,15]]
+};
+const buildings=["Marangozhane","Tuğla Fırını","Demir Dökümhanesi","Değirmen"];
+const state={speed:1,crop:6,layout:0,levels:[10,10,10,10],gold:[false,false,false,false],factory:[0,0,0,0],bakery:0,oasis:[0,0,0,0],water:0};
+const nf=new Intl.NumberFormat("tr-TR"),fmt=n=>nf.format(n);
 const $=id=>document.getElementById(id);
-const fieldRate=(level,speed)=>production[level]*speed;
-const fieldLevels=()=>opts(levels,n=>"Seviye "+n);
-root.innerHTML='<section class="hp-panel"><div class="hp-toolbar"><div><h2>Hammadde alanı üretim tablosu</h2><p>Her seviye için tek bir hammadde alanının bonus öncesi saatlik üretimi.</p></div><label>Sunucu <select id="hp-speed">'+opts(speeds,s=>"T4.6 "+s+"x")+'</select></label></div>'+
- '<div class="hp-table-wrap"><table class="hp-table"><thead><tr><th scope="col">Seviye</th>'+resources.map((r,i)=>'<th scope="col">'+icon(i)+' '+r[1]+' /sa</th>').join("")+'<th scope="col">Önceki seviyeye göre artış /sa</th></tr></thead><tbody id="hp-reference"></tbody></table></div>'+
- '<p class="hp-note">Seviye 0–22 referans aralığı; 22 oyunun kesin üst sınırı değildir. Normal köylerde en fazla 10, özel dünyalardaki şehirlerde 12, başkentte ise depolama koşulları elverdiği sürece daha yüksek seviyeler mümkündür.</p></section>'+
- '<section class="hp-panel"><div class="hp-toolbar"><div><h2>Köyün saatlik üretimi</h2><p>Alan dağılımını ve her alanın seviyesini seç; toplam üretimi anında gör.</p></div><label>Köy türü <select id="hp-layout">'+layouts.map((v,i)=>'<option value="'+i+'">'+v.join('-')+(i===0?' · Standart köy':v[3]===18?' · Özel dünya':'')+'</option>').join("")+'</select></label><label>Tüm alanları ayarla <select id="hp-all"><option value="">Seviye seç</option>'+fieldLevels()+'</select></label></div>'+
- '<div class="hp-fields" id="hp-fields"></div>'+
- '<div class="hp-consumption"><label>Nüfus (tahıl /sa)<input id="hp-pop" type="number" min="0" max="1000000000" step="1" value="0"></label><label>Asker tüketimi (tahıl /sa)<input id="hp-upkeep" type="number" min="0" max="1000000000" step="1" value="0"></label></div>'+
- '<div class="hp-table-wrap"><table class="hp-table hp-results"><thead><tr><th scope="col">Hammadde</th><th scope="col">Brüt /sa</th><th scope="col">Tüketim /sa</th><th scope="col">Net /sa</th><th scope="col">Net /24 sa</th></tr></thead><tbody id="hp-results"></tbody></table></div>'+
- '<p class="hp-note">İlk sürüm yalnızca hammadde alanlarının temel üretimini hesaplar. Vaha, üretim binaları, kahraman ve altın bonusları henüz dahil değildir. Nüfus ve asker tüketimini saatlik toplam olarak gir. Depo sınırı hesaba katılmaz.</p></section>'+
- '<div class="hp-sources">Veri modeli: mevcut AhirTools Binalar sayfasındaki T4.6 referans eğrisi. Sunucuya göre değerler farklı olabilir. <a href="https://support.travian.com/en/articles/33-buildings-and-resource-fields-statistics" target="_blank" rel="noopener noreferrer">Resmî bina istatistikleri</a> · <a href="https://support.travian.com/en/articles/214-guide-resources-explained" target="_blank" rel="noopener noreferrer">Hammadde kuralları</a></div>';
-let selected=layouts[0].map(count=>Array(count).fill(0));
-function renderFields(){
- $("hp-fields").innerHTML=resources.map((r,i)=>'<div class="hp-field-card"><h3>'+icon(i)+' '+r[1]+' <span>'+selected[i].length+' alan</span></h3><div class="hp-field-levels">'+selected[i].map((level,j)=>'<label>'+ (j+1)+'. alan<select data-resource="'+i+'" data-field="'+j+'" aria-label="'+r[1]+' '+(j+1)+'. alan seviyesi">'+fieldLevels()+'</select></label>').join("")+'</div></div>').join("");
- $("hp-fields").querySelectorAll("select").forEach(el=>{el.value=String(selected[Number(el.dataset.resource)][Number(el.dataset.field)]);});
+const icon=i=>'<img class="hp-icon" src="/portal/assets/resources/'+resources[i][0]+'-v2.webp" width="24" height="24" alt="" aria-hidden="true">';
+const options=(xs,label)=>xs.map(x=>'<option value="'+x+'">'+label(x)+'</option>').join("");
+const select=(id,label,values,format)=>'<select id="'+id+'" aria-label="'+label+'">'+options(values,format)+'</select>';
+const levelOptions=seq(production.length-1);
+const bonusLevels=seq(5), oasisOptions=seq(6).map(n=>n*25);
+const cells=fn=>resources.map((r,i)=>'<td>'+fn(r,i)+'</td>').join("");
+function layoutName(v){
+ if(v[3]>=9)return v[3]+" tarlalı · "+v.join("-");
+ if(v[3]===7)return "Az "+resources[v.slice(0,3).indexOf(3)][1].toLowerCase()+" · "+v.join("-");
+ if(v.slice(0,3).every(n=>n===4))return "Dengeli · "+v.join("-");
+ return "Çok "+resources[v.slice(0,3).indexOf(5)][1].toLowerCase()+", az "+resources[v.slice(0,3).indexOf(3)][1].toLowerCase()+" · "+v.join("-");
 }
-function readConsumption(id){const v=Number($(id).value);return Number.isFinite(v)?Math.min(1000000000,Math.max(0,Math.floor(v))):0;}
+function calculate(s){
+ const counts=layouts[s.crop][s.layout];
+ return counts.map((count,i)=>{
+  const base=count*production[s.levels[i]]*s.speed;
+  const building=5*(s.factory[i]+(i===3?s.bakery:0));
+  const oasis=s.oasis[i]*(1+s.water*.05);
+  return Math.round(base*(1+(building+oasis)/100)*(s.gold[i]?1.25:1));
+ });
+}
+root.innerHTML='<section class="hp-panel"><div class="hp-toolbar">'+
+ '<label>Sunucu '+select("hp-speed","Sunucu hızı",speeds,n=>"T4.6 "+n+"x")+'</label>'+
+ '<div class="hp-village"><span>Köy türü</span><div class="hp-tabs" id="hp-tabs" role="group" aria-label="Köy türü">'+crops.map(n=>'<button type="button" data-crop="'+n+'" aria-pressed="false">'+n+' tarlalı</button>').join("")+'</div></div>'+
+ '<label class="hp-layout-label" id="hp-layout-label">Hammadde dağılımı <select id="hp-layout" aria-label="Hammadde dağılımı"></select></label></div>'+
+ '<div class="hp-main"><div class="hp-village-panel"><h2 id="hp-village-title">Köy dağılımı</h2><div class="hp-map" id="hp-map" aria-label="Şematik hammadde alanları"></div><p class="hp-map-caption">18 hammadde alanı · Şematik görünüm</p></div>'+
+ '<div class="hp-calc"><div class="hp-table-wrap"><table class="hp-table"><thead><tr><th scope="col">Ayarlar</th>'+resources.map((r,i)=>'<th scope="col">'+icon(i)+' <span>'+r[1]+'</span></th>').join("")+'</tr></thead><tbody>'+
+ '<tr><th scope="row"><label class="hp-inline"><input type="checkbox" id="hp-gold-all"> Plus (+%25)</label></th>'+cells((r,i)=>'<input type="checkbox" id="hp-gold-'+i+'" aria-label="'+r[1]+' altın üretim bonusu">')+'</tr>'+
+ '<tr><th scope="row">Alan sayısı</th>'+cells((r,i)=>'<strong id="hp-count-'+i+'"></strong>')+'</tr>'+
+ '<tr><th scope="row"><label>Seviye '+select("hp-all","Tüm alanların ortak seviyesi",["",...levelOptions],n=>n===""?"Tümü":n)+'</label></th>'+cells((r,i)=>select("hp-level-"+i,r[1]+" alanlarının ortak seviyesi",levelOptions,n=>n))+'</tr>'+
+ '<tr><th scope="row">Üretim binaları</th>'+cells((r,i)=>'<div class="hp-building"><span>'+buildings[i]+'</span>'+select("hp-building-"+i,buildings[i]+" seviyesi",bonusLevels,n=>n===0?"Yok":n+" (+%"+(n*5)+")")+(i===3?'<span>Ekmek Fırını</span>'+select("hp-bakery","Ekmek Fırını seviyesi",bonusLevels,n=>n===0?"Yok":n+" (+%"+(n*5)+")"):"")+'</div>')+'</tr>'+
+ '<tr><th scope="row">Vahalar</th>'+cells((r,i)=>select("hp-oasis-"+i,r[1]+" toplam vaha bonusu",oasisOptions,n=>"%"+n))+'</tr>'+
+ '<tr><th scope="row">Su İşleri</th><td colspan="4"><div class="hp-water">'+select("hp-water","Su İşleri seviyesi (Mısır)",seq(20),n=>n===0?"Yok":n+". seviye (+%"+(n*5)+")")+'<span>Mısır · vaha bonusuna etki eder</span></div></td></tr>'+
+ '<tr class="hp-result"><th scope="row">Üretim /sa</th>'+cells((r,i)=>'<strong id="hp-value-'+i+'"></strong>')+'</tr></tbody></table></div>'+
+ '<div class="hp-total" aria-live="polite"><span>Toplam saatlik üretim</span><strong id="hp-total"></strong><span>Günlük toplam <b id="hp-daily"></b></span></div></div></div>'+
+ '<div class="hp-note">Brüt üretimdir; kahraman, nüfus, asker tüketimi ve özel dünya bonusları dahil değildir. Vaha yüzdeleri elle girilir; köydeki gerçek üç vahanın toplamını kullan. Bina seviyeleri serbest senaryo içindir; oyun içi ön koşullar denetlenmez. Normal köylerde alan sınırı 10, özel şehirlerde 12; başkent için 21 seviyeye kadar Kirilloid referans değerleri sunulur. Plus burada ayrı satın alınan %25 altın üretim bonusunu ifade eder.</div>'+
+ '<details class="hp-sources"><summary>Hesaplama ve kaynaklar</summary><p>Alan sayısı × alan üretimi × sunucu hızı × (1 + bina bonusu + etkin vaha bonusu) × altın bonusu. Vaha bonusu Su İşleri ile çarpılır; yalnızca altın bonusu toplam üretime uygulanır. Yüzdeler ondalık katsayı olarak alınır; sonuç her kaynak için en yakın tam sayıya yuvarlanır.</p><a href="https://github.com/kirilloid/travian/blob/master/src/model/t4/buildings.ts" target="_blank" rel="noopener noreferrer">Kirilloid T4 üretim modeli</a> · <a href="https://support.travian.com/en/articles/129-gold-feature-production-bonuses" target="_blank" rel="noopener noreferrer">Altın üretim bonusu</a> · <a href="https://support.travian.com/en/articles/48-oasis" target="_blank" rel="noopener noreferrer">Vahalar</a> · <a href="https://support.travian.com/en/articles/214-guide-resources-explained" target="_blank" rel="noopener noreferrer">Hammaddeler</a> · <a href="https://support.travian.com/en/articles/149-5-things-to-consider-about-egyptians" target="_blank" rel="noopener noreferrer">Su İşleri</a></details></section>';
+function setLayout(){
+ $("hp-layout").innerHTML=layouts[state.crop].map((v,i)=>'<option value="'+i+'">'+layoutName(v)+'</option>').join("");
+ $("hp-layout").value=String(state.layout);
+ $("hp-layout-label").hidden=layouts[state.crop].length===1;
+ $("hp-tabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.crop)===state.crop)));
+}
 function render(){
- const speed=Number($("hp-speed").value);
- $("hp-reference").innerHTML=levels.map(level=>{
-  const value=fieldRate(level,speed);
-  return '<tr><th scope="row">'+level+'</th>'+resources.map(()=>'<td>'+fmt(value)+'</td>').join("")+'<td class="hp-delta">'+(level?'+'+fmt(value-fieldRate(level-1,speed)):'—')+'</td></tr>';
- }).join("");
- const gross=selected.map(xs=>sum(xs.map(l=>fieldRate(l,speed))));
- const use=[0,0,0,readConsumption("hp-pop")+readConsumption("hp-upkeep")];
- const net=gross.map((v,i)=>v-use[i]);
- const row=(label,g,u,n)=>'<tr><th scope="row">'+label+'</th><td>'+fmt(g)+'</td><td>'+fmt(u)+'</td><td class="'+(n<0?"hp-negative":"hp-net")+'">'+fmt(n)+'</td><td class="'+(n<0?"hp-negative":"")+'">'+fmt(n*24)+'</td></tr>';
- $("hp-results").innerHTML=resources.map((r,i)=>row(icon(i)+' '+r[1],gross[i],use[i],net[i])).join("")+row("Toplam",sum(gross),sum(use),sum(net));
+ const counts=layouts[state.crop][state.layout];
+ const values=calculate(state);
+ $("hp-village-title").textContent=state.crop+" tarlalı köy · "+counts.join("-");
+ $("hp-map").innerHTML=counts.map((count,i)=>Array.from({length:count},()=>'<div class="hp-tile hp-tile-'+i+'" title="'+resources[i][1]+' · Seviye '+state.levels[i]+'">'+icon(i)+'<b>'+state.levels[i]+'</b></div>').join("")).join("");
+ for(let i=0;i<4;i++){
+  $("hp-count-"+i).textContent=counts[i];
+  $("hp-value-"+i).textContent=fmt(values[i]);
+ }
+ const total=values.reduce((a,b)=>a+b,0);
+ $("hp-total").textContent=fmt(total);$("hp-daily").textContent=fmt(total*24);
+ $("hp-gold-all").checked=state.gold.every(Boolean);
+ $("hp-gold-all").indeterminate=state.gold.some(Boolean)&&!state.gold.every(Boolean);
+ $("hp-all").value=state.levels.every(v=>v===state.levels[0])?String(state.levels[0]):"";
 }
-$("hp-speed").addEventListener("change",render);
-$("hp-layout").addEventListener("change",e=>{
- const layout=layouts[Number(e.target.value)];if(!layout)return;
- selected=layout.map((count,i)=>Array.from({length:count},(_,j)=>selected[i][j]??0));
- $("hp-all").value="";renderFields();render();
+function bind(id,fn){$(id).addEventListener("change",e=>{fn(e.target);render();});}
+$("hp-speed").value=String(state.speed);
+bind("hp-speed",el=>{state.speed=Number(el.value)});
+$("hp-tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-crop]");if(!b)return;state.crop=Number(b.dataset.crop);state.layout=0;setLayout();render();});
+bind("hp-layout",el=>{state.layout=Number(el.value)});
+bind("hp-all",el=>{if(el.value==="")return;state.levels.fill(Number(el.value));state.levels.forEach((v,i)=>{$("hp-level-"+i).value=String(v)});});
+bind("hp-gold-all",el=>{state.gold.fill(el.checked);state.gold.forEach((v,i)=>{$("hp-gold-"+i).checked=v});});
+resources.forEach((r,i)=>{
+ $("hp-level-"+i).value=String(state.levels[i]);
+ bind("hp-level-"+i,el=>{state.levels[i]=Number(el.value)});
+ bind("hp-gold-"+i,el=>{state.gold[i]=el.checked});
+ bind("hp-building-"+i,el=>{state.factory[i]=Number(el.value)});
+ bind("hp-oasis-"+i,el=>{state.oasis[i]=Number(el.value)});
 });
-$("hp-all").addEventListener("change",e=>{
- if(e.target.value==="")return;
- const level=Number(e.target.value);if(!levels.includes(level))return;
- selected=selected.map(xs=>xs.map(()=>level));renderFields();render();
-});
-$("hp-fields").addEventListener("change",e=>{
- const el=e.target.closest("select[data-resource]");if(!el)return;
- const level=Number(el.value);if(!levels.includes(level))return;
- selected[Number(el.dataset.resource)][Number(el.dataset.field)]=level;$("hp-all").value="";render();
-});
-["hp-pop","hp-upkeep"].forEach(id=>$(id).addEventListener("input",render));
-renderFields();render();
+bind("hp-bakery",el=>{state.bakery=Number(el.value)});
+bind("hp-water",el=>{state.water=Number(el.value)});
+setLayout();render();
 })();

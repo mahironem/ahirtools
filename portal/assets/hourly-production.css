@@ -1,34 +1,50 @@
-/* Scoped hourly production page; shares portal theme variables. */
-#hourly-production{display:grid;gap:14px}
-.hp-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
-.hp-toolbar{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px}
-.hp-toolbar>div{flex:1 1 250px}
-.hp-toolbar h2{font-size:16px;margin:0 0 5px;color:var(--text)}
-.hp-toolbar p,.hp-note{color:var(--muted);font-size:12px;line-height:1.5;margin:0}
-.hp-toolbar label,.hp-field-levels label,.hp-consumption label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
-#hourly-production select,#hourly-production input{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-height:33px;max-width:100%;min-width:0}
-#hourly-production select:focus-visible,#hourly-production input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.hp-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px}
-.hp-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* Compact production calculator – uses the portal's light and dark theme tokens. */
+body[data-page="p-tablolar-saatlik-uretim"] .page-heading{margin-bottom:10px}
+#hourly-production{font-size:13px}
+.hp-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.hp-toolbar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.hp-toolbar label,.hp-village>span{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
+.hp-toolbar label[hidden]{display:none}
+.hp-village{display:grid;gap:4px}
+.hp-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.hp-tabs button,#hourly-production select{font:inherit;font-size:12px;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 8px;min-height:32px;max-width:100%}
+.hp-tabs button{cursor:pointer;font-weight:700}
+.hp-tabs button[aria-pressed="true"]{background:var(--accentbg);border-color:var(--accent);color:var(--accent)}
+#hourly-production select:focus-visible,#hourly-production input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#hourly-production input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);vertical-align:middle;cursor:pointer;margin:0}
+.hp-main{display:grid;grid-template-columns:minmax(190px,.8fr) minmax(0,2.2fr);gap:12px;align-items:start}
+.hp-village-panel{border:1px solid var(--line);border-radius:9px;padding:10px}
+.hp-village-panel h2{font-size:13px;margin:0 0 10px;text-align:center}
+.hp-map{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;max-width:250px;margin:auto}
+.hp-tile{border:1px solid var(--line);border-radius:7px;min-height:33px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--panel2);font-variant-numeric:tabular-nums}
+.hp-tile-0{border-color:#6b94694f}.hp-tile-1{border-color:#ba775e55}.hp-tile-2{border-color:#8698ad66}.hp-tile-3{border-color:#cba24066}
+.hp-map-caption{color:var(--muted);text-align:center;font-size:10px;margin:8px 0 0}
+.hp-calc{min-width:0}
+.hp-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px}
+.hp-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:495px;font-size:12px;font-variant-numeric:tabular-nums}
 .hp-table thead{background:var(--accentbg)}
-.hp-table th,.hp-table td{padding:7px 12px;text-align:right;border-bottom:1px solid var(--line)}
-.hp-table th:first-child{text-align:left}
+.hp-table th,.hp-table td{padding:6px 5px;text-align:center;border-bottom:1px solid var(--line);vertical-align:middle}
+.hp-table th:first-child{text-align:left;width:126px;padding-left:8px}
+.hp-table thead th:not(:first-child) .hp-icon{display:block;margin:0 auto 3px}
 .hp-table tbody tr:last-child>*{border-bottom:0}
-.hp-table tbody tr:hover{background:var(--panel2)}
-.hp-table .hp-delta,.hp-net{color:var(--accent);font-weight:700}
-.hp-negative{color:#e06464;font-weight:700}
-.hp-icon{width:24px;height:24px;object-fit:contain;vertical-align:middle}
-.hp-note{margin-top:10px}
-.hp-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.hp-field-card{border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
-.hp-field-card h3{display:flex;align-items:center;gap:5px;font-size:13px;margin:0 0 8px}
-.hp-field-card h3 span{font-size:11px;color:var(--muted);margin-left:auto;font-weight:500}
-.hp-field-levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.hp-field-levels select{width:100%}
-.hp-consumption{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
-.hp-consumption label{flex:0 1 220px}
-.hp-results tbody tr:last-child{background:var(--accentbg);font-weight:800}
-.hp-sources{font-size:12px;color:var(--muted);line-height:1.6}
+.hp-table select{width:100%;min-width:0}
+.hp-table th select{width:auto;margin-left:3px}
+.hp-inline{display:inline-flex;align-items:center;gap:5px}
+.hp-building{display:grid;gap:3px}
+.hp-building span{font-size:10px;font-weight:600;color:var(--muted);line-height:1.2}
+.hp-water{display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-align:left}
+.hp-water select{width:auto}
+.hp-water span{font-size:11px;color:var(--muted)}
+.hp-result{background:var(--accentbg)}
+.hp-result strong{font-size:15px;color:var(--accent)}
+.hp-icon{width:22px;height:22px;object-fit:contain;vertical-align:middle}
+.hp-total{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 2px 2px;color:var(--muted);font-size:12px}
+.hp-total>strong{font-size:19px;color:var(--accent);font-variant-numeric:tabular-nums}
+.hp-total>span:last-child{margin-left:auto}
+.hp-total b{color:var(--text)}
+.hp-note,.hp-sources{color:var(--muted);font-size:11px;line-height:1.5;margin:10px 0 0}
+.hp-sources summary{cursor:pointer;font-weight:700}
+.hp-sources p{margin:6px 0}
 .hp-sources a{color:var(--accent)}
-@media(max-width:1050px){.hp-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.hp-panel{padding:10px}.hp-fields{grid-template-columns:1fr}.hp-table th,.hp-table td{padding:6px 8px}.hp-toolbar label{flex:1 1 130px}.hp-consumption label{flex:1 1 130px}}
+@media(max-width:1050px){.hp-main{grid-template-columns:1fr}.hp-map{grid-template-columns:repeat(9,minmax(0,1fr));max-width:none}.hp-tile{min-height:30px}}
+@media(max-width:550px){.hp-panel{padding:8px}.hp-map{grid-template-columns:repeat(6,minmax(0,1fr))}.hp-toolbar{gap:8px}.hp-layout-label{width:100%}.hp-table{min-width:490px}.hp-total>span:last-child{margin-left:0}}
