@@ -38,7 +38,7 @@ const levels=Array.from({length:21},(_,i)=>i);
 const state={
  tribe:tribes.some(t=>t.id===qs.get("tribe"))?qs.get("tribe"):"gauls",
  speed:allowedNum("s",[1,2,3,5,10],1),
- training:allowedNum("train",levels.slice(1),7),
+ training:allowedNum("train",levels.slice(1),1),
  smithy:allowedNum("smithy",levels,0),
  helmInf:allowedNum("hi",[0,10,15,20],0),
  helmCav:allowedNum("hc",[0,10,15,20],0),
