@@ -40,7 +40,7 @@ const state={
  speed:allowedNum("s",[1,2,3,5,10],1),
  training:allowedNum("train",levels.slice(1),1),
  smithy:allowedNum("smithy",levels,0),
- smithyBuilding:allowedNum("sb",levels,Math.max(1,allowedNum("smithy",levels,0))),
+ smithyBuilding:allowedNum("sb",levels,0),
  upgradeFrom:allowedNum("uf",levels,0),
  upgradeTo:allowedNum("ut",levels.slice(1),1),
  buildingTarget:allowedNum("bt",levels,1),
@@ -57,7 +57,7 @@ const state={
 };
 state.selected=(tribes.find(t=>t.id===state.tribe).units.some(u=>u.id===qs.get("unit"))?qs.get("unit"):tribes.find(t=>t.id===state.tribe).units[0].id);
 function normalizePlan(){
- state.smithy=Math.min(state.smithy,state.smithyBuilding);
+ // Combat preview is independent of the building upgrade planner.
  state.upgradeFrom=Math.min(19,state.upgradeFrom);
  state.upgradeTo=Math.min(20,Math.max(state.upgradeFrom+1,state.upgradeTo));
  state.buildingTarget=Math.min(20,Math.max(state.smithyBuilding,state.upgradeTo,state.buildingTarget));
@@ -218,8 +218,7 @@ function drawControls(){
    selectCard("Süvari miğferi","helmCav",helmCav)+
    (t.id==="romans"?selectCard("Yalak","trough",levels.map(v=>[v,v?"Seviye "+v:"Yok"])):"");
  $("tc-armor-controls").innerHTML=
-   selectCard("Zırh Dökümhanesi","smithyBuilding",levels.map(v=>[v,"Seviye "+v]))+
-   selectCard("Asker geliştirme seviyesi","smithy",levels.filter(v=>v<=state.smithyBuilding).map(v=>[v,"Seviye "+v]))+
+   selectCard("Asker zırh seviyesi","smithy",levels.map(v=>[v,"Seviye "+v]))+
    selectCard("Metalürji bonusu","allianceMetal",bonus);
  $("tc-artifact-controls").innerHTML=
    selectCard("Asker Eğitme Tılsımı","trainer",artifact)+
