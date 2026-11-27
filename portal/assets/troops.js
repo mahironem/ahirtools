@@ -8,6 +8,7 @@ const tribes=dataset.tribes;
 const $=id=>document.getElementById(id);
 const nf=new Intl.NumberFormat("tr-TR");
 const n=v=>nf.format(Math.round(v||0));
+const speedText=v=>Number(v||0).toLocaleString("tr-TR",{maximumFractionDigits:1});
 const fixed=v=>Number(v||0).toLocaleString("tr-TR",{minimumFractionDigits:1,maximumFractionDigits:1});
 const esc=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Familiar, minimal unit silhouettes in their original tribe-specific colours.
@@ -44,9 +45,8 @@ const state={
  allianceTrain:allowedNum("at",[0,2,4,6,8,10],0),
  allianceMetal:allowedNum("am",[0,2,4,6,8,10],0),
  trainer:allowedNum("art",[1,.75,.5],1),
+ titan:allowedNum("titan",[1,1.5,2],1),
  trough:allowedNum("hdt",levels,0),
- academy:allowedNum("academy",levels.slice(1),1),
- admin:qs.get("admin")==="palace"?"palace":qs.get("admin")==="command"?"command":"residence",
  selected:null
 };
 state.selected=(tribes.find(t=>t.id===state.tribe).units.some(u=>u.id===qs.get("unit"))?qs.get("unit"):tribes.find(t=>t.id===state.tribe).units[0].id);
@@ -93,13 +93,14 @@ function trainingTime(unit){
 }
 function unitCost(unit){return unit.trainable&&Array.isArray(unit.c)?unit.c:null;}
 function totalCost(unit){const c=unitCost(unit);return c?c.reduce((s,v)=>s+v,0):(unit.totalKnown||null)}
-function movement(unit){return unit.v*speedFactor[state.speed]}
+// Titan boots multiply movement speed at every distance. NPC units cannot use player artefacts.
+function movement(unit){return unit.v*speedFactor[state.speed]*(unit.trainable?state.titan:1)}
 function upkeep(unit){
  const threshold={"romans-3":10,"romans-4":15,"romans-5":20}[unit.id];
  return unit.u-(threshold&&state.trough>=threshold?1:0);
 }
 function trainingType(unit){
- if(unit.building==="residence")return state.admin==="palace"?"Saray":state.admin==="command"&&tribe().id==="huns"?"Komuta Merkezi":"Köşk";
+ if(unit.building==="residence")return tribe().id==="huns"?"Köşk / Saray / Komuta Merkezi":"Köşk / Saray";
  return {barracks:"Kışla",stable:"Ahır",workshop:"Tamirhane"}[unit.building]||"—";
 }
 function requirementsText(unit){
@@ -115,7 +116,7 @@ function researchText(unit){
  if(!unit.trainable)return "—";
  if(unit.researchTime===0)return "Araştırma gerekmez";
  if(!Number.isFinite(unit.researchTime))return "Doğrulanmadı";
- return timeFormat(unit.researchTime*Math.pow(.9,state.academy-1)/state.speed);
+ return timeFormat(unit.researchTime/state.speed);
 }
 function buildShell(){
  root.innerHTML='<div class="tc-topline"><span class="tc-version">⚔ T4.6 Asker İstatistikleri</span>'+
@@ -124,14 +125,14 @@ function buildShell(){
  '<div class="tc-table-wrap"><table class="tc-table"><thead><tr>'+
  '<th>Birim / Tür</th><th title="Demirci ve metalürji bonuslu saldırı gücü">⚔ Saldırı</th>'+
  '<th title="Piyadeye karşı savunma">🛡 Piyade</th><th title="Süvariye karşı savunma">🛡 Süvari</th>'+
- '<th title="Sunucu hızına göre birim hareketi, alan/saat">👟 Hız</th><th title="Birimin taşıma kapasitesi">🎒 Taşıma</th>'+
+ '<th title="Sunucu hızı ve Titan Çizmesi etkisiyle hareket hızı, alan/saat">👟 Hız</th><th title="Birimin taşıma kapasitesi">🎒 Taşıma</th>'+
  '<th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th>'+
  '<th>📦 Toplam</th><th title="Saatlik tahıl tüketimi">🌾/sa</th><th title="Kayıtlı eğitim bonuslarına göre eğitim süresi">⏱ Eğitim</th>'+
  '</tr></thead><tbody id="tc-rows"></tbody></table></div>'+
  '<section class="tc-control-sections" aria-label="Asker hesaplama ayarları">'+
  '<div class="tc-control-group"><div class="tc-control-title">⏱ Asker Eğitim Hızı</div><div class="tc-control-items" id="tc-training-controls"></div></div>'+
  '<div class="tc-control-group"><div class="tc-control-title">🛡 Demirci ve Zırh</div><div class="tc-control-items" id="tc-armor-controls"></div></div>'+
- '<div class="tc-control-group"><div class="tc-control-title">⚡ Asker Tılsımı</div><div class="tc-control-items" id="tc-artifact-controls"></div></div>'+
+ '<div class="tc-control-group"><div class="tc-control-title">⚡ Tılsım Etkileri</div><div class="tc-control-items" id="tc-artifact-controls"></div></div>'+
  '</section>'+
  '<section class="tc-detail"><div class="tc-detail-top"><div><span class="tc-eyebrow">DEMİRCİ GELİŞTİRMELERİ</span>'+
  '<h3 id="tc-selected-title"></h3><p id="tc-selected-note"></p></div>'+
@@ -142,7 +143,7 @@ function buildShell(){
  '<div class="tc-source-note"><span>ℹ️ Demirci tablosu savaş değerlerini gösterir; demirci araştırmasının kaynak/süre maliyetleri bu sürümde hesaplanmaz.</span>'+
  '<span id="tc-data-scope"></span></div><div class="tc-source-note" id="tc-research-info"></div></section>'+
  '<div class="tc-bottom"><div class="tc-links"><a href="https://support.travian.com/en/articles/20-game-versions-and-speed" target="_blank" rel="noopener noreferrer">Resmî sunucu hızları ↗</a>'+
- '<a href="https://support.travian.com/en/articles/40-troop-upgrades-and-smithy" target="_blank" rel="noopener noreferrer">Demirci kuralları ↗</a>'+
+ '<a href="https://support.travian.com/en/articles/40-troop-upgrades-and-smithy" target="_blank" rel="noopener noreferrer">Demirci kuralları ↗</a><a href="https://support.travian.com/en/articles/102-artefact-effects" target="_blank" rel="noopener noreferrer">Resmî tılsım etkileri ↗</a>'+
  '<a href="https://github.com/kirilloid/travian" target="_blank" rel="noopener noreferrer">Kirilloid veri modeli ↗</a></div>'+
  '<button type="button" class="tc-copy" id="tc-copy">🔗 Hesabın bağlantısını kopyala</button><span id="tc-copy-msg" role="status"></span></div>'+
  '<div class="tc-disclaimer">Özel dünya ve dönemsel denge değişiklikleri olabilir. Askerler sayfası bir referans/hesaplama aracıdır; oyun hesabınıza erişmez. Doğa ve Natar birlikleri normal eğitim hesaplamasına dahil edilmez.</div>';
@@ -153,21 +154,21 @@ function drawControls(){
  const helmInf=[[0,"Yok"],[10,"Paralı Asker %10"],[15,"Savaşçı %15"],[20,"Liderlik %20"]];
  const helmCav=[[0,"Yok"],[10,"Atlı %10"],[15,"Süvari %15"],[20,"Ağır Süvari %20"]];
  const bonus=[[0,"Yok"],[2,"%2"],[4,"%4"],[6,"%6"],[8,"%8"],[10,"%10"]];
- const artifact=[[1,"Yok"],[.75,"3/4 • %75 süre"],[.5,"1/2 • %50 süre"]];
+ const artifact=[[1,"Yok"],[.5,"1/2 • %50 daha kısa (küçük / eşsiz)"],[.75,"3/4 • %25 daha kısa (büyük)"]];
+ const titanArtifact=[[1,"Yok"],[2,"2× • %100 daha hızlı (küçük / eşsiz)"],[1.5,"1,5× • %50 daha hızlı (büyük)"]];
  $("tc-speed").innerHTML=selectOpts(opts,state.speed);
  $("tc-training-controls").innerHTML=
    selectCard("Eğitim binası","training",levels.slice(1).map(v=>[v,"Seviye "+v]))+
+   selectCard("Birlik eğitim bonusu","allianceTrain",bonus)+
    selectCard("Piyade miğferi","helmInf",helmInf)+
    selectCard("Süvari miğferi","helmCav",helmCav)+
-   selectCard("Birlik eğitim bonusu","allianceTrain",bonus)+
-   selectCard("Akademi seviyesi","academy",levels.slice(1).map(v=>[v,"Seviye "+v]))+
-   (t.playable?selectCard("Yönetim binası","admin",[["residence","Köşk"],["palace","Saray"],...(t.id==="huns"?[["command","Komuta Merkezi"]]:[])],"Reis ve göçmen"):"")+
-   (t.id==="romans"?selectCard("At İçme Yalağı","trough",levels.map(v=>[v,v?"Seviye "+v:"Yok"])):"");
+   (t.id==="romans"?selectCard("Yalak","trough",levels.map(v=>[v,v?"Seviye "+v:"Yok"])):"");
  $("tc-armor-controls").innerHTML=
    selectCard("Demirci seviyesi","smithy",levels.map(v=>[v,"Seviye "+v]))+
    selectCard("Metalürji bonusu","allianceMetal",bonus);
  $("tc-artifact-controls").innerHTML=
-   selectCard("Hızlı asker yetiştirme","trainer",artifact);
+   selectCard("Asker Eğitme Tılsımı","trainer",artifact)+
+   selectCard("Titan Çizmesi Tılsımı","titan",titanArtifact);
  const tabs=$("tc-tribes");
  tabs.innerHTML=tribes.map(x=>'<button type="button" class="tc-tribe'+(x.id===state.tribe?" active":"")+'" data-tribe="'+x.id+'">'+esc(x.name)+'</button>').join("");
 }
@@ -178,7 +179,7 @@ function drawUnits(){
   return '<tr data-unit="'+u.id+'" class="'+(u.id===state.selected?"selected":"")+'" tabindex="0" role="button" aria-label="'+esc(u.name)+" — geliştirme detaylarını aç"+'">'+
    '<td><div class="tc-unit-cell">'+unitIconHTML(u)+'<span><strong>'+esc(u.name)+'</strong><small>'+esc(typeNames[u.type]||"Birim")+'</small></span></div></td>'+
    '<td class="tc-power">'+fixed(stat.a)+'</td><td>'+fixed(stat.di)+'</td><td>'+fixed(stat.dc)+'</td>'+
-   '<td class="tc-speed">'+n(movement(u))+'</td><td>'+n(u.p)+'</td>'+
+   '<td class="tc-speed">'+speedText(movement(u))+'</td><td>'+n(u.p)+'</td>'+
    [0,1,2,3].map(i=>'<td>'+(cost?n(cost[i]):"—")+'</td>').join("")+
    '<td class="tc-cost">'+(totalCost(u)!=null?n(totalCost(u)):"—")+'</td>'+
    '<td>'+n(upkeep(u))+'</td><td class="tc-time">'+(time!==null?timeFormat(time):"—")+'</td></tr>';
@@ -199,12 +200,12 @@ function drawDetail(){
      '<td>'+fixed(points.a)+'</td><td>'+fixed(points.di)+'</td><td>'+fixed(points.dc)+'</td>'+
      '<td>'+ (!smithyEligible(u)?"Geliştirme uygulanmaz":l===0?"Temel seviye":active?"✓ Seçili seviye":"Seviye "+l)+'</td></tr>';
  }).join("");
- $("tc-research-info").textContent="Gereksinimler: "+requirementsText(u)+" | Akademi araştırma süresi (eski model): "+researchText(u)+" | Araştırma maliyetleri: doğrulanmadı.";
+ $("tc-research-info").textContent="Gereksinimler: "+requirementsText(u)+" | Akademi araştırma süresi (seviye 1, eski model): "+researchText(u)+" | Araştırma maliyetleri: doğrulanmadı.";
  $("tc-data-scope").textContent=u.source==="npc"?"Eğitilemeyen NPC birimi":u.source==="official/community"||u.source==="mixed-official-community"?"Karma kaynak verisi; bazı değerler eksik olabilir":u.source==="travian-official"?"Travian resmî Viking verisi":"Kirilloid T4.6 modelinden";
 }
 function syncUrl(){
  const p=new URLSearchParams();
- for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["art",state.trainer],["hdt",state.trough],["academy",state.academy],["admin",state.admin],["unit",state.selected]])p.set(key,String(v));
+ for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["art",state.trainer],["titan",state.titan],["hdt",state.trough],["unit",state.selected]])p.set(key,String(v));
  history.replaceState(null,"",location.pathname+"?"+p.toString());
 }
 function render(){
@@ -214,12 +215,12 @@ buildShell();
 root.addEventListener("change",e=>{
  const el=e.target.closest("select[data-key]");if(!el)return;
  const key=el.dataset.key;
- state[key]=key==="admin"?el.value:Number(el.value);
+ state[key]=Number(el.value);
  render();
 });
 root.addEventListener("click",e=>{
  const tab=e.target.closest("[data-tribe]");
- if(tab){state.tribe=tab.dataset.tribe;if(state.tribe!=="huns"&&state.admin==="command")state.admin="residence";state.selected=tribe().units[0].id;render();return;}
+ if(tab){state.tribe=tab.dataset.tribe;state.selected=tribe().units[0].id;render();return;}
  const unit=e.target.closest("tr[data-unit]");
  if(unit){state.selected=unit.dataset.unit;render();return;}
  const sm=e.target.closest("tr[data-smithy]");
