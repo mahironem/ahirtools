@@ -199,3 +199,6 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 }
 .bc-building-icon .bc-art-atlas{width:34px;height:34px}
 .bc-head-icon .bc-art-atlas{width:43px;height:43px}
+
+/* Seven custom art icons: Hun / Egyptian / German / Roman walls, Stonemason, Palace, WW. */
+.bc-art-atlas-v4{background-image:url('/portal/assets/building-art-v4/atlas.webp')!important;background-size:700% 100%!important;}

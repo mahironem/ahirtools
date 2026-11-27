@@ -29,7 +29,11 @@ const buildingEffects=window.AHIR_BUILDING_EFFECTS||{};
 const customBuildingArts = {"sawmill":"/portal/assets/building-art-v1/sawmill.webp","brickyard":"/portal/assets/building-art-v1/brickyard.webp","ironfoundry":"/portal/assets/building-art-v1/ironfoundry.webp","bakery":"/portal/assets/building-art-v1/bakery.webp","trapper":"/portal/assets/building-art-v1/trapper.webp","palisade":"/portal/assets/building-art-v1/palisade.webp","barracks":"/portal/assets/building-art-v1/barracks.webp","heromansion":"/portal/assets/building-art-v1/heromansion.webp","academy":"/portal/assets/building-art-v1/academy.webp","smithy":"/portal/assets/building-art-v1/smithy.webp","stable":"/portal/assets/building-art-v2/stable.webp","workshop":"/portal/assets/building-art-v2/workshop.webp","hospital":"/portal/assets/building-art-v2/hospital.webp","arena":"/portal/assets/building-art-v2/arena.webp","greatbarracks":"/portal/assets/building-art-v2/greatbarracks.webp","greatstables":"/portal/assets/building-art-v2/greatstables.webp","cranny":"/portal/assets/building-art-v2/cranny.webp","embassy":"/portal/assets/building-art-v2/embassy.webp","residence":"/portal/assets/building-art-v2/residence.webp","treasury":"/portal/assets/building-art-v2/treasury.webp"};
 // New third-batch building artwork; one 10-tile optimized transparent WebP atlas.
 const customAtlasIds=["townhall","tradeoffice","greatgranary","grainmill","mainbuilding","greatwarehouse","warehouse","marketplace","granary","rallypoint"];
+// Seven custom, transparent icons from the user's building screenshots.
+const customAtlasV4Ids=["makeshiftwall","stonewall","earthwall","wall","stonemason","palace","worldwonder"];
 function iconFromAtlas(id){
+ const v4Index=customAtlasV4Ids.indexOf(id);
+ if(v4Index>=0)return '<span class="bc-art-img bc-art-atlas bc-art-atlas-v4" style="background-position-x:'+(v4Index*100/6).toFixed(5)+'%" aria-hidden="true"></span>';
  const index=customAtlasIds.indexOf(id);
  return index<0?"":'<span class="bc-art-img bc-art-atlas" style="background-position-x:'+(index*100/9).toFixed(5)+'%" aria-hidden="true"></span>';
 }
