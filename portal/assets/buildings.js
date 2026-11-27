@@ -127,13 +127,17 @@ function toolbar(prefix){
  return '<div class="bc-options">'+
  '<label>Sunucu <select id="'+prefix+'-speed">'+speedChoices.map(v=>'<option value="'+v+'">T4.6 '+v+'x</option>').join("")+'</select></label>'+
  '<label>Merkez Binası <select id="'+prefix+'-mb">'+options(Array.from({length:20},(_,i)=>i+1))+'</select></label>'+
- '<label class="bc-check"><input id="'+prefix+'-ad" type="checkbox"><span>Reklam ile %25 daha kısa</span></label>'+
+ '<label class="bc-check"><input id="'+prefix+'-ad" type="checkbox">'+buildingTimeIcon("ad")+'<span>Reklam ile %25 daha kısa</span></label>'+
  '</div>';
 }
 const resourceFiles=["wood","clay","iron","crop"];
 function resourceIcon(index){
  const name=resourceFiles[index];
  return name===undefined?"":'<img class="bc-resource-icon" src="/portal/assets/resources/'+name+'-v2.webp" alt="" aria-hidden="true" width="30" height="30">';
+}
+function buildingTimeIcon(kind){
+ const asset=kind==="ad"?"ad-shortcut-v1.webp":"clock-v1.webp";
+ return '<img class="bc-time-icon'+(kind==="ad"?" bc-ad-icon":"")+'" src="/portal/assets/metric-icons/'+asset+'" alt="" aria-hidden="true" width="25" height="25">';
 }
 function totalResourcesIcon(){
  return '<img class="bc-total-resources-icon" src="/portal/assets/metric-icons/total-resources-v1.webp" width="26" height="26" alt="" aria-hidden="true">';
@@ -167,7 +171,7 @@ function setup(){
  '<span class="bc-effect-heading" id="bc-effect-heading"></span></div>'+
  '<div class="bc-table-scroll" id="bc-scroll"><table class="bc-table"><thead><tr>'+
  '<th>Seviye</th><th>'+resourceIcon(0)+' Odun</th><th>'+resourceIcon(1)+' Tuğla</th><th>'+resourceIcon(2)+' Demir</th><th>'+resourceIcon(3)+' Tahıl</th>'+
- '<th>'+totalResourcesIcon()+' Toplam</th><th>'+metricIcon("population")+' Nüfus</th><th>'+metricIcon("kp")+' KP/gün</th><th title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>⏱ İnşa</th>'+
+ '<th>'+totalResourcesIcon()+' Toplam</th><th>'+metricIcon("population")+' Nüfus</th><th>'+metricIcon("kp")+' KP/gün</th><th title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>'+buildingTimeIcon("clock")+' İnşa</th>'+
  '</tr></thead><tbody id="bc-rows"></tbody><tfoot id="bc-totals"></tfoot></table></div>'+
  '<div class="bc-results"><div class="bc-results-top"><span><strong id="bc-range"></strong> yükseltme toplamı</span></div>'+
  '<div class="bc-mini-metrics" id="bc-summary"></div></div>'+
@@ -335,7 +339,7 @@ function render(){
  const items=[
    [resourceIcon(0),"Odun",int(sums[0])],[resourceIcon(1),"Tuğla",int(sums[1])],
    [resourceIcon(2),"Demir",int(sums[2])],[resourceIcon(3),"Tahıl",int(sums[3])],
-   [totalResourcesIcon(),"Toplam",int(total)],["⏱","Süre",fmt(seconds)],
+   [totalResourcesIcon(),"Toplam",int(total)],[buildingTimeIcon("clock"),"Süre",fmt(seconds)],
    [metricIcon("kp"),"KP/gün artışı","+"+int(cpDiff)],[metricIcon("population"),"Ek nüfus","+"+int(pop)]
  ];
  $("bc-summary").innerHTML=items.map(([ico,label,value],i)=>'<div class="bc-mini'+(i===4?" emphasized":"")+'">'+

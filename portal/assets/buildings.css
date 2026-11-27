@@ -218,3 +218,14 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 .bc-table thead th .bc-total-resources-icon{vertical-align:-7px;margin-right:3px}
 .bc-mini>span .bc-total-resources-icon{vertical-align:-7px;margin-right:3px}
 @media(max-width:700px){.bc-total-resources-icon{width:23px;height:23px}}
+
+/* Original clock and ad-shortcut illustrations for building construction time. */
+.bc-time-icon{display:inline-block;vertical-align:middle;width:25px;height:25px;object-fit:contain;flex:none}
+.bc-table thead th .bc-time-icon{vertical-align:-7px;margin-right:3px}
+.bc-mini>span .bc-time-icon{vertical-align:-7px;margin-right:3px}
+.bc-check .bc-time-icon{width:22px;height:22px;margin:0 3px 0 6px;vertical-align:middle}
+.bc-check{display:inline-flex;align-items:center;gap:3px}
+@media(max-width:700px){
+ .bc-time-icon{width:22px;height:22px}
+ .bc-check .bc-time-icon{width:20px;height:20px;margin-left:3px}
+}
