@@ -67,7 +67,7 @@ function tribe(){return tribes.find(x=>x.id===state.tribe)||tribes[0];}
 function chosen(){return tribe().units.find(x=>x.id===state.selected)||tribe().units[0];}
 function selectOpts(items,value){return items.map(([v,label])=>'<option value="'+esc(v)+'"'+(String(v)===String(value)?" selected":"")+'>'+esc(label)+'</option>').join("")}
 function selectCard(label,key,values,footnote){
- const iconPath=key==="allianceTrain"?"training-bonus-v1.webp":key==="helmInf"?"infantry-helmet-v1.webp":key==="helmCav"?"cavalry-helmet-v1.webp":key==="smithy"?"smithy-control-v1.webp":key==="allianceMetal"?"metallurgy-control-v1.webp":key==="trainer"||key==="titan"?key+"-artifact-v1.webp":"";
+ const iconPath=key==="training"?"training-building-v1.webp":key==="allianceTrain"?"training-bonus-v1.webp":key==="helmInf"?"infantry-helmet-v1.webp":key==="helmCav"?"cavalry-helmet-v1.webp":key==="smithy"?"smithy-control-v1.webp":key==="allianceMetal"?"metallurgy-control-v1.webp":key==="trainer"||key==="titan"?key+"-artifact-v1.webp":"";
  const icon=iconPath?'<img class="tc-artifact-icon" src="/portal/assets/metric-icons/'+iconPath+'" width="24" height="24" alt="" aria-hidden="true">':"";
  return '<label class="tc-control"><span>'+icon+label+'</span><select data-key="'+key+'" aria-label="'+esc(label)+'">'+selectOpts(values,state[key])+'</select>'+(footnote?'<small>'+footnote+'</small>':'')+'</label>';
 }
