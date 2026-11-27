@@ -182,8 +182,8 @@ function buildShell(){
  '</tr></thead><tbody id="tc-rows"></tbody></table></div>'+
  '<section class="tc-control-sections" aria-label="Asker hesaplama ayarları">'+
  '<div class="tc-control-group"><div class="tc-control-title">'+clockIcon()+' Asker Eğitim Hızı</div><div class="tc-control-items" id="tc-training-controls"></div></div>'+
- '<div class="tc-control-group"><div class="tc-control-title">'+combatIcon("infantry-defense")+' Demirci ve Zırh</div><div class="tc-control-items" id="tc-armor-controls"></div></div>'+
- '<div class="tc-control-group"><div class="tc-control-title">⚡ Tılsım Etkileri</div><div class="tc-control-items" id="tc-artifact-controls"></div></div>'+
+ '<div class="tc-control-group"><div class="tc-control-title"><img class="tc-panel-heading-icon" src="/portal/assets/metric-icons/armor-effects-v1.webp" alt="" aria-hidden="true" width="24" height="24"> Zırh Etkileri</div><div class="tc-control-items" id="tc-armor-controls"></div></div>'+
+ '<div class="tc-control-group"><div class="tc-control-title"><img class="tc-panel-heading-icon" src="/portal/assets/metric-icons/treasury-effects-v1.webp" alt="" aria-hidden="true" width="24" height="24"> Tılsım Etkileri</div><div class="tc-control-items" id="tc-artifact-controls"></div></div>'+
  '</section>'+
  '<section class="tc-detail"><div class="tc-detail-top"><div><span class="tc-eyebrow">ZIRH DÖKÜMHANESİ • ASKER GELİŞTİRMELERİ</span>'+
  '<h3 id="tc-selected-title"></h3><p id="tc-selected-note"></p></div>'+
