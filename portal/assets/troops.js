@@ -157,6 +157,11 @@ function researchText(unit){
  if(!Number.isFinite(unit.researchTime))return "Doğrulanmadı";
  return timeFormat(unit.researchTime/state.speed);
 }
+// Reuse the same transparent resource illustrations as the Buildings tool.
+function resourceIcon(kind){
+ const src=kind==="total"?"/portal/assets/metric-icons/total-resources-v1.webp":"/portal/assets/resources/"+kind+"-v2.webp";
+ return '<img class="tc-resource-icon" src="'+src+'" alt="" aria-hidden="true" width="20" height="20">';
+}
 function buildShell(){
  root.innerHTML='<div class="tc-toolbar">'+
  '<div class="tc-tribe-tabs" id="tc-tribes" role="group" aria-label="Kabile seçimi"></div>'+
@@ -165,8 +170,8 @@ function buildShell(){
  '<th>Birim / Tür</th><th title="Demirci ve metalürji bonuslu saldırı gücü">⚔ Saldırı</th>'+
  '<th title="Piyadeye karşı savunma">🛡 Piyade</th><th title="Süvariye karşı savunma">🛡 Süvari</th>'+
  '<th title="Sunucu hızı ve Titan Çizmesi etkisiyle hareket hızı, alan/saat">👟 Hız</th><th title="Birimin taşıma kapasitesi">🎒 Taşıma</th>'+
- '<th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th>'+
- '<th>📦 Toplam</th><th title="Saatlik tahıl tüketimi">🌾/sa</th><th title="Kayıtlı eğitim bonuslarına göre eğitim süresi">⏱ Eğitim</th>'+
+ '<th>'+resourceIcon("wood")+' Odun</th><th>'+resourceIcon("clay")+' Tuğla</th><th>'+resourceIcon("iron")+' Demir</th><th>'+resourceIcon("crop")+' Tahıl</th>'+
+ '<th>'+resourceIcon("total")+' Toplam</th><th title="Saatlik tahıl tüketimi">'+resourceIcon("crop")+'/sa</th><th title="Kayıtlı eğitim bonuslarına göre eğitim süresi">⏱ Eğitim</th>'+
  '</tr></thead><tbody id="tc-rows"></tbody></table></div>'+
  '<section class="tc-control-sections" aria-label="Asker hesaplama ayarları">'+
  '<div class="tc-control-group"><div class="tc-control-title">⏱ Asker Eğitim Hızı</div><div class="tc-control-items" id="tc-training-controls"></div></div>'+
@@ -180,7 +185,7 @@ function buildShell(){
  '<p class="tc-plan-hint" id="tc-upgrade-hint" role="status"></p>'+
  '<div class="tc-plan-summary" id="tc-upgrade-summary"></div>'+
  '<div class="tc-smithy-wrap"><table class="tc-smithy-table"><thead><tr><th>Seviye</th>'+
- '<th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th><th>📦 Toplam</th><th>⏱ Geliştirme</th>'+
+ '<th>'+resourceIcon("wood")+' Odun</th><th>'+resourceIcon("clay")+' Tuğla</th><th>'+resourceIcon("iron")+' Demir</th><th>'+resourceIcon("crop")+' Tahıl</th><th>'+resourceIcon("total")+' Toplam</th><th>⏱ Geliştirme</th>'+
  '<th>⚔ Saldırı</th><th>🛡 Piyade</th><th>🛡 Süvari</th><th>Durum</th></tr></thead>'+
  '<tbody id="tc-smithy-rows"></tbody><tfoot id="tc-upgrade-total"></tfoot></table></div></div>'+
  '<div class="tc-building-plan"><div class="tc-control-title">Zırh Dökümhanesi bina yükseltmesi</div><div class="tc-upgrade-toolbar" id="tc-building-controls"></div>'+
@@ -245,7 +250,7 @@ function drawDetail(){
  $("tc-data-scope").textContent=u.source==="npc"?"Eğitilemeyen NPC birimi":u.source==="official/community"||u.source==="mixed-official-community"?"Karma kaynak verisi; bazı değerler eksik olabilir":u.source==="travian-official"?"Travian resmî Viking verisi":"Kirilloid T4.6 modelinden";
 }
 function summaryHTML(result,range,label){
- const items=[["🪵 Odun",n(result.costs[0])],["🧱 Tuğla",n(result.costs[1])],["⛏ Demir",n(result.costs[2])],["🌾 Tahıl",n(result.costs[3])],["📦 Toplam",n(result.total)],["⏱ "+label,timeFormat(result.seconds)]];
+ const items=[[resourceIcon("wood")+" Odun",n(result.costs[0])],[resourceIcon("clay")+" Tuğla",n(result.costs[1])],[resourceIcon("iron")+" Demir",n(result.costs[2])],[resourceIcon("crop")+" Tahıl",n(result.costs[3])],[resourceIcon("total")+" Toplam",n(result.total)],["⏱ "+label,timeFormat(result.seconds)]];
  return '<div class="tc-plan-range">'+esc(range)+'</div>'+items.map(([k,v])=>'<div class="tc-plan-metric"><small>'+k+'</small><strong>'+v+'</strong></div>').join("");
 }
 function drawUpgradePlan(u){

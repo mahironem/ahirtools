@@ -273,3 +273,8 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
 .tc-plan-link{display:inline-block;text-decoration:none}
 @media(max-width:850px){.tc-plan-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.tc-plan-range{grid-column:1/-1}}
 @media(max-width:450px){.tc-upgrade-toolbar .tc-control{flex:1 1 120px}.tc-plan-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Consistent, transparent resource illustrations shared with the Buildings tool. */
+.tc-resource-icon{display:inline-block;width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:3px;flex:none}
+.tc-plan-metric .tc-resource-icon{width:18px;height:18px;margin-right:3px}
+@media(max-width:1199px){.tc-table .tc-resource-icon,.tc-smithy-table .tc-resource-icon{width:17px;height:17px;margin-right:2px}}
