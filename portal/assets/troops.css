@@ -48,11 +48,11 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:13px}
 .tc-selected-stats>div{min-width:128px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
 .tc-selected-stats small{font-size:10px;color:var(--muted);display:block}
 .tc-selected-stats strong{font-size:17px;color:var(--text);display:block;margin-top:3px}
-.tc-smithy-wrap{max-height:400px;overflow:auto;border:1px solid var(--line);border-radius:9px;scrollbar-color:var(--line) transparent}
+.tc-smithy-wrap{max-height:none;overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);border-radius:9px;scrollbar-color:var(--line) transparent}
 .tc-smithy-table{width:100%;min-width:520px;text-align:right;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:11px}
 .tc-smithy-table th,.tc-smithy-table td{padding:8px 13px;border-bottom:1px solid var(--line);white-space:nowrap}
 .tc-smithy-table th:first-child,.tc-smithy-table td:first-child{text-align:left}
-.tc-smithy-table thead{position:sticky;top:0;background:var(--panel2);z-index:1}
+.tc-smithy-table thead{background:var(--panel2)}
 .tc-smithy-table th{font-size:10px;color:var(--muted)}
 .tc-smithy-table tbody tr{cursor:pointer}.tc-smithy-table tbody tr:hover{background:var(--accentbg)}
 .tc-smithy-table tbody tr.active{background:var(--accentbg);color:var(--accent);font-weight:700}
@@ -268,7 +268,7 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
 .tc-smithy-table tbody tr.tc-range-selected{background:var(--accentbg)}
 .tc-smithy-table tbody tr.tc-range-start,.tc-smithy-table tbody tr.tc-range-end{box-shadow:inset 3px 0 var(--accent);font-weight:750}
 .tc-smithy-table tbody tr.tc-upgrade-locked td:last-child{color:var(--muted)}
-.tc-smithy-table tfoot{position:sticky;bottom:0;background:var(--panel2);z-index:1;color:var(--accent)}
+.tc-smithy-table tfoot{background:var(--panel2);color:var(--accent)}
 .tc-building-plan{margin-top:12px;padding:9px;border:1px solid var(--line);border-radius:9px}
 .tc-plan-link{display:inline-block;text-decoration:none}
 @media(max-width:850px){.tc-plan-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.tc-plan-range{grid-column:1/-1}}
