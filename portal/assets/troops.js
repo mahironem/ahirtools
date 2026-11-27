@@ -20,7 +20,9 @@ function unitIconHTML(u){
  if(row<0||!Number.isInteger(unitIndex)||unitIndex<0||unitIndex>9)return '<span class="tc-unit-icon" aria-hidden="true">⚔️</span>';
  const x=(unitIndex*100/9).toFixed(5);
  const y=(row*100/8).toFixed(5);
- return '<span class="tc-unit-icon tc-unit-pixel" style="background-position:'+x+'% '+y+'%" aria-hidden="true"></span>';
+ // Keep the already-correct Natar graphics on their original atlas.
+ const iconClass=tribeId==="natars"?" tc-unit-natar":"";
+ return '<span class="tc-unit-icon tc-unit-pixel'+iconClass+'" style="background-position:'+x+'% '+y+'%" aria-hidden="true"></span>';
 }
 const typeNames={infantry:"Piyade",cavalry:"Süvari",scout:"Casus",ram:"Koçbaşı",catapult:"Mancınık",chief:"Reis / Yönetici",settler:"Göçmen"};
 const speedFactor={1:1,2:2,3:2,5:2,10:4};

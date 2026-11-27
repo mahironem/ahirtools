@@ -152,7 +152,7 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
  width:34px;height:34px;min-width:34px;
  border:0;border-radius:4px;
  background-color:transparent;
- background-image:url('/portal/assets/troop-original-icons-v1.webp');
+ background-image:url('/portal/assets/troop-original-icons-v2.webp');
  background-repeat:no-repeat;
  background-size:1000% 900%;
  image-rendering:auto;
@@ -162,4 +162,9 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
 @media(max-width:600px){
  .tc-unit-icon.tc-unit-pixel{width:30px;height:30px;min-width:30px}
  .tc-detail-top h3 .tc-unit-pixel{width:33px;height:33px;min-width:33px}
+}
+
+/* Natars were correctly aligned already: retain their original art unchanged. */
+.tc-unit-icon.tc-unit-pixel.tc-unit-natar{
+ background-image:url('/portal/assets/troop-original-icons-v1.webp');
 }
