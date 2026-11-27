@@ -212,3 +212,31 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
 @media (max-width: 700px){
  .tc-table{min-width:1000px}
 }
+
+/* Compact vertical rhythm: preserve text size, full column layout and icon artwork. */
+@media (min-width: 701px){
+ .tc-table tbody td{padding-top:3px;padding-bottom:3px;line-height:1.25}
+ .tc-table thead th{padding-top:6px;padding-bottom:6px}
+ .tc-table .tc-unit-cell strong{line-height:1.15}
+ .tc-table .tc-unit-cell small{margin-top:1px;line-height:1.15}
+ .tc-control-sections{gap:8px;margin-top:8px;align-items:start}
+ .tc-control-group{padding:7px 10px}
+ .tc-control-title{padding-bottom:5px;margin-bottom:5px;line-height:1.3}
+ .tc-control-items{gap:5px 8px}
+ .tc-control{gap:2px;line-height:1.25}
+ .tc-control select{min-height:28px;padding:3px 7px;line-height:1.3}
+ .tc-control-group:last-child .tc-control-items{max-width:none}
+ .tc-detail{margin-top:8px}
+ .tc-smithy-table th,.tc-smithy-table td{padding-top:5px;padding-bottom:5px}
+}
+@media (max-width: 700px){
+ .tc-table tbody td{padding-top:5px;padding-bottom:5px}
+ .tc-table thead th{padding-top:7px;padding-bottom:7px}
+ .tc-control-sections{gap:7px;margin-top:8px}
+ .tc-control-group{padding:8px 10px}
+ .tc-control-title{padding-bottom:6px;margin-bottom:6px}
+ .tc-control-items{gap:6px 8px}
+ .tc-control{gap:3px}
+ .tc-control select{min-height:33px;padding:4px 8px}
+ .tc-detail{margin-top:8px}
+}
