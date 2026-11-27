@@ -202,3 +202,6 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 
 /* Seven custom art icons: Hun / Egyptian / German / Roman walls, Stonemason, Palace, WW. */
 .bc-art-atlas-v4{background-image:url('/portal/assets/building-art-v4/atlas.webp')!important;background-size:700% 100%!important;}
+
+/* Fourth supplied-building batch: custom isometric icons, four horizontal tiles. */
+.bc-art-atlas-v5{background-image:url('/portal/assets/building-art-v5/atlas.webp')!important;background-size:400% 100%!important;}

@@ -31,7 +31,11 @@ const customBuildingArts = {"sawmill":"/portal/assets/building-art-v1/sawmill.we
 const customAtlasIds=["townhall","tradeoffice","greatgranary","grainmill","mainbuilding","greatwarehouse","warehouse","marketplace","granary","rallypoint"];
 // Seven custom, transparent icons from the user's building screenshots.
 const customAtlasV4Ids=["makeshiftwall","stonewall","earthwall","wall","stonemason","palace","worldwonder"];
+// Four fresh source-based icons: brewery, horsepool, Hunnic command center, Egyptian waterworks.
+const customAtlasV5Ids=["brewery","horsepool","commandcenter","waterworks"];
 function iconFromAtlas(id){
+ const v5Index=customAtlasV5Ids.indexOf(id);
+ if(v5Index>=0)return '<span class="bc-art-img bc-art-atlas bc-art-atlas-v5" style="background-position-x:'+(v5Index*100/3).toFixed(5)+'%" aria-hidden="true"></span>';
  const v4Index=customAtlasV4Ids.indexOf(id);
  if(v4Index>=0)return '<span class="bc-art-img bc-art-atlas bc-art-atlas-v4" style="background-position-x:'+(v4Index*100/6).toFixed(5)+'%" aria-hidden="true"></span>';
  const index=customAtlasIds.indexOf(id);
