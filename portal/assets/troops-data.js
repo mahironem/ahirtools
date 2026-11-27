@@ -519,7 +519,7 @@ window.AHIR_TROOPS = {
           "name": "Toytatın Şimşeği",
           "type": "cavalry",
           "building": "stable",
-          "a": 90,
+          "a": 100,
           "di": 25,
           "dc": 40,
           "v": 19,
@@ -887,7 +887,7 @@ window.AHIR_TROOPS = {
       "units": [
         {
           "id": "natars-0",
-          "name": "Natar Mızrakçısı",
+          "name": "Sipahi",
           "type": "infantry",
           "building": "barracks",
           "a": 20,
@@ -908,7 +908,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "natars-1",
-          "name": "Natar Kılıçlısı",
+          "name": "Kalkan Kıran",
           "type": "infantry",
           "building": "barracks",
           "a": 65,
@@ -950,7 +950,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "natars-3",
-          "name": "Natar Casusu",
+          "name": "Natar Kartalı",
           "type": "scout",
           "building": "barracks",
           "a": 0,
@@ -971,7 +971,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "natars-4",
-          "name": "Natar Atlısı",
+          "name": "Baltalı",
           "type": "infantry",
           "building": "barracks",
           "a": 155,
@@ -1013,7 +1013,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "natars-6",
-          "name": "Natar Koçbaşı",
+          "name": "Savaş Fili",
           "type": "ram",
           "building": "workshop",
           "a": 250,
@@ -1034,7 +1034,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "natars-7",
-          "name": "Natar Mancınığı",
+          "name": "Kurşun Mancınığı",
           "type": "catapult",
           "building": "workshop",
           "a": 60,
@@ -1055,7 +1055,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "natars-8",
-          "name": "Natar Reisi",
+          "name": "Natar Prensi",
           "type": "chief",
           "building": "residence",
           "a": 80,
@@ -1076,7 +1076,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "natars-9",
-          "name": "Natar Göçmeni",
+          "name": "Göçmen",
           "type": "settler",
           "building": "residence",
           "a": 30,
@@ -1272,7 +1272,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "egyptians-8",
-          "name": "Nomark",
+          "name": "Eyalet Başkanı",
           "type": "chief",
           "building": "residence",
           "a": 40,
@@ -1408,7 +1408,7 @@ window.AHIR_TROOPS = {
           "name": "Nişancı",
           "type": "cavalry",
           "building": "stable",
-          "a": 115,
+          "a": 110,
           "di": 80,
           "dc": 70,
           "v": 16,
@@ -1538,7 +1538,7 @@ window.AHIR_TROOPS = {
       "units": [
         {
           "id": "spartans-0",
-          "name": "Hoplit",
+          "name": "Hoplite",
           "type": "infantry",
           "building": "barracks",
           "a": 50,
@@ -1580,7 +1580,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-2",
-          "name": "Kalkanlı",
+          "name": "Shieldsman",
           "type": "infantry",
           "building": "barracks",
           "a": 40,
@@ -1601,7 +1601,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-3",
-          "name": "Çift Bıçaklı Therion",
+          "name": "Twinsteel Therion",
           "type": "infantry",
           "building": "barracks",
           "a": 90,
@@ -1622,7 +1622,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-4",
-          "name": "Elpida Atlısı",
+          "name": "Elpida Rider",
           "type": "cavalry",
           "building": "stable",
           "a": 55,
@@ -1643,7 +1643,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-5",
-          "name": "Korintli Öğütücü",
+          "name": "Corinthian Crusher",
           "type": "cavalry",
           "building": "stable",
           "a": 195,
@@ -1664,7 +1664,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-6",
-          "name": "Koçbaşı",
+          "name": "Ram",
           "type": "ram",
           "building": "workshop",
           "a": 65,
@@ -1685,7 +1685,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-7",
-          "name": "Balista",
+          "name": "Ballista",
           "type": "catapult",
           "building": "workshop",
           "a": 50,
@@ -1706,7 +1706,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-8",
-          "name": "Efor",
+          "name": "Ephor",
           "type": "chief",
           "building": "residence",
           "a": 40,
@@ -1723,7 +1723,7 @@ window.AHIR_TROOPS = {
         },
         {
           "id": "spartans-9",
-          "name": "Göçmen",
+          "name": "Settler",
           "type": "settler",
           "building": "residence",
           "a": 10,
