@@ -79,6 +79,7 @@
   function pageContent(){
     if(page.id === "p-tablolar-binalar") return '<div id="build-calculator"></div>';
     if(page.id === "p-tablolar-askerler") return '<div id="troops-calculator"></div>';
+    if(page.id === "p-tablolar-saatlik-uretim") return '<div id="hourly-production"></div>';
     if(page.kind === "home") return homeContent();
     if(page.kind === "section"){
       const s=data.sections.find(x=>x.path===page.path);

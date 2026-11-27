@@ -448,11 +448,11 @@ window.AHIR_PORTAL = {
           "status": "available"
         },
         {
-          "id": "p-tablolar-demirci",
-          "path": "/portal/tablolar/demirci/",
-          "title": "Demirci Geliştirmeleri",
-          "icon": "hammer",
-          "status": "planned"
+          "id": "p-tablolar-saatlik-uretim",
+          "path": "/portal/tablolar/saatlik-uretim/",
+          "title": "Saatlik Üretim",
+          "icon": "chart-column-increasing",
+          "status": "available"
         },
         {
           "id": "p-tablolar-tilsimlar",
@@ -1186,13 +1186,13 @@ window.AHIR_PORTAL = {
       "section": "Tablolar"
     },
     {
-      "id": "p-tablolar-demirci",
-      "path": "/portal/tablolar/demirci/",
-      "title": "Demirci Geliştirmeleri",
-      "description": "Ekipman geliştirmelerinin etkileri.",
-      "icon": "hammer",
+      "id": "p-tablolar-saatlik-uretim",
+      "path": "/portal/tablolar/saatlik-uretim/",
+      "title": "Saatlik Üretim",
+      "description": "Hammadde alanlarının seviyeye ve sunucu hızına göre saatlik üretimi.",
+      "icon": "chart-column-increasing",
       "kind": "page",
-      "status": "planned",
+      "status": "available",
       "section": "Tablolar"
     },
     {
