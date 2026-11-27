@@ -10,7 +10,18 @@ const nf=new Intl.NumberFormat("tr-TR");
 const n=v=>nf.format(Math.round(v||0));
 const fixed=v=>Number(v||0).toLocaleString("tr-TR",{minimumFractionDigits:1,maximumFractionDigits:1});
 const esc=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const icons={infantry:"⚔️",cavalry:"🐎",scout:"🔍",ram:"🔨",catapult:"💣",chief:"👑",settler:"🏘️"};
+// Familiar, minimal unit silhouettes in their original tribe-specific colours.
+// The 10-column × 9-row atlas follows the order of units in troops-data.js.
+const unitIconTribes=["romans","teutons","gauls","nature","natars","egyptians","huns","spartans","vikings"];
+function unitIconHTML(u){
+ const tribeId=u.id.replace(/-\d+$/,"");
+ const unitIndex=Number(u.id.match(/-(\d+)$/)?.[1]);
+ const row=unitIconTribes.indexOf(tribeId);
+ if(row<0||!Number.isInteger(unitIndex)||unitIndex<0||unitIndex>9)return '<span class="tc-unit-icon" aria-hidden="true">⚔️</span>';
+ const x=(unitIndex*100/9).toFixed(5);
+ const y=(row*100/8).toFixed(5);
+ return '<span class="tc-unit-icon tc-unit-pixel" style="background-position:'+x+'% '+y+'%" aria-hidden="true"></span>';
+}
 const typeNames={infantry:"Piyade",cavalry:"Süvari",scout:"Casus",ram:"Koçbaşı",catapult:"Mancınık",chief:"Reis / Yönetici",settler:"Göçmen"};
 const speedFactor={1:1,2:2,3:2,5:2,10:4};
 const qs=new URL(location.href).searchParams;
@@ -133,7 +144,7 @@ function drawUnits(){
  $("tc-rows").innerHTML=t.units.map(u=>{
   const stat=combat(u),cost=unitCost(u),time=trainingTime(u);
   return '<tr data-unit="'+u.id+'" class="'+(u.id===state.selected?"selected":"")+'" tabindex="0" role="button" aria-label="'+esc(u.name)+" — geliştirme detaylarını aç"+'">'+
-   '<td><div class="tc-unit-cell"><span class="tc-unit-icon" aria-hidden="true">'+(icons[u.type]||"⚔️")+'</span><span><strong>'+esc(u.name)+'</strong><small>'+esc(typeNames[u.type]||"Birim")+'</small></span></div></td>'+
+   '<td><div class="tc-unit-cell">'+unitIconHTML(u)+'<span><strong>'+esc(u.name)+'</strong><small>'+esc(typeNames[u.type]||"Birim")+'</small></span></div></td>'+
    '<td class="tc-power">'+fixed(stat.a)+'</td><td>'+fixed(stat.di)+'</td><td>'+fixed(stat.dc)+'</td>'+
    '<td class="tc-speed">'+n(movement(u))+'</td><td>'+n(u.p)+'</td>'+
    [0,1,2,3].map(i=>'<td>'+(cost?n(cost[i]):"—")+'</td>').join("")+
@@ -143,7 +154,7 @@ function drawUnits(){
 }
 function drawDetail(){
  const u=chosen(),stat=combat(u),base=combat(u,0);
- $("tc-selected-title").textContent=u.name+" • "+tribe().name;
+ $("tc-selected-title").innerHTML=unitIconHTML(u)+'<span>'+esc(u.name)+" • "+esc(tribe().name)+'</span>';
  $("tc-selected-note").textContent=trainingType(u)+" · "+(u.trainable?"Eğitim süresi: "+timeFormat(trainingTime(u)):"Doğa/Natar birimi; eğitim süresi uygulanmaz.")+
    " · Baz hareket: "+u.v+" alan/saat"+(smithyEligible(u)?"":" · Demirci geliştirilemez");
  const statBoxes=[["⚔","Saldırı",stat.a],["🛡","Piyadeye savunma",stat.di],["🛡","Süvariye savunma",stat.dc]];
