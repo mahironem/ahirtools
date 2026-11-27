@@ -162,6 +162,9 @@ function resourceIcon(kind){
  const src=kind==="total"?"/portal/assets/metric-icons/total-resources-v1.webp":"/portal/assets/resources/"+kind+"-v2.webp";
  return '<img class="tc-resource-icon" src="'+src+'" alt="" aria-hidden="true" width="20" height="20">';
 }
+function combatIcon(kind){
+ return '<img class="tc-resource-icon tc-combat-icon" src="/portal/assets/metric-icons/'+kind+'-v1.webp" alt="" aria-hidden="true" width="20" height="20">';
+}
 function clockIcon(){
  return '<img class="tc-resource-icon tc-clock-icon" src="/portal/assets/metric-icons/clock-v1.webp" alt="" aria-hidden="true" width="20" height="20">';
 }
@@ -170,15 +173,15 @@ function buildShell(){
  '<div class="tc-tribe-tabs" id="tc-tribes" role="group" aria-label="Kabile seçimi"></div>'+
  '<label class="tc-speed-select"><span>Sunucu</span><select id="tc-speed" data-key="speed" aria-label="Sunucu hızı"></select></label></div>'+
  '<div class="tc-table-wrap"><table class="tc-table"><thead><tr>'+
- '<th>Birim / Tür</th><th title="Demirci ve metalürji bonuslu saldırı gücü">⚔ Saldırı</th>'+
- '<th title="Piyadeye karşı savunma">🛡 Piyade</th><th title="Süvariye karşı savunma">🛡 Süvari</th>'+
- '<th title="Sunucu hızı ve Titan Çizmesi etkisiyle hareket hızı, alan/saat">👟 Hız</th><th title="Birimin taşıma kapasitesi">🎒 Taşıma</th>'+
+ '<th>Birim / Tür</th><th title="Demirci ve metalürji bonuslu saldırı gücü">'+combatIcon("attack")+' Saldırı</th>'+
+ '<th title="Piyadeye karşı savunma">'+combatIcon("infantry-defense")+' Piyade</th><th title="Süvariye karşı savunma">'+combatIcon("cavalry-defense")+' Süvari</th>'+
+ '<th title="Sunucu hızı ve Titan Çizmesi etkisiyle hareket hızı, alan/saat">'+combatIcon("speed")+' Hız</th><th title="Birimin taşıma kapasitesi">'+combatIcon("capacity")+' Taşıma</th>'+
  '<th>'+resourceIcon("wood")+' Odun</th><th>'+resourceIcon("clay")+' Tuğla</th><th>'+resourceIcon("iron")+' Demir</th><th>'+resourceIcon("crop")+' Tahıl</th>'+
  '<th>'+resourceIcon("total")+' Toplam</th><th title="Saatlik tahıl tüketimi">'+resourceIcon("crop")+'/sa</th><th title="Kayıtlı eğitim bonuslarına göre eğitim süresi">'+clockIcon()+' Eğitim</th>'+
  '</tr></thead><tbody id="tc-rows"></tbody></table></div>'+
  '<section class="tc-control-sections" aria-label="Asker hesaplama ayarları">'+
  '<div class="tc-control-group"><div class="tc-control-title">'+clockIcon()+' Asker Eğitim Hızı</div><div class="tc-control-items" id="tc-training-controls"></div></div>'+
- '<div class="tc-control-group"><div class="tc-control-title">🛡 Demirci ve Zırh</div><div class="tc-control-items" id="tc-armor-controls"></div></div>'+
+ '<div class="tc-control-group"><div class="tc-control-title">'+combatIcon("infantry-defense")+' Demirci ve Zırh</div><div class="tc-control-items" id="tc-armor-controls"></div></div>'+
  '<div class="tc-control-group"><div class="tc-control-title">⚡ Tılsım Etkileri</div><div class="tc-control-items" id="tc-artifact-controls"></div></div>'+
  '</section>'+
  '<section class="tc-detail"><div class="tc-detail-top"><div><span class="tc-eyebrow">ZIRH DÖKÜMHANESİ • ASKER GELİŞTİRMELERİ</span>'+
@@ -189,7 +192,7 @@ function buildShell(){
  '<div class="tc-plan-summary" id="tc-upgrade-summary"></div>'+
  '<div class="tc-smithy-wrap"><table class="tc-smithy-table"><thead><tr><th>Seviye</th>'+
  '<th>'+resourceIcon("wood")+' Odun</th><th>'+resourceIcon("clay")+' Tuğla</th><th>'+resourceIcon("iron")+' Demir</th><th>'+resourceIcon("crop")+' Tahıl</th><th>'+resourceIcon("total")+' Toplam</th><th>'+clockIcon()+' Geliştirme</th>'+
- '<th>⚔ Saldırı</th><th>🛡 Piyade</th><th>🛡 Süvari</th><th>Durum</th></tr></thead>'+
+ '<th>'+combatIcon("attack")+' Saldırı</th><th>'+combatIcon("infantry-defense")+' Piyade</th><th>'+combatIcon("cavalry-defense")+' Süvari</th><th>Durum</th></tr></thead>'+
  '<tbody id="tc-smithy-rows"></tbody><tfoot id="tc-upgrade-total"></tfoot></table></div></div>'+
  '<div class="tc-building-plan"><div class="tc-control-title">Zırh Dökümhanesi bina yükseltmesi</div><div class="tc-upgrade-toolbar" id="tc-building-controls"></div>'+
  '<p class="tc-plan-hint" id="tc-building-hint"></p><div class="tc-plan-summary" id="tc-building-summary"></div>'+
@@ -244,7 +247,7 @@ function drawDetail(){
  $("tc-selected-title").innerHTML=unitIconHTML(u)+'<span>'+esc(u.name)+" • "+esc(tribe().name)+'</span>';
  $("tc-selected-note").textContent=trainingType(u)+" · "+(u.trainable?"Eğitim süresi: "+timeFormat(trainingTime(u)):"Doğa/Natar birimi; eğitim süresi uygulanmaz.")+
    " · Baz hareket: "+u.v+" alan/saat"+(smithyEligible(u)?"":" · Demirci geliştirilemez");
- const statBoxes=[["⚔","Saldırı",stat.a],["🛡","Piyadeye savunma",stat.di],["🛡","Süvariye savunma",stat.dc]];
+ const statBoxes=[[combatIcon("attack"),"Saldırı",stat.a],[combatIcon("infantry-defense"),"Piyadeye savunma",stat.di],[combatIcon("cavalry-defense"),"Süvariye savunma",stat.dc]];
  $("tc-selected-stats").innerHTML=statBoxes.map(([i,label,value])=>'<div><small>'+i+" "+label+'</small><strong>'+fixed(value)+'</strong></div>').join("");
  drawUpgradePlan(u);
  drawBuildingPlan();

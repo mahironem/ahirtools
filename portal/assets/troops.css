@@ -296,3 +296,7 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
 @media(max-width:700px){
  .tc-table thead th,.tc-smithy-table thead th{font-size:12px}
 }
+
+/* Dedicated combat stat artwork, aligned with the resource and time icons. */
+.tc-combat-icon{object-fit:contain;vertical-align:middle}
+.tc-selected-stats .tc-combat-icon{width:18px;height:18px}
