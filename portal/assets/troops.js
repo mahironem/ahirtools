@@ -20,7 +20,9 @@ function unitIconHTML(u){
  if(row<0||!Number.isInteger(unitIndex)||unitIndex<0||unitIndex>9)return '<span class="tc-unit-icon" aria-hidden="true">⚔️</span>';
  if(tribeId!=="natars"){
    // Individually cropped icon: no neighbouring sprite pixels can appear.
-   return '<img class="tc-unit-icon tc-unit-image" src="/portal/assets/troop-icons-v2/'+tribeId+'-'+unitIndex+'.webp" width="34" height="34" alt="" aria-hidden="true" draggable="false">';
+   // The Cermen icons now use the correct troop artwork; refresh only those cached images.
+   const iconVersion=tribeId==="teutons"?"?v=correct-teutons-v4":"";
+   return '<img class="tc-unit-icon tc-unit-image" src="/portal/assets/troop-icons-v2/'+tribeId+'-'+unitIndex+'.webp'+iconVersion+'" width="34" height="34" alt="" aria-hidden="true" draggable="false">';
  }
  // Keep Natars on their already-correct original icon atlas.
  const x=(unitIndex*100/9).toFixed(5);
