@@ -50,6 +50,7 @@ const state={
  helmCav:allowedNum("hc",[0,10,15,20],0),
  allianceTrain:allowedNum("at",[0,2,4,6,8,10],0),
  allianceMetal:allowedNum("am",[0,2,4,6,8,10],0),
+ brewery:allowedNum("brew",levels,0),
  trainer:allowedNum("art",[1,.75,.5],1),
  titan:allowedNum("titan",[1,1.5,2],1),
  trough:allowedNum("hdt",levels,0),
@@ -89,7 +90,9 @@ function combat(unit,level=state.smithy){
  const eligible=smithyEligible(unit);
  const multiplier=unit.trainable?1+state.allianceMetal/100:1;
  const actualLevel=eligible?level:0;
- return {a:smithyPoints(unit.a,unit.u,actualLevel)*multiplier,
+ // An active Brewery celebration adds 1% attack per level, for this Teuton-only preview.
+ const breweryMultiplier=state.tribe==="teutons"&&unit.id.startsWith("teutons-")?1+state.brewery/100:1;
+ return {a:smithyPoints(unit.a,unit.u,actualLevel)*multiplier*breweryMultiplier,
          di:smithyPoints(unit.di,unit.u,actualLevel)*multiplier,
          dc:smithyPoints(unit.dc,unit.u,actualLevel)*multiplier};
 }
@@ -175,7 +178,7 @@ function buildShell(){
  '<div class="tc-tribe-tabs" id="tc-tribes" role="group" aria-label="Kabile seçimi"></div>'+
  '<label class="tc-speed-select"><span>Sunucu</span><select id="tc-speed" data-key="speed" aria-label="Sunucu hızı"></select></label></div>'+
  '<div class="tc-table-wrap"><table class="tc-table"><thead><tr>'+
- '<th>Birim / Tür</th><th title="Demirci ve metalürji bonuslu saldırı gücü">'+combatIcon("attack")+' Saldırı</th>'+
+ '<th>Birim / Tür</th><th title="Demirci, metalürji ve aktif İçecek Fabrikası bonuslu saldırı gücü">'+combatIcon("attack")+' Saldırı</th>'+
  '<th title="Piyadeye karşı savunma">'+combatIcon("infantry-defense")+' Piyade</th><th title="Süvariye karşı savunma">'+combatIcon("cavalry-defense")+' Süvari</th>'+
  '<th title="Sunucu hızı ve Titan Çizmesi etkisiyle hareket hızı, alan/saat">'+combatIcon("speed")+' Hız</th><th title="Birimin taşıma kapasitesi">'+combatIcon("capacity")+' Taşıma</th>'+
  '<th>'+resourceIcon("wood")+' Odun</th><th>'+resourceIcon("clay")+' Tuğla</th><th>'+resourceIcon("iron")+' Demir</th><th>'+resourceIcon("crop")+' Tahıl</th>'+
@@ -224,7 +227,8 @@ function drawControls(){
    (t.id==="romans"?selectCard("Yalak","trough",levels.map(v=>[v,v?"Seviye "+v:"Yok"])):"");
  $("tc-armor-controls").innerHTML=
    selectCard("Asker zırh seviyesi","smithy",levels.map(v=>[v,"Seviye "+v]))+
-   selectCard("Metalürji bonusu","allianceMetal",bonus);
+   selectCard("Metalürji bonusu","allianceMetal",bonus)+
+   (t.id==="teutons"?selectCard("İçecek Fabrikası","brewery",levels.map(v=>[v,v?"Seviye "+v+" (+%"+v+")":"Yok / festival kapalı"]),"Festival aktifken yalnızca saldırıya etki eder."):"");
  $("tc-artifact-controls").innerHTML=
    selectCard("Asker Eğitme Tılsımı","trainer",artifact)+
    selectCard("Titan Çizmesi Tılsımı","titan",titanArtifact);
@@ -301,7 +305,7 @@ function drawBuildingPlan(){
 }
 function syncUrl(){
  const p=new URLSearchParams();
- for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["sb",state.smithyBuilding],["uf",state.upgradeFrom],["ut",state.upgradeTo],["bt",state.buildingTarget],["mb",state.mainBuilding],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["art",state.trainer],["titan",state.titan],["hdt",state.trough],["unit",state.selected]])p.set(key,String(v));
+ for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["sb",state.smithyBuilding],["uf",state.upgradeFrom],["ut",state.upgradeTo],["bt",state.buildingTarget],["mb",state.mainBuilding],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["brew",state.brewery],["art",state.trainer],["titan",state.titan],["hdt",state.trough],["unit",state.selected]])p.set(key,String(v));
  history.replaceState(null,"",location.pathname+"?"+p.toString());
 }
 function render(){
