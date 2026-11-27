@@ -44,6 +44,9 @@ const state={
  allianceTrain:allowedNum("at",[0,2,4,6,8,10],0),
  allianceMetal:allowedNum("am",[0,2,4,6,8,10],0),
  trainer:allowedNum("art",[1,.75,.5],1),
+ trough:allowedNum("hdt",levels,0),
+ academy:allowedNum("academy",levels.slice(1),1),
+ admin:qs.get("admin")==="palace"?"palace":qs.get("admin")==="command"?"command":"residence",
  selected:null
 };
 state.selected=(tribes.find(t=>t.id===state.tribe).units.some(u=>u.id===qs.get("unit"))?qs.get("unit"):tribes.find(t=>t.id===state.tribe).units[0].id);
@@ -69,7 +72,7 @@ function smithyEligible(unit){
 }
 function combat(unit,level=state.smithy){
  const eligible=smithyEligible(unit);
- const multiplier=eligible?1+state.allianceMetal/100:1;
+ const multiplier=unit.trainable?1+state.allianceMetal/100:1;
  const actualLevel=eligible?level:0;
  return {a:smithyPoints(unit.a,unit.u,actualLevel)*multiplier,
          di:smithyPoints(unit.di,unit.u,actualLevel)*multiplier,
@@ -82,18 +85,37 @@ function trainingTime(unit){
  const isP=unit.building==="barracks",isC=unit.building==="stable";
  if(isP)time*=1-state.helmInf/100;
  if(isC)time*=1-state.helmCav/100;
- if(isP||isC||unit.building==="workshop"){
-   // Recruitment bonus reduces duration: 10% => multiply by 0.90.
-   time*=1-state.allianceTrain/100;
-   time*=state.trainer;
- }
+ // Recruitment and training artefacts apply to troop production, including expansion units.
+ time*=1-state.allianceTrain/100;
+ time*=state.trainer;
+ if(isC&&unit.id.startsWith("romans-"))time*=1-state.trough/100;
  return time;
 }
 function unitCost(unit){return unit.trainable&&Array.isArray(unit.c)?unit.c:null;}
 function totalCost(unit){const c=unitCost(unit);return c?c.reduce((s,v)=>s+v,0):(unit.totalKnown||null)}
 function movement(unit){return unit.v*speedFactor[state.speed]}
+function upkeep(unit){
+ const threshold={"romans-3":10,"romans-4":15,"romans-5":20}[unit.id];
+ return unit.u-(threshold&&state.trough>=threshold?1:0);
+}
 function trainingType(unit){
- return {barracks:"Kışla",stable:"Ahır",workshop:"Tamirhane",residence:"Köşk / Saray"}[unit.building]||"—";
+ if(unit.building==="residence")return state.admin==="palace"?"Saray":state.admin==="command"&&tribe().id==="huns"?"Komuta Merkezi":"Köşk";
+ return {barracks:"Kışla",stable:"Ahır",workshop:"Tamirhane"}[unit.building]||"—";
+}
+function requirementsText(unit){
+ if(!unit.trainable)return "Eğitilemez";
+ if(!unit.requirements)return "Araştırma gereksinimleri doğrulanmadı";
+ const names={academy:"Akademi",smithy:"Dökümhane",stable:"Ahır",barracks:"Kışla",workshop:"Tamirhane",main:"Merkez Bina",rally:"Askerî Üs",expansion:trainingType(unit)};
+ const items=Object.entries(unit.requirements).map(([k,v])=>(names[k]||k)+" "+v);
+ if(unit.type==="chief")items.push(trainingType(unit)+" 10 ve boş genişleme yuvası");
+ if(unit.type==="settler")items.push("Boş genişleme yuvası");
+ return items.join(" · ")||"Akademi araştırması gerekmez";
+}
+function researchText(unit){
+ if(!unit.trainable)return "—";
+ if(unit.researchTime===0)return "Araştırma gerekmez";
+ if(!Number.isFinite(unit.researchTime))return "Doğrulanmadı";
+ return timeFormat(unit.researchTime*Math.pow(.9,state.academy-1)/state.speed);
 }
 function buildShell(){
  root.innerHTML='<div class="tc-topline"><span class="tc-version">⚔ T4.6 Asker İstatistikleri</span>'+
@@ -118,7 +140,7 @@ function buildShell(){
  '<th>⚔ Saldırı</th><th>🛡 Piyade savunması</th><th>🛡 Süvari savunması</th><th>Artış / Durum</th></tr></thead>'+
  '<tbody id="tc-smithy-rows"></tbody></table></div>'+
  '<div class="tc-source-note"><span>ℹ️ Demirci tablosu savaş değerlerini gösterir; demirci araştırmasının kaynak/süre maliyetleri bu sürümde hesaplanmaz.</span>'+
- '<span id="tc-data-scope"></span></div></section>'+
+ '<span id="tc-data-scope"></span></div><div class="tc-source-note" id="tc-research-info"></div></section>'+
  '<div class="tc-bottom"><div class="tc-links"><a href="https://support.travian.com/en/articles/20-game-versions-and-speed" target="_blank" rel="noopener noreferrer">Resmî sunucu hızları ↗</a>'+
  '<a href="https://support.travian.com/en/articles/40-troop-upgrades-and-smithy" target="_blank" rel="noopener noreferrer">Demirci kuralları ↗</a>'+
  '<a href="https://github.com/kirilloid/travian" target="_blank" rel="noopener noreferrer">Kirilloid veri modeli ↗</a></div>'+
@@ -137,7 +159,10 @@ function drawControls(){
    selectCard("Eğitim binası","training",levels.slice(1).map(v=>[v,"Seviye "+v]))+
    selectCard("Piyade miğferi","helmInf",helmInf)+
    selectCard("Süvari miğferi","helmCav",helmCav)+
-   selectCard("Birlik eğitim bonusu","allianceTrain",bonus);
+   selectCard("Birlik eğitim bonusu","allianceTrain",bonus)+
+   selectCard("Akademi seviyesi","academy",levels.slice(1).map(v=>[v,"Seviye "+v]))+
+   (t.playable?selectCard("Yönetim binası","admin",[["residence","Köşk"],["palace","Saray"],...(t.id==="huns"?[["command","Komuta Merkezi"]]:[])],"Reis ve göçmen"):"")+
+   (t.id==="romans"?selectCard("At İçme Yalağı","trough",levels.map(v=>[v,v?"Seviye "+v:"Yok"])):"");
  $("tc-armor-controls").innerHTML=
    selectCard("Demirci seviyesi","smithy",levels.map(v=>[v,"Seviye "+v]))+
    selectCard("Metalürji bonusu","allianceMetal",bonus);
@@ -156,7 +181,7 @@ function drawUnits(){
    '<td class="tc-speed">'+n(movement(u))+'</td><td>'+n(u.p)+'</td>'+
    [0,1,2,3].map(i=>'<td>'+(cost?n(cost[i]):"—")+'</td>').join("")+
    '<td class="tc-cost">'+(totalCost(u)!=null?n(totalCost(u)):"—")+'</td>'+
-   '<td>'+n(u.u)+'</td><td class="tc-time">'+(time!==null?timeFormat(time):"—")+'</td></tr>';
+   '<td>'+n(upkeep(u))+'</td><td class="tc-time">'+(time!==null?timeFormat(time):"—")+'</td></tr>';
  }).join("");
 }
 function drawDetail(){
@@ -174,11 +199,12 @@ function drawDetail(){
      '<td>'+fixed(points.a)+'</td><td>'+fixed(points.di)+'</td><td>'+fixed(points.dc)+'</td>'+
      '<td>'+ (!smithyEligible(u)?"Geliştirme uygulanmaz":l===0?"Temel seviye":active?"✓ Seçili seviye":"Seviye "+l)+'</td></tr>';
  }).join("");
+ $("tc-research-info").textContent="Gereksinimler: "+requirementsText(u)+" | Akademi araştırma süresi (eski model): "+researchText(u)+" | Araştırma maliyetleri: doğrulanmadı.";
  $("tc-data-scope").textContent=u.source==="npc"?"Eğitilemeyen NPC birimi":u.source==="official/community"||u.source==="mixed-official-community"?"Karma kaynak verisi; bazı değerler eksik olabilir":u.source==="travian-official"?"Travian resmî Viking verisi":"Kirilloid T4.6 modelinden";
 }
 function syncUrl(){
  const p=new URLSearchParams();
- for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["art",state.trainer],["unit",state.selected]])p.set(key,String(v));
+ for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["art",state.trainer],["hdt",state.trough],["academy",state.academy],["admin",state.admin],["unit",state.selected]])p.set(key,String(v));
  history.replaceState(null,"",location.pathname+"?"+p.toString());
 }
 function render(){
@@ -188,12 +214,12 @@ buildShell();
 root.addEventListener("change",e=>{
  const el=e.target.closest("select[data-key]");if(!el)return;
  const key=el.dataset.key;
- state[key]=Number(el.value);
+ state[key]=key==="admin"?el.value:Number(el.value);
  render();
 });
 root.addEventListener("click",e=>{
  const tab=e.target.closest("[data-tribe]");
- if(tab){state.tribe=tab.dataset.tribe;state.selected=tribe().units[0].id;render();return;}
+ if(tab){state.tribe=tab.dataset.tribe;if(state.tribe!=="huns"&&state.admin==="command")state.admin="residence";state.selected=tribe().units[0].id;render();return;}
  const unit=e.target.closest("tr[data-unit]");
  if(unit){state.selected=unit.dataset.unit;render();return;}
  const sm=e.target.closest("tr[data-smithy]");
