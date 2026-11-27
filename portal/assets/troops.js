@@ -18,11 +18,14 @@ function unitIconHTML(u){
  const unitIndex=Number(u.id.match(/-(\d+)$/)?.[1]);
  const row=unitIconTribes.indexOf(tribeId);
  if(row<0||!Number.isInteger(unitIndex)||unitIndex<0||unitIndex>9)return '<span class="tc-unit-icon" aria-hidden="true">⚔️</span>';
+ if(tribeId!=="natars"){
+   // Individually cropped icon: no neighbouring sprite pixels can appear.
+   return '<img class="tc-unit-icon tc-unit-image" src="/portal/assets/troop-icons-v2/'+tribeId+'-'+unitIndex+'.webp" width="34" height="34" alt="" aria-hidden="true" draggable="false">';
+ }
+ // Keep Natars on their already-correct original icon atlas.
  const x=(unitIndex*100/9).toFixed(5);
  const y=(row*100/8).toFixed(5);
- // Keep the already-correct Natar graphics on their original atlas.
- const iconClass=tribeId==="natars"?" tc-unit-natar":"";
- return '<span class="tc-unit-icon tc-unit-pixel'+iconClass+'" style="background-position:'+x+'% '+y+'%" aria-hidden="true"></span>';
+ return '<span class="tc-unit-icon tc-unit-pixel tc-unit-natar" style="background-position:'+x+'% '+y+'%" aria-hidden="true"></span>';
 }
 const typeNames={infantry:"Piyade",cavalry:"Süvari",scout:"Casus",ram:"Koçbaşı",catapult:"Mancınık",chief:"Reis / Yönetici",settler:"Göçmen"};
 const speedFactor={1:1,2:2,3:2,5:2,10:4};
