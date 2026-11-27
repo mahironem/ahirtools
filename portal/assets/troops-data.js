@@ -2,14 +2,16 @@
    Kirilloid'in kullanıcı arayüzü veya oyun görselleri kopyalanmamıştır. */
 window.AHIR_TROOPS = {
   "version": "T4.6",
-  "updated": "2026-11-24",
-  "note": "İlk yedi kabilenin temel istatistikleri Kirilloid t4/t4.fs sayısal modelinden; Vikingler Travian Legends resmî 2026 tablosundan; Spartalılar resmî kıyaslama ve topluluk maliyet tablolarından derlendi. Özel sunucu denge değişiklikleri olabilir. Spartalı Efor ve Göçmenin dört kaynak kırılımı doğrulanamadığından boş bırakıldı.",
+  "updated": "2026-11-27",
+  "note": "İlk yedi kabilenin temel istatistikleri Kirilloid t4/t4.fs sayısal modelinden; Vikingler Travian Legends resmî 2026 tablosundan; Spartalılar resmî kıyaslama ve topluluk maliyet tablolarından derlendi. Özel sunucu denge değişiklikleri olabilir. Spartalı Ephor ve Settler kaynak dağılımları Siegewise topluluk tablosundan alınmıştır. Akademi gereksinimleri ve baz araştırma süreleri Kirilloid eski modeline dayanır.",
   "sourceLinks": [
     "https://github.com/kirilloid/travian/tree/master/src/model",
     "https://support.travian.com/en/articles/20-game-versions-and-speed",
     "https://support.travian.com/en/articles/139-vikings-in-travian-legends",
     "https://support.travian.com/en/articles/187-infantry-and-cavalry-units-comparison-table",
-    "https://www.pilotrav.com/blog/travian-troop-costs-and-crop-upkeep"
+    "https://www.pilotrav.com/blog/travian-troop-costs-and-crop-upkeep",
+    "https://siegewise.com/en/travian/units/spartans",
+    "https://support.travian.com/en/articles/187-infantry-and-cavalry-units-comparison-table"
   ],
   "tribes": [
     {
@@ -36,7 +38,9 @@ window.AHIR_TROOPS = {
           ],
           "t": 1600,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {},
+          "researchTime": 0
         },
         {
           "id": "romans-1",
@@ -57,7 +61,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1760,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 1,
+            "smithy": 1
+          },
+          "researchTime": 7080
         },
         {
           "id": "romans-2",
@@ -78,7 +87,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1920,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "smithy": 1
+          },
+          "researchTime": 7560
         },
         {
           "id": "romans-3",
@@ -99,7 +113,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1360,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 1,
+            "stable": 1
+          },
+          "researchTime": 5880
         },
         {
           "id": "romans-4",
@@ -120,7 +139,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2640,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 5
+          },
+          "researchTime": 9720
         },
         {
           "id": "romans-5",
@@ -141,7 +165,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 3520,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 10
+          },
+          "researchTime": 12360
         },
         {
           "id": "romans-6",
@@ -162,7 +191,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 4600,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 10,
+            "workshop": 1
+          },
+          "researchTime": 15600
         },
         {
           "id": "romans-7",
@@ -183,7 +217,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 9000,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "workshop": 10
+          },
+          "researchTime": 28800
         },
         {
           "id": "romans-8",
@@ -204,7 +243,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 90700,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 20,
+            "rally": 10
+          },
+          "researchTime": 24475
         },
         {
           "id": "romans-9",
@@ -225,7 +269,11 @@ window.AHIR_TROOPS = {
           ],
           "t": 26900,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "expansion": 10
+          },
+          "researchTime": 0
         }
       ]
     },
@@ -253,7 +301,9 @@ window.AHIR_TROOPS = {
           ],
           "t": 720,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {},
+          "researchTime": 0
         },
         {
           "id": "teutons-1",
@@ -274,7 +324,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1120,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 1,
+            "barracks": 3
+          },
+          "researchTime": 5160
         },
         {
           "id": "teutons-2",
@@ -295,7 +350,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1200,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 3,
+            "smithy": 1
+          },
+          "researchTime": 5400
         },
         {
           "id": "teutons-3",
@@ -316,7 +376,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1120,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 1,
+            "main": 5
+          },
+          "researchTime": 5160
         },
         {
           "id": "teutons-4",
@@ -337,7 +402,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2400,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 3
+          },
+          "researchTime": 9000
         },
         {
           "id": "teutons-5",
@@ -358,7 +428,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2960,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "stable": 10
+          },
+          "researchTime": 10680
         },
         {
           "id": "teutons-6",
@@ -379,7 +454,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 4200,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 10,
+            "workshop": 1
+          },
+          "researchTime": 14400
         },
         {
           "id": "teutons-7",
@@ -400,7 +480,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 9000,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "workshop": 10
+          },
+          "researchTime": 28800
         },
         {
           "id": "teutons-8",
@@ -421,7 +506,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 70500,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 20,
+            "rally": 5
+          },
+          "researchTime": 19425
         },
         {
           "id": "teutons-9",
@@ -442,7 +532,11 @@ window.AHIR_TROOPS = {
           ],
           "t": 31000,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "expansion": 10
+          },
+          "researchTime": 0
         }
       ]
     },
@@ -470,7 +564,9 @@ window.AHIR_TROOPS = {
           ],
           "t": 1040,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {},
+          "researchTime": 0
         },
         {
           "id": "gauls-1",
@@ -491,7 +587,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1440,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 3,
+            "smithy": 3
+          },
+          "researchTime": 6120
         },
         {
           "id": "gauls-2",
@@ -512,7 +613,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1360,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 1
+          },
+          "researchTime": 5880
         },
         {
           "id": "gauls-3",
@@ -533,7 +639,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2480,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 3
+          },
+          "researchTime": 9240
         },
         {
           "id": "gauls-4",
@@ -554,7 +665,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2560,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 5
+          },
+          "researchTime": 9480
         },
         {
           "id": "gauls-5",
@@ -575,7 +691,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 3120,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "stable": 10
+          },
+          "researchTime": 11160
         },
         {
           "id": "gauls-6",
@@ -596,7 +717,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 5000,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 10,
+            "workshop": 1
+          },
+          "researchTime": 16800
         },
         {
           "id": "gauls-7",
@@ -617,7 +743,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 9000,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "workshop": 10
+          },
+          "researchTime": 28800
         },
         {
           "id": "gauls-8",
@@ -638,7 +769,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 90700,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 20,
+            "rally": 10
+          },
+          "researchTime": 24475
         },
         {
           "id": "gauls-9",
@@ -659,7 +795,11 @@ window.AHIR_TROOPS = {
           ],
           "t": 22700,
           "source": "kirilloid-t4",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "expansion": 10
+          },
+          "researchTime": 0
         }
       ]
     },
@@ -1121,7 +1261,9 @@ window.AHIR_TROOPS = {
           ],
           "t": 530,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {},
+          "researchTime": 0
         },
         {
           "id": "egyptians-1",
@@ -1142,7 +1284,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1320,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 3,
+            "smithy": 1
+          },
+          "researchTime": 5760
         },
         {
           "id": "egyptians-2",
@@ -1163,7 +1310,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1440,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 1
+          },
+          "researchTime": 6120
         },
         {
           "id": "egyptians-3",
@@ -1184,7 +1336,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1360,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 3
+          },
+          "researchTime": 5880
         },
         {
           "id": "egyptians-4",
@@ -1205,7 +1362,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2560,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 5
+          },
+          "researchTime": 9480
         },
         {
           "id": "egyptians-5",
@@ -1226,7 +1388,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 3240,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "stable": 10
+          },
+          "researchTime": 11520
         },
         {
           "id": "egyptians-6",
@@ -1247,7 +1414,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 4800,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 10,
+            "workshop": 1
+          },
+          "researchTime": 16200
         },
         {
           "id": "egyptians-7",
@@ -1268,7 +1440,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 9000,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "workshop": 10
+          },
+          "researchTime": 28800
         },
         {
           "id": "egyptians-8",
@@ -1289,7 +1466,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 90700,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 20,
+            "rally": 10
+          },
+          "researchTime": 24475
         },
         {
           "id": "egyptians-9",
@@ -1310,7 +1492,11 @@ window.AHIR_TROOPS = {
           ],
           "t": 24800,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "expansion": 10
+          },
+          "researchTime": 0
         }
       ]
     },
@@ -1338,7 +1524,9 @@ window.AHIR_TROOPS = {
           ],
           "t": 810,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {},
+          "researchTime": 0
         },
         {
           "id": "huns-1",
@@ -1359,7 +1547,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1120,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 1,
+            "smithy": 1
+          },
+          "researchTime": 5160
         },
         {
           "id": "huns-2",
@@ -1380,7 +1573,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 1360,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "smithy": 1
+          },
+          "researchTime": 5880
         },
         {
           "id": "huns-3",
@@ -1401,7 +1599,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2400,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 1
+          },
+          "researchTime": 9000
         },
         {
           "id": "huns-4",
@@ -1411,7 +1614,7 @@ window.AHIR_TROOPS = {
           "a": 110,
           "di": 80,
           "dc": 70,
-          "v": 16,
+          "v": 15,
           "p": 105,
           "u": 2,
           "c": [
@@ -1422,7 +1625,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2480,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 5
+          },
+          "researchTime": 9240
         },
         {
           "id": "huns-5",
@@ -1443,7 +1651,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 2990,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 5,
+            "stable": 10
+          },
+          "researchTime": 10770
         },
         {
           "id": "huns-6",
@@ -1464,7 +1677,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 4400,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 10,
+            "workshop": 1
+          },
+          "researchTime": 15000
         },
         {
           "id": "huns-7",
@@ -1485,7 +1703,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 9000,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 15,
+            "workshop": 10
+          },
+          "researchTime": 28800
         },
         {
           "id": "huns-8",
@@ -1506,7 +1729,12 @@ window.AHIR_TROOPS = {
           ],
           "t": 90700,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "academy": 20,
+            "rally": 10
+          },
+          "researchTime": 24475
         },
         {
           "id": "huns-9",
@@ -1527,7 +1755,11 @@ window.AHIR_TROOPS = {
           ],
           "t": 28950,
           "source": "kirilloid-t4fs",
-          "trainable": true
+          "trainable": true,
+          "requirements": {
+            "expansion": 10
+          },
+          "researchTime": 0
         }
       ]
     },
@@ -1714,12 +1946,18 @@ window.AHIR_TROOPS = {
           "dc": 40,
           "v": 4,
           "p": 0,
-          "c": null,
+          "c": [
+            33450,
+            30665,
+            36240,
+            13935
+          ],
           "u": 4,
           "t": 28800,
           "source": "mixed-official-community",
           "trainable": true,
-          "totalKnown": 114290
+          "totalKnown": 114290,
+          "costSource": "https://siegewise.com/en/travian/units/spartans"
         },
         {
           "id": "spartans-9",
@@ -1731,12 +1969,18 @@ window.AHIR_TROOPS = {
           "dc": 80,
           "v": 5,
           "p": 3000,
-          "c": null,
+          "c": [
+            5115,
+            5580,
+            6045,
+            3255
+          ],
           "u": 1,
           "t": 34100,
           "source": "mixed-official-community",
           "trainable": true,
-          "totalKnown": 19995
+          "totalKnown": 19995,
+          "costSource": "https://siegewise.com/en/travian/units/spartans"
         }
       ]
     },
