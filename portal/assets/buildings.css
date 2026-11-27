@@ -205,3 +205,10 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 
 /* Fourth supplied-building batch: custom isometric icons, four horizontal tiles. */
 .bc-art-atlas-v5{background-image:url('/portal/assets/building-art-v5/atlas.webp')!important;background-size:400% 100%!important;}
+
+/* Original AhirTools cultural-points and population icons.
+   Accessible label text stays next to the decorative images. */
+.bc-metric-icon{display:inline-block;vertical-align:middle;width:25px;height:25px;object-fit:contain;flex:none}
+.bc-table thead th .bc-metric-icon{vertical-align:-7px;margin-right:3px}
+.bc-mini>span .bc-metric-icon{vertical-align:-7px;margin-right:3px}
+@media(max-width:700px){.bc-metric-icon{width:22px;height:22px}}

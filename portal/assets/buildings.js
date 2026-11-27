@@ -135,6 +135,10 @@ function resourceIcon(index){
  const name=resourceFiles[index];
  return name===undefined?"":'<img class="bc-resource-icon" src="/portal/assets/resources/'+name+'-v2.webp" alt="" aria-hidden="true" width="30" height="30">';
 }
+function metricIcon(kind){
+ const src=kind==="kp"?"kp-v1.webp":kind==="population"?"population-v1.webp":null;
+ return src?'<img class="bc-metric-icon" src="/portal/assets/metric-icons/'+src+'" alt="" aria-hidden="true" width="25" height="25">':"";
+}
 function setup(){
  const root=$("build-calculator");if(!root)return;
  root.innerHTML=
@@ -160,7 +164,7 @@ function setup(){
  '<span class="bc-effect-heading" id="bc-effect-heading"></span></div>'+
  '<div class="bc-table-scroll" id="bc-scroll"><table class="bc-table"><thead><tr>'+
  '<th>Seviye</th><th>'+resourceIcon(0)+' Odun</th><th>'+resourceIcon(1)+' Tuğla</th><th>'+resourceIcon(2)+' Demir</th><th>'+resourceIcon(3)+' Tahıl</th>'+
- '<th>Toplam</th><th>👥 Nüfus</th><th>🏛 KP/gün</th><th title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>⏱ İnşa</th>'+
+ '<th>Toplam</th><th>'+metricIcon("population")+' Nüfus</th><th>'+metricIcon("kp")+' KP/gün</th><th title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>⏱ İnşa</th>'+
  '</tr></thead><tbody id="bc-rows"></tbody><tfoot id="bc-totals"></tfoot></table></div>'+
  '<div class="bc-results"><div class="bc-results-top"><span><strong id="bc-range"></strong> yükseltme toplamı</span></div>'+
  '<div class="bc-mini-metrics" id="bc-summary"></div></div>'+
@@ -329,7 +333,7 @@ function render(){
    [resourceIcon(0),"Odun",int(sums[0])],[resourceIcon(1),"Tuğla",int(sums[1])],
    [resourceIcon(2),"Demir",int(sums[2])],[resourceIcon(3),"Tahıl",int(sums[3])],
    ["📦","Toplam",int(total)],["⏱","Süre",fmt(seconds)],
-   ["🏛","KP/gün artışı","+"+int(cpDiff)],["👥","Ek nüfus","+"+int(pop)]
+   [metricIcon("kp"),"KP/gün artışı","+"+int(cpDiff)],[metricIcon("population"),"Ek nüfus","+"+int(pop)]
  ];
  $("bc-summary").innerHTML=items.map(([ico,label,value],i)=>'<div class="bc-mini'+(i===4?" emphasized":"")+'">'+
    '<span>'+ico+' '+label+'</span><strong>'+esc(value)+'</strong></div>').join("");
