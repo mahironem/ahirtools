@@ -229,3 +229,12 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
  .bc-time-icon{width:22px;height:22px}
  .bc-check .bc-time-icon{width:20px;height:20px;margin-left:3px}
 }
+
+/* Extra wall-specific effect column, without changing any other building's table. */
+.bc-table.bc-wall-table{min-width:890px}
+.bc-wall-table th,.bc-wall-table td{padding-left:7px;padding-right:7px}
+.bc-wall-table thead th:nth-last-child(3),
+.bc-wall-table thead th:nth-last-child(2){white-space:nowrap}
+.bc-wall-points{font-weight:800;color:var(--text)}
+.bc-wall-bonus{font-weight:800;color:var(--accent)}
+@media(max-width:700px){.bc-table.bc-wall-table{min-width:890px}}

@@ -66,6 +66,19 @@ function requirementHtml(b){
    (reqs.length?reqs.map(x=>'<span class="bc-req-badge '+(x.blocked?'blocked':'')+'">'+esc(x.label)+'</span>').join(" "):
     '<span class="bc-req-none">Yok</span>');
 }
+// Travian Legends official Walls and Rams data: base defence points per level
+// and a compound bonus applied to stationed defenders.
+const wallDefenseStats=Object.freeze({
+ wall:{points:10,bonus:.03},        // Roma Suru
+ palisade:{points:8,bonus:.025},   // Galya Çiti
+ earthwall:{points:6,bonus:.02},   // Cermen Toprak Siperi
+ makeshiftwall:{points:6,bonus:.015}, // Hun Eğreti Suru
+ stonewall:{points:8,bonus:.025}   // Mısır Taş Suru
+});
+function wallEffectAt(b,level){
+ const cfg=wallDefenseStats[b.id];
+ return cfg?{points:cfg.points*level,bonus:(Math.pow(1+cfg.bonus,level)-1)*100}:null;
+}
 function effectAt(b,lvl){
  const [kind,label]=buildingEffects[b.id]||["level","Bina seviyesi"];
  const production=[2,5,9,15,22,33,50,70,100,145,200,280,375,495,635,800,1000,1300,1600,2000,2450,3050,3750];
@@ -171,7 +184,7 @@ function setup(){
  '<span class="bc-effect-heading" id="bc-effect-heading"></span></div>'+
  '<div class="bc-table-scroll" id="bc-scroll"><table class="bc-table"><thead><tr>'+
  '<th>Seviye</th><th>'+resourceIcon(0)+' Odun</th><th>'+resourceIcon(1)+' Tuğla</th><th>'+resourceIcon(2)+' Demir</th><th>'+resourceIcon(3)+' Tahıl</th>'+
- '<th>'+totalResourcesIcon()+' Toplam</th><th>'+metricIcon("population")+' Nüfus</th><th>'+metricIcon("kp")+' KP/gün</th><th title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>'+buildingTimeIcon("clock")+' İnşa</th>'+
+ '<th>'+totalResourcesIcon()+' Toplam</th><th>'+metricIcon("population")+' Nüfus</th><th>'+metricIcon("kp")+' KP/gün</th><th id="bc-effect-head" title="Binanın bu seviyede sağladığı yarar">✨ Etki</th><th>'+buildingTimeIcon("clock")+' İnşa</th>'+
  '</tr></thead><tbody id="bc-rows"></tbody><tfoot id="bc-totals"></tfoot></table></div>'+
  '<div class="bc-results"><div class="bc-results-top"><span><strong id="bc-range"></strong> yükseltme toplamı</span></div>'+
  '<div class="bc-mini-metrics" id="bc-summary"></div></div>'+
@@ -319,6 +332,14 @@ function rowData(b,level){
 }
 function render(){
  const b=byId(state.building);if(!b)return;
+ const wall=wallDefenseStats[b.id]||null;
+ const effectHead=$("bc-effect-head");
+ effectHead.textContent=wall?"Sav. Puanı":"✨ Etki";
+ effectHead.title=wall?"Bu seviyenin sağladığı sabit savunma puanı":"Binanın bu seviyede sağladığı yarar";
+ const bonusHead=$("bc-effect-bonus-head");
+ if(wall&&!bonusHead)effectHead.insertAdjacentHTML("afterend",'<th id="bc-effect-bonus-head" title="Köyü savunan askerlere uygulanan yüzdesel savunma bonusu">Sav. Bonusu</th>');
+ if(!wall&&bonusHead)bonusHead.remove();
+ $("bc-scroll").querySelector("table").classList.toggle("bc-wall-table",Boolean(wall));
  state.from=Math.min(Math.max(0,Math.floor(state.from)),b.max-1);
  state.to=Math.min(Math.max(state.from+1,Math.floor(state.to)),b.max);
  $("bc-from").innerHTML=Array.from({length:b.max},(_,i)=>'<option value="'+i+'">'+i+'</option>').join("");
@@ -335,7 +356,9 @@ function render(){
  const startCp=state.from===0?0:rowData(b,state.from).cp;
  const cpDiff=rowData(b,state.to).cp-startCp;
  $("bc-range").textContent=state.from+" → "+state.to;
- $("bc-effect-heading").textContent="✨ Seviye etkisi: "+effectAt(b,Math.min(1,b.max)).label;
+ $("bc-effect-heading").textContent=wall?
+   "🛡 Seviye etkileri: Sabit savunma puanı ve birlik savunma bonusu":
+   "✨ Seviye etkisi: "+effectAt(b,Math.min(1,b.max)).label;
  const items=[
    [resourceIcon(0),"Odun",int(sums[0])],[resourceIcon(1),"Tuğla",int(sums[1])],
    [resourceIcon(2),"Demir",int(sums[2])],[resourceIcon(3),"Tahıl",int(sums[3])],
@@ -346,7 +369,7 @@ function render(){
    '<span>'+ico+' '+label+'</span><strong>'+esc(value)+'</strong></div>').join("");
  // 0. seviye, bina henüz kurulmamış anlamına gelir. Tablodan 0 → 5 seçilebilir.
  const unbuiltRow='<tr data-level="0" tabindex="0" role="button" aria-label="Seviye 0, bina kurulmamış" class="bc-zero-row">'+
-   '<td><strong>0</strong></td><td colspan="9">Bina henüz kurulmamış — başlangıç seviyesi olarak seç</td></tr>';
+   '<td><strong>0</strong></td><td colspan="'+(wall?10:9)+'">Bina henüz kurulmamış — başlangıç seviyesi olarak seç</td></tr>';
  $("bc-rows").innerHTML=unbuiltRow+all.map(r=>{
    const chosen=r.level>state.from&&r.level<=state.to;
    const classes=[chosen?"selected":"",r.level===state.to?"target":""].join(" ");
@@ -354,11 +377,20 @@ function render(){
      '<td><strong>'+r.level+'</strong></td>'+
      r.costs.map(n=>'<td>'+int(n)+'</td>').join("")+
      '<td class="bc-row-total">'+int(r.total)+'</td><td>'+int(r.pop)+'</td><td>'+int(r.cp)+'</td>'+
- '<td class="bc-row-effect">'+esc(effectAt(b,r.level).value)+'</td><td>'+fmt(r.seconds)+'</td></tr>';
+ (wall?
+   '<td class="bc-row-effect bc-wall-points">+'+int(wall.points*r.level)+'</td>'+
+   '<td class="bc-row-effect bc-wall-bonus">+'+((Math.pow(1+wall.bonus,r.level)-1)*100).toFixed(1)+'%</td>':
+   '<td class="bc-row-effect">'+esc(effectAt(b,r.level).value)+'</td>')+
+   '<td>'+fmt(r.seconds)+'</td></tr>';
  }).join("");
+ const targetWallEffect=wall?wallEffectAt(b,state.to):null;
+ const footerEffect=targetWallEffect?
+   '<th title="Toplam değil, hedef seviyedeki sabit savunma puanı">+'+int(targetWallEffect.points)+'</th>'+
+   '<th title="Toplam değil, hedef seviyedeki birlik savunma bonusu">+'+targetWallEffect.bonus.toFixed(1)+'%</th>':
+   '<th title="Bina etkileri seviyeye göre gösterilir">—</th>';
  $("bc-totals").innerHTML='<tr><th>'+state.from+' → '+state.to+'</th>'+
    sums.map(n=>'<th>'+int(n)+'</th>').join("")+
-   '<th>'+int(total)+'</th><th>+'+int(pop)+'</th><th>+'+int(cpDiff)+'</th><th title="Bina etkileri seviyeye göre gösterilir">—</th><th>'+fmt(seconds)+'</th></tr>';
+   '<th>'+int(total)+'</th><th>+'+int(pop)+'</th><th>+'+int(cpDiff)+'</th>'+footerEffect+'<th>'+fmt(seconds)+'</th></tr>';
  syncUrl();
 }
 setup();
