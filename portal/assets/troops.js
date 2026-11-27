@@ -179,7 +179,7 @@ function buildShell(){
  '<th title="Piyadeye karşı savunma">'+combatIcon("infantry-defense")+' Piyade</th><th title="Süvariye karşı savunma">'+combatIcon("cavalry-defense")+' Süvari</th>'+
  '<th title="Sunucu hızı ve Titan Çizmesi etkisiyle hareket hızı, alan/saat">'+combatIcon("speed")+' Hız</th><th title="Birimin taşıma kapasitesi">'+combatIcon("capacity")+' Taşıma</th>'+
  '<th>'+resourceIcon("wood")+' Odun</th><th>'+resourceIcon("clay")+' Tuğla</th><th>'+resourceIcon("iron")+' Demir</th><th>'+resourceIcon("crop")+' Tahıl</th>'+
- '<th>'+resourceIcon("total")+' Toplam</th><th title="Saatlik tahıl tüketimi">'+resourceIcon("crop")+'/sa</th><th title="Kayıtlı eğitim bonuslarına göre eğitim süresi">'+clockIcon()+' Eğitim</th>'+
+ '<th>'+resourceIcon("total")+' Toplam</th><th title="Saatlik tahıl tüketimi">'+combatIcon("crop-upkeep")+'/sa</th><th title="Kayıtlı eğitim bonuslarına göre eğitim süresi">'+clockIcon()+' Eğitim</th>'+
  '</tr></thead><tbody id="tc-rows"></tbody></table></div>'+
  '<section class="tc-control-sections" aria-label="Asker hesaplama ayarları">'+
  '<div class="tc-control-group"><div class="tc-control-title">'+clockIcon()+' Asker Eğitim Hızı</div><div class="tc-control-items" id="tc-training-controls"></div></div>'+
