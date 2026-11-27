@@ -15,9 +15,9 @@ body[data-page="p-tablolar-saatlik-uretim"] .page-heading{margin-bottom:10px}
 .hp-main{display:grid;grid-template-columns:minmax(190px,.8fr) minmax(0,2.2fr);gap:12px;align-items:start}
 .hp-village-panel{border:1px solid var(--line);border-radius:9px;padding:10px}
 .hp-village-panel h2{font-size:13px;margin:0 0 10px;text-align:center}
-.hp-map{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;max-width:250px;margin:auto}
-.hp-tile{border:1px solid var(--line);border-radius:7px;min-height:33px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--panel2);font-variant-numeric:tabular-nums}
-.hp-tile-0{border-color:#6b94694f}.hp-tile-1{border-color:#ba775e55}.hp-tile-2{border-color:#8698ad66}.hp-tile-3{border-color:#cba24066}
+.hp-map{display:block;width:100%;max-width:520px;margin:0 auto}
+.hp-village-art{display:block;width:100%;height:auto;overflow:visible}
+.hp-map-marker text{fill:#fffdf2;font-family:Arial,sans-serif;font-weight:800;font-variant-numeric:tabular-nums;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:1.7;stroke-linejoin:round;user-select:none}
 .hp-map-caption{color:var(--muted);text-align:center;font-size:10px;margin:8px 0 0}
 .hp-calc{min-width:0}
 .hp-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px}
@@ -46,5 +46,5 @@ body[data-page="p-tablolar-saatlik-uretim"] .page-heading{margin-bottom:10px}
 .hp-sources summary{cursor:pointer;font-weight:700}
 .hp-sources p{margin:6px 0}
 .hp-sources a{color:var(--accent)}
-@media(max-width:1050px){.hp-main{grid-template-columns:1fr}.hp-map{grid-template-columns:repeat(9,minmax(0,1fr));max-width:none}.hp-tile{min-height:30px}}
-@media(max-width:550px){.hp-panel{padding:8px}.hp-map{grid-template-columns:repeat(6,minmax(0,1fr))}.hp-toolbar{gap:8px}.hp-layout-label{width:100%}.hp-table{min-width:490px}.hp-total>span:last-child{margin-left:0}}
+@media(max-width:1050px){.hp-main{grid-template-columns:1fr}.hp-map{max-width:440px}}
+@media(max-width:550px){.hp-panel{padding:8px}.hp-map{max-width:100%}.hp-toolbar{gap:8px}.hp-layout-label{width:100%}.hp-table{min-width:490px}.hp-total>span:last-child{margin-left:0}}
