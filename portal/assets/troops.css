@@ -318,3 +318,19 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
  margin:0 auto 3px;
  object-fit:contain;object-position:center;
 }
+
+/* Smithy: align each heading, icon, value and total on the same column axis. */
+.tc-smithy-table thead th,
+.tc-smithy-table tbody td,
+.tc-smithy-table tfoot th{
+ text-align:center;
+ vertical-align:middle;
+}
+.tc-smithy-table thead th:first-child,
+.tc-smithy-table tbody td:first-child,
+.tc-smithy-table tfoot th:first-child{
+ text-align:center;
+}
+.tc-smithy-table thead th:has(> .tc-resource-icon){
+ vertical-align:middle;
+}
