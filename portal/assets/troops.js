@@ -40,6 +40,12 @@ const state={
  speed:allowedNum("s",[1,2,3,5,10],1),
  training:allowedNum("train",levels.slice(1),1),
  smithy:allowedNum("smithy",levels,0),
+ smithyBuilding:allowedNum("sb",levels,Math.max(1,allowedNum("smithy",levels,0))),
+ upgradeFrom:allowedNum("uf",levels,0),
+ upgradeTo:allowedNum("ut",levels.slice(1),1),
+ buildingTarget:allowedNum("bt",levels,1),
+ mainBuilding:allowedNum("mb",levels.slice(1),1),
+ rowStage:0,
  helmInf:allowedNum("hi",[0,10,15,20],0),
  helmCav:allowedNum("hc",[0,10,15,20],0),
  allianceTrain:allowedNum("at",[0,2,4,6,8,10],0),
@@ -50,6 +56,13 @@ const state={
  selected:null
 };
 state.selected=(tribes.find(t=>t.id===state.tribe).units.some(u=>u.id===qs.get("unit"))?qs.get("unit"):tribes.find(t=>t.id===state.tribe).units[0].id);
+function normalizePlan(){
+ state.smithy=Math.min(state.smithy,state.smithyBuilding);
+ state.upgradeFrom=Math.min(19,state.upgradeFrom);
+ state.upgradeTo=Math.min(20,Math.max(state.upgradeFrom+1,state.upgradeTo));
+ state.buildingTarget=Math.min(20,Math.max(state.smithyBuilding,state.upgradeTo,state.buildingTarget));
+}
+normalizePlan();
 function tribe(){return tribes.find(x=>x.id===state.tribe)||tribes[0];}
 function chosen(){return tribe().units.find(x=>x.id===state.selected)||tribe().units[0];}
 function selectOpts(items,value){return items.map(([v,label])=>'<option value="'+esc(v)+'"'+(String(v)===String(value)?" selected":"")+'>'+esc(label)+'</option>').join("")}
@@ -77,6 +90,32 @@ function combat(unit,level=state.smithy){
  return {a:smithyPoints(unit.a,unit.u,actualLevel)*multiplier,
          di:smithyPoints(unit.di,unit.u,actualLevel)*multiplier,
          dc:smithyPoints(unit.dc,unit.u,actualLevel)*multiplier};
+}
+// Kirilloid old T4 model: rt = 3 * base training time + 1800 for upgradable units.
+ // Per-level resource formula cross-checked against the Equites Imperatoris reference screenshot.
+const round5=x=>Math.round(x/5)*5;
+const sum=x=>x.reduce((a,b)=>a+b,0);
+function upgradeRow(unit,l,buildingLevel){
+ if(!smithyEligible(unit)||!Array.isArray(unit.c)||unit.u<=0||!Number.isFinite(unit.t)||l<1)return null;
+ const coeff=[100,100,200,160];
+ const scale=Math.pow(l,.8);
+ const costs=unit.c.map((c,i)=>round5((7*c+coeff[i])*scale/unit.u));
+ const rt=unit.researchTime>0?unit.researchTime:3*unit.t+1800;
+ const seconds=Math.round(rt*scale*Math.pow(.964,Math.max(1,buildingLevel)-1)/state.speed);
+ return {level:l,costs,seconds,total:sum(costs)};
+}
+function sumRows(rows){
+ if(!rows.length)return {costs:[0,0,0,0],seconds:0,total:0};
+ const costs=[0,0,0,0];let seconds=0;
+ for(const r of rows){r.costs.forEach((c,i)=>costs[i]+=c);seconds+=r.seconds;}
+ return {costs,seconds,total:sum(costs)};
+}
+function buildingRow(l){
+ const b=(window.AHIR_BUILDINGS||[]).find(x=>x.id==="smithy");
+ if(!b)return null;
+ const costs=b.base.map(c=>round5(c*Math.pow(b.k,l-1)));
+ const seconds=Math.round(Math.max(0,b.a*Math.pow(b.tk,l-1)-b.tb)/state.speed*Math.pow(.964,state.mainBuilding-1));
+ return {level:l,costs,seconds,total:sum(costs)};
 }
 function trainingTime(unit){
  if(!unit.trainable||!Number.isFinite(unit.t)||unit.t<=0)return null;
@@ -134,13 +173,20 @@ function buildShell(){
  '<div class="tc-control-group"><div class="tc-control-title">🛡 Demirci ve Zırh</div><div class="tc-control-items" id="tc-armor-controls"></div></div>'+
  '<div class="tc-control-group"><div class="tc-control-title">⚡ Tılsım Etkileri</div><div class="tc-control-items" id="tc-artifact-controls"></div></div>'+
  '</section>'+
- '<section class="tc-detail"><div class="tc-detail-top"><div><span class="tc-eyebrow">DEMİRCİ GELİŞTİRMELERİ</span>'+
+ '<section class="tc-detail"><div class="tc-detail-top"><div><span class="tc-eyebrow">ZIRH DÖKÜMHANESİ • ASKER GELİŞTİRMELERİ</span>'+
  '<h3 id="tc-selected-title"></h3><p id="tc-selected-note"></p></div>'+
  '<div class="tc-selected-stats" id="tc-selected-stats"></div></div>'+
- '<div class="tc-smithy-wrap"><table class="tc-smithy-table"><thead><tr><th>Demirci seviyesi</th>'+
- '<th>⚔ Saldırı</th><th>🛡 Piyade savunması</th><th>🛡 Süvari savunması</th><th>Artış / Durum</th></tr></thead>'+
- '<tbody id="tc-smithy-rows"></tbody></table></div>'+
- '<div class="tc-source-note"><span>ℹ️ Demirci tablosu savaş değerlerini gösterir; demirci araştırmasının kaynak/süre maliyetleri bu sürümde hesaplanmaz.</span>'+
+ '<div id="tc-upgrade-planner"><div class="tc-upgrade-toolbar" id="tc-upgrade-controls"></div>'+
+ '<p class="tc-plan-hint" id="tc-upgrade-hint" role="status"></p>'+
+ '<div class="tc-plan-summary" id="tc-upgrade-summary"></div>'+
+ '<div class="tc-smithy-wrap"><table class="tc-smithy-table"><thead><tr><th>Seviye</th>'+
+ '<th>🪵 Odun</th><th>🧱 Tuğla</th><th>⛏ Demir</th><th>🌾 Tahıl</th><th>📦 Toplam</th><th>⏱ Geliştirme</th>'+
+ '<th>⚔ Saldırı</th><th>🛡 Piyade</th><th>🛡 Süvari</th><th>Durum</th></tr></thead>'+
+ '<tbody id="tc-smithy-rows"></tbody><tfoot id="tc-upgrade-total"></tfoot></table></div></div>'+
+ '<div class="tc-building-plan"><div class="tc-control-title">Zırh Dökümhanesi bina yükseltmesi</div><div class="tc-upgrade-toolbar" id="tc-building-controls"></div>'+
+ '<p class="tc-plan-hint" id="tc-building-hint"></p><div class="tc-plan-summary" id="tc-building-summary"></div>'+
+ '<div id="tc-building-link"></div></div>'+
+ '<div class="tc-source-note"><span>Geliştirme maliyetleri tek asker türü içindir, tüm o tür birliklere uygulanır. Akademi araştırması, bina maliyetleri ve asker eğitimi ayrıdır. Süreler Kirilloid eski modeline göre hesaplanır; özel dünyalarda değişebilir.</span>'+
  '<span id="tc-data-scope"></span></div><div class="tc-source-note" id="tc-research-info"></div></section>'+
  '<div class="tc-bottom"><div class="tc-links"><a href="https://support.travian.com/en/articles/20-game-versions-and-speed" target="_blank" rel="noopener noreferrer">Resmî sunucu hızları ↗</a>'+
  '<a href="https://support.travian.com/en/articles/40-troop-upgrades-and-smithy" target="_blank" rel="noopener noreferrer">Demirci kuralları ↗</a><a href="https://support.travian.com/en/articles/102-artefact-effects" target="_blank" rel="noopener noreferrer">Resmî tılsım etkileri ↗</a>'+
@@ -164,7 +210,8 @@ function drawControls(){
    selectCard("Süvari miğferi","helmCav",helmCav)+
    (t.id==="romans"?selectCard("Yalak","trough",levels.map(v=>[v,v?"Seviye "+v:"Yok"])):"");
  $("tc-armor-controls").innerHTML=
-   selectCard("Demirci seviyesi","smithy",levels.map(v=>[v,"Seviye "+v]))+
+   selectCard("Zırh Dökümhanesi","smithyBuilding",levels.map(v=>[v,"Seviye "+v]))+
+   selectCard("Asker geliştirme seviyesi","smithy",levels.filter(v=>v<=state.smithyBuilding).map(v=>[v,"Seviye "+v]))+
    selectCard("Metalürji bonusu","allianceMetal",bonus);
  $("tc-artifact-controls").innerHTML=
    selectCard("Asker Eğitme Tılsımı","trainer",artifact)+
@@ -192,30 +239,69 @@ function drawDetail(){
    " · Baz hareket: "+u.v+" alan/saat"+(smithyEligible(u)?"":" · Demirci geliştirilemez");
  const statBoxes=[["⚔","Saldırı",stat.a],["🛡","Piyadeye savunma",stat.di],["🛡","Süvariye savunma",stat.dc]];
  $("tc-selected-stats").innerHTML=statBoxes.map(([i,label,value])=>'<div><small>'+i+" "+label+'</small><strong>'+fixed(value)+'</strong></div>').join("");
- $("tc-smithy-rows").innerHTML=levels.map(l=>{
-   const points=combat(u,l);
-   const active=l===state.smithy;
-   return '<tr data-smithy="'+l+'" class="'+(active?"active":"")+'" role="button" tabindex="0" aria-label="Demirci '+l+'. seviye">'+
-     '<td><strong>'+l+'</strong>'+(l===0?" <small>Baz</small>":"")+'</td>'+
-     '<td>'+fixed(points.a)+'</td><td>'+fixed(points.di)+'</td><td>'+fixed(points.dc)+'</td>'+
-     '<td>'+ (!smithyEligible(u)?"Geliştirme uygulanmaz":l===0?"Temel seviye":active?"✓ Seçili seviye":"Seviye "+l)+'</td></tr>';
- }).join("");
+ drawUpgradePlan(u);
+ drawBuildingPlan();
  $("tc-research-info").textContent="Gereksinimler: "+requirementsText(u)+" | Akademi araştırma süresi (seviye 1, eski model): "+researchText(u)+" | Araştırma maliyetleri: doğrulanmadı.";
  $("tc-data-scope").textContent=u.source==="npc"?"Eğitilemeyen NPC birimi":u.source==="official/community"||u.source==="mixed-official-community"?"Karma kaynak verisi; bazı değerler eksik olabilir":u.source==="travian-official"?"Travian resmî Viking verisi":"Kirilloid T4.6 modelinden";
 }
+function summaryHTML(result,range,label){
+ const items=[["🪵 Odun",n(result.costs[0])],["🧱 Tuğla",n(result.costs[1])],["⛏ Demir",n(result.costs[2])],["🌾 Tahıl",n(result.costs[3])],["📦 Toplam",n(result.total)],["⏱ "+label,timeFormat(result.seconds)]];
+ return '<div class="tc-plan-range">'+esc(range)+'</div>'+items.map(([k,v])=>'<div class="tc-plan-metric"><small>'+k+'</small><strong>'+v+'</strong></div>').join("");
+}
+function drawUpgradePlan(u){
+ const available=smithyEligible(u)&&Array.isArray(u.c)&&u.u>0&&Number.isFinite(u.t);
+ const plan=$("tc-upgrade-planner");plan.hidden=!available;
+ if(!available)return;
+ const planLevel=Math.max(1,state.buildingTarget);
+ const options=arr=>arr.map(v=>[v,"Seviye "+v]);
+ $("tc-upgrade-controls").innerHTML=selectCard("Mevcut asker geliştirmesi","upgradeFrom",options(levels.slice(0,20)))+
+ selectCard("Hedef asker geliştirmesi","upgradeTo",options(levels.filter(l=>l>state.upgradeFrom)));
+ const future=state.upgradeTo>state.smithyBuilding;
+ $("tc-upgrade-hint").textContent=(state.rowStage?"Mevcut seviye "+state.upgradeFrom+" seçildi; şimdi hedef satıra tıkla.":"Tablodan önce mevcut, sonra hedef seviyeye tıkla veya menüleri kullan.")+
+ " | Şu an en fazla "+state.smithyBuilding+". seviye yapılabilir."+
+ (future?" Hedef için önce bina en az "+state.upgradeTo+". seviyeye çıkarılmalı.":"")+
+ " Süre hesabı: "+planLevel+". seviye dökümhane (planlanan bina tamamlandıktan sonra)."+
+ (!u.researchTime&&/^(spartans|vikings)-/.test(u.id)?" Baz geliştirme süresi modelden türetilmiştir; canlı doğrulama yok.":"");
+ const rows=levels.slice(1).map(l=>upgradeRow(u,l,planLevel));
+ const totals=sumRows(rows.filter(r=>r.level>state.upgradeFrom&&r.level<=state.upgradeTo));
+ $("tc-upgrade-summary").innerHTML=summaryHTML(totals,state.upgradeFrom+" → "+state.upgradeTo,"Geliştirme");
+ $("tc-smithy-rows").innerHTML=levels.map(l=>{
+   const points=combat(u,l),r=l?rows[l-1]:null;
+   const selected=l>state.upgradeFrom&&l<=state.upgradeTo;
+   const cls=[selected?"tc-range-selected":"",l===state.upgradeFrom?"tc-range-start":"",l===state.upgradeTo?"tc-range-end":"",l>state.smithyBuilding?"tc-upgrade-locked":""].join(" ");
+   return '<tr data-smithy="'+l+'" class="'+cls+'" role="button" tabindex="0" aria-label="Geliştirme seviyesi '+l+(l>state.smithyBuilding?", bina seviyesi yetersiz":"")+'">'+
+     '<td><strong>'+l+'</strong></td>'+
+     (r?r.costs.map(c=>'<td>'+n(c)+'</td>').join("")+'<td>'+n(r.total)+'</td><td>'+timeFormat(r.seconds)+'</td>':'<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>')+
+     '<td>'+fixed(points.a)+'</td><td>'+fixed(points.di)+'</td><td>'+fixed(points.dc)+'</td><td>'+ (l===0?"Baz":l>state.smithyBuilding?"Bina "+l+" gerekli":l<=state.upgradeFrom?"Mevcut":selected?"Seçili":"Uygun")+'</td></tr>';
+ }).join("");
+ $("tc-upgrade-total").innerHTML='<tr><th>'+state.upgradeFrom+' → '+state.upgradeTo+'</th>'+totals.costs.map(c=>'<th>'+n(c)+'</th>').join("")+'<th>'+n(totals.total)+'</th><th>'+timeFormat(totals.seconds)+'</th><th colspan="4">Toplam</th></tr>';
+}
+function drawBuildingPlan(){
+ const options=arr=>arr.map(v=>[v,"Seviye "+v]);
+ $("tc-building-controls").innerHTML=selectCard("Mevcut dökümhane","smithyBuilding",options(levels))+
+ selectCard("Hedef dökümhane","buildingTarget",options(levels.filter(v=>v>=Math.max(state.smithyBuilding,state.upgradeTo))))+
+ selectCard("Merkez Binası","mainBuilding",options(levels.slice(1)));
+ const rows=levels.filter(l=>l>state.smithyBuilding&&l<=state.buildingTarget).map(buildingRow);
+ const range=state.smithyBuilding+" → "+state.buildingTarget;
+ $("tc-building-hint").textContent="Yalnızca bina yükseltmesi; asker geliştirme kaynakları ve süreleri bu toplama dahil değildir.";
+ $("tc-building-summary").innerHTML=rows.some(r=>!r)?"Bina verisi bulunamadı.":summaryHTML(sumRows(rows),range,"İnşaat");
+ $("tc-building-link").innerHTML='<a class="tc-copy tc-plan-link" href="/portal/tablolar/binalar/?b=smithy&s='+state.speed+'&mb='+state.mainBuilding+'&from='+Math.min(19,state.smithyBuilding)+'&to='+Math.max(Math.min(20,state.smithyBuilding+1),state.buildingTarget)+'">Binalar aracında dökümhane tablosunu aç ↗</a>';
+}
 function syncUrl(){
  const p=new URLSearchParams();
- for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["art",state.trainer],["titan",state.titan],["hdt",state.trough],["unit",state.selected]])p.set(key,String(v));
+ for(const [key,v] of [["tribe",state.tribe],["s",state.speed],["train",state.training],["smithy",state.smithy],["sb",state.smithyBuilding],["uf",state.upgradeFrom],["ut",state.upgradeTo],["bt",state.buildingTarget],["mb",state.mainBuilding],["hi",state.helmInf],["hc",state.helmCav],["at",state.allianceTrain],["am",state.allianceMetal],["art",state.trainer],["titan",state.titan],["hdt",state.trough],["unit",state.selected]])p.set(key,String(v));
  history.replaceState(null,"",location.pathname+"?"+p.toString());
 }
 function render(){
- drawControls();drawUnits();drawDetail();syncUrl();
+ normalizePlan();drawControls();drawUnits();drawDetail();syncUrl();
 }
 buildShell();
 root.addEventListener("change",e=>{
  const el=e.target.closest("select[data-key]");if(!el)return;
  const key=el.dataset.key;
  state[key]=Number(el.value);
+ if(key==="upgradeFrom"||key==="upgradeTo"||key==="smithyBuilding"||key==="buildingTarget")state.rowStage=0;
+ if(key==="smithyBuilding")state.buildingTarget=Math.max(state.smithyBuilding,state.upgradeTo);
  render();
 });
 root.addEventListener("click",e=>{
@@ -224,7 +310,7 @@ root.addEventListener("click",e=>{
  const unit=e.target.closest("tr[data-unit]");
  if(unit){state.selected=unit.dataset.unit;render();return;}
  const sm=e.target.closest("tr[data-smithy]");
- if(sm){state.smithy=Number(sm.dataset.smithy);render();return;}
+ if(sm){const l=Number(sm.dataset.smithy);if(!state.rowStage||l<=state.upgradeFrom){state.upgradeFrom=Math.min(l,19);state.upgradeTo=state.upgradeFrom+1;state.rowStage=1;}else{state.upgradeTo=l;state.rowStage=0;}render();return;}
 });
 root.addEventListener("keydown",e=>{
  const el=e.target.closest("tr[data-unit],tr[data-smithy]");

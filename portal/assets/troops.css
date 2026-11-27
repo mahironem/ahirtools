@@ -253,3 +253,23 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
  .tc-toolbar .tc-tribe-tabs{flex:1 1 100%}
  .tc-toolbar .tc-speed-select{margin-left:auto}
 }
+
+/* Upgrade planner: compact range selection, separate research and building totals. */
+.tc-upgrade-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0}
+.tc-upgrade-toolbar .tc-control{flex:0 1 180px;min-width:130px}
+.tc-plan-hint{color:var(--muted);font-size:12px;line-height:1.5;margin:5px 0 8px}
+.tc-plan-summary{display:grid;grid-template-columns:auto repeat(6,minmax(0,1fr));gap:5px;margin:6px 0 8px;align-items:stretch}
+.tc-plan-range,.tc-plan-metric{padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}
+.tc-plan-range{display:flex;align-items:center;font-weight:800;color:var(--accent);white-space:nowrap}
+.tc-plan-metric small{display:block;font-size:10px;color:var(--muted)}
+.tc-plan-metric strong{font-size:13px;overflow-wrap:anywhere}
+.tc-smithy-table{min-width:720px}
+.tc-smithy-table th,.tc-smithy-table td{padding:5px 6px}
+.tc-smithy-table tbody tr.tc-range-selected{background:var(--accentbg)}
+.tc-smithy-table tbody tr.tc-range-start,.tc-smithy-table tbody tr.tc-range-end{box-shadow:inset 3px 0 var(--accent);font-weight:750}
+.tc-smithy-table tbody tr.tc-upgrade-locked td:last-child{color:var(--muted)}
+.tc-smithy-table tfoot{position:sticky;bottom:0;background:var(--panel2);z-index:1;color:var(--accent)}
+.tc-building-plan{margin-top:12px;padding:9px;border:1px solid var(--line);border-radius:9px}
+.tc-plan-link{display:inline-block;text-decoration:none}
+@media(max-width:850px){.tc-plan-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.tc-plan-range{grid-column:1/-1}}
+@media(max-width:450px){.tc-upgrade-toolbar .tc-control{flex:1 1 120px}.tc-plan-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
