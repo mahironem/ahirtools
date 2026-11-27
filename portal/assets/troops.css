@@ -240,3 +240,16 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
  .tc-control select{min-height:33px;padding:4px 8px}
  .tc-detail{margin-top:8px}
 }
+
+/* Single compact row: tribe tabs left, server speed right. */
+.tc-toolbar{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:0 0 8px;min-width:0}
+.tc-toolbar .tc-tribe-tabs{flex:1 1 auto;min-width:0;padding:0}
+.tc-toolbar .tc-speed-select{flex:0 0 auto;margin-left:auto}
+@media (min-width:701px){
+ .tc-toolbar .tc-tribe-tabs{flex:1 1 460px}
+}
+@media (max-width:700px){
+ .tc-toolbar{gap:6px}
+ .tc-toolbar .tc-tribe-tabs{flex:1 1 100%}
+ .tc-toolbar .tc-speed-select{margin-left:auto}
+}

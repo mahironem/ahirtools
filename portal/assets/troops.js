@@ -119,9 +119,9 @@ function researchText(unit){
  return timeFormat(unit.researchTime/state.speed);
 }
 function buildShell(){
- root.innerHTML='<div class="tc-topline"><span class="tc-version">⚔ T4.6 Asker İstatistikleri</span>'+
- '<label class="tc-speed-select"><span>Sunucu</span><select id="tc-speed" data-key="speed" aria-label="Sunucu hızı"></select></label></div>'+
+ root.innerHTML='<div class="tc-toolbar">'+
  '<div class="tc-tribe-tabs" id="tc-tribes" role="group" aria-label="Kabile seçimi"></div>'+
+ '<label class="tc-speed-select"><span>Sunucu</span><select id="tc-speed" data-key="speed" aria-label="Sunucu hızı"></select></label></div>'+
  '<div class="tc-table-wrap"><table class="tc-table"><thead><tr>'+
  '<th>Birim / Tür</th><th title="Demirci ve metalürji bonuslu saldırı gücü">⚔ Saldırı</th>'+
  '<th title="Piyadeye karşı savunma">🛡 Piyade</th><th title="Süvariye karşı savunma">🛡 Süvari</th>'+
