@@ -212,3 +212,9 @@ body[data-page="p-tablolar-binalar"] .page-heading{margin-bottom:12px}
 .bc-table thead th .bc-metric-icon{vertical-align:-7px;margin-right:3px}
 .bc-mini>span .bc-metric-icon{vertical-align:-7px;margin-right:3px}
 @media(max-width:700px){.bc-metric-icon{width:22px;height:22px}}
+
+/* Four-resource illustration, used for the combined total in buildings. */
+.bc-total-resources-icon{display:inline-block;width:26px;height:26px;object-fit:contain;vertical-align:middle;flex:none}
+.bc-table thead th .bc-total-resources-icon{vertical-align:-7px;margin-right:3px}
+.bc-mini>span .bc-total-resources-icon{vertical-align:-7px;margin-right:3px}
+@media(max-width:700px){.bc-total-resources-icon{width:23px;height:23px}}
