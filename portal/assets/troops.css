@@ -179,3 +179,36 @@ body[data-page="p-tablolar-askerler"] .page-heading{margin-bottom:8px}
  .tc-unit-icon.tc-unit-image{width:30px;height:30px;min-width:30px}
  .tc-detail-top h3 .tc-unit-image{width:33px;height:33px;min-width:33px}
 }
+
+/* Desktop fit: all 13 columns stay visible in the available main pane.
+   Keep horizontal scrolling on narrow mobile screens instead of hiding data. */
+@media (min-width: 901px){
+ body[data-page="p-tablolar-askerler"] .page-content{width:100%;max-width:none;padding-left:12px;padding-right:12px;min-width:0}
+}
+.tc-table-wrap{min-width:0;max-width:100%}
+@media (min-width: 701px){
+ .tc-table{width:100%;min-width:0;table-layout:fixed;font-size:12px}
+ .tc-table th,.tc-table td{padding:8px 3px;min-width:0;text-align:center}
+ .tc-table thead th{font-size:11px;white-space:normal;line-height:1.25;overflow-wrap:anywhere;padding:9px 2px}
+ .tc-table th:first-child,.tc-table td:first-child{width:19%;min-width:0;padding-left:7px;text-align:left;white-space:normal}
+ .tc-table th:nth-child(13),.tc-table td:nth-child(13){width:12%;white-space:normal;overflow-wrap:anywhere}
+ .tc-table th:nth-child(11),.tc-table td:nth-child(11){width:8%}
+ .tc-table td:not(:first-child){white-space:normal;overflow-wrap:anywhere}
+ .tc-table .tc-unit-cell{gap:5px;min-width:0}
+ .tc-table .tc-unit-cell>span{min-width:0;overflow-wrap:anywhere}
+ .tc-table .tc-unit-cell strong{font-size:12px;line-height:1.2}
+ .tc-table .tc-unit-cell small{font-size:10px;line-height:1.2}
+ .tc-table .tc-unit-icon.tc-unit-image,.tc-table .tc-unit-icon.tc-unit-pixel{width:28px;height:28px;min-width:28px;flex:none}
+ .tc-tribe-tabs{flex-wrap:wrap;white-space:normal;overflow-x:visible}
+}
+@media (min-width: 901px) and (max-width: 1199px){
+ .tc-table{font-size:11px}
+ .tc-table th,.tc-table td{padding-left:2px;padding-right:2px}
+ .tc-table thead th{font-size:10px}
+ .tc-table .tc-unit-cell strong{font-size:11px}
+ .tc-table .tc-unit-cell small{font-size:10px}
+ .tc-table .tc-unit-icon.tc-unit-image,.tc-table .tc-unit-icon.tc-unit-pixel{width:24px;height:24px;min-width:24px}
+}
+@media (max-width: 700px){
+ .tc-table{min-width:1000px}
+}
